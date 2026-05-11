@@ -1,0 +1,3056 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#051A11">
+<title>TYSA · Warren Pole Transfer · Operations Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #FAF7EE;
+    --bg-alt: #F2EDD9;
+    --bg-card: #FFFDF5;
+    --ink: #0A1410;
+    --ink-soft: #2D3A33;
+    --ink-muted: #5C6B62;
+    --ink-faint: #8A9089;
+    --line: #0A1410;
+    --line-soft: #B8B099;
+    --line-faint: #E5DEC4;
+    /* Paleta oficial TYSA Brandbook */
+    --tysa-green: #19B269;        /* Crayola Green - Pantone 3405 C */
+    --tysa-deep: #123329;         /* Phthalo Green - Pantone 627 C */
+    --tysa-darkest: #0A1F18;      /* Phthalo Green más oscuro */
+    --tysa-lime: #B2E67B;         /* Crayola Yellow-Green - Pantone 366 C */
+    --tysa-acid: #B2E67B;         /* alias */
+    --tysa-mint: #DFF4E0;         /* Chinese White - Pantone 656 C */
+    --success: #19B269;
+    --danger: #DC2626;
+    --warn: #D97706;
+    --warn-bg: #FED7AA;
+    --paper-shadow: 0 1px 0 rgba(18,51,41,0.08), 0 4px 16px rgba(18,51,41,0.05);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  body {
+    background-image:
+      radial-gradient(circle at 20% 0%, rgba(22,163,74,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 80% 100%, rgba(132,204,22,0.05) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  /* PWA standalone mode: respect iPhone safe area (notch + home indicator) */
+  html.pwa-standalone body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .display { font-family: 'Anton', sans-serif; letter-spacing: 0.02em; text-transform: uppercase; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-feature-settings: 'tnum' 1; }
+  .num { font-family: 'JetBrains Mono', monospace; font-feature-settings: 'tnum' 1; font-variant-numeric: tabular-nums; }
+
+  /* ============ HEADER ============ */
+  header.brand {
+    background: #14332B; /* matchea exacto el fondo del logo TYSA para blend invisible */
+    color: var(--bg);
+    border-bottom: 2px solid var(--ink);
+    position: sticky; top: 0; z-index: 50;
+    padding: 14px 22px;
+    display: flex; align-items: center; gap: 22px;
+  }
+  .logo-block {
+    display: flex; align-items: center;
+  }
+  .logo-img {
+    height: 64px;
+    width: auto;
+    display: block;
+  }
+
+  .brand-divider { width: 1px; height: 36px; background: rgba(255,255,255,0.15); }
+
+  .project-tag {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+  }
+  .project-name {
+    font-family: 'Anton', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.03em;
+    color: var(--bg);
+  }
+
+  .header-spacer { flex: 1; }
+
+  .header-meta {
+    display: flex; gap: 22px; align-items: center;
+    font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+  }
+  .header-meta strong { color: var(--tysa-lime); font-weight: 500; }
+
+  .live-dot {
+    display: inline-block; width: 8px; height: 8px;
+    background: var(--tysa-lime); border-radius: 50%;
+    margin-right: 6px;
+    box-shadow: 0 0 0 0 rgba(190, 242, 100, 0.8);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(190, 242, 100, 0.6); }
+    50% { box-shadow: 0 0 0 6px rgba(190, 242, 100, 0); }
+  }
+
+  /* ============ DATA SOURCE BAR ============ */
+  .data-bar {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 10px 22px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    font-size: 12px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .data-bar .label { color: var(--ink-faint); letter-spacing: 0.15em; text-transform: uppercase; font-size: 10px; }
+  .data-bar input[type="text"], .data-bar input[type="file"] {
+    background: var(--tysa-darkest);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--bg);
+    padding: 6px 10px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    min-width: 320px;
+  }
+  .data-bar input[type="text"]:focus { outline: 1px solid var(--tysa-lime); border-color: var(--tysa-lime); }
+  .btn-pill {
+    background: var(--tysa-lime);
+    color: var(--tysa-darkest);
+    border: none;
+    padding: 6px 14px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .btn-pill:hover { background: var(--bg); }
+  .btn-pill:active { transform: translateY(1px); }
+  .btn-pill.ghost {
+    background: transparent;
+    color: var(--bg);
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  .btn-pill.ghost:hover { border-color: var(--tysa-lime); color: var(--tysa-lime); }
+
+  .data-status {
+    margin-left: auto;
+    display: flex; gap: 14px; align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .data-status .stat-pip {
+    background: rgba(190,242,100,0.1);
+    border: 1px solid rgba(190,242,100,0.3);
+    color: var(--tysa-lime);
+    padding: 3px 10px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ============ MAIN ============ */
+  main {
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 24px 22px 80px;
+  }
+
+  /* ============ FILTERS ============ */
+  .filters-card {
+    background: var(--bg-card);
+    border: 2px solid var(--ink);
+    box-shadow: var(--paper-shadow);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .filters-card::before {
+    content: '01 · CONTROL DE FILTROS';
+    position: absolute;
+    top: -10px; left: 16px;
+    background: var(--bg);
+    padding: 0 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--ink-muted);
+  }
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  .filter-cell {
+    padding: 16px 18px;
+    border-right: 1px solid var(--line-faint);
+    border-bottom: 1px solid var(--line-faint);
+  }
+  .filter-cell:nth-child(4n) { border-right: none; }
+  .filter-cell.full {
+    grid-column: 1 / -1;
+    border-right: none;
+  }
+  .filter-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 6px;
+    display: block;
+  }
+  .filter-cell select, .filter-cell input[type="date"] {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 6px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    width: 100%;
+    cursor: pointer;
+  }
+  .filter-cell select:focus, .filter-cell input[type="date"]:focus {
+    outline: 2px solid var(--tysa-green);
+    outline-offset: -1px;
+  }
+
+  .preset-row {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 14px 18px;
+    background: var(--bg-alt);
+    border-top: 2px solid var(--ink);
+  }
+  .preset-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 5px 12px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: all 0.1s;
+  }
+  .preset-btn:hover { background: var(--ink); color: var(--bg); }
+  .preset-btn.active {
+    background: var(--tysa-deep);
+    color: var(--tysa-lime);
+    border-color: var(--tysa-deep);
+  }
+
+  /* ============ KPI GRID ============ */
+  .kpi-section { margin-bottom: 28px; }
+  .section-title {
+    font-family: 'Anton', sans-serif;
+    font-size: 28px;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    margin-bottom: 4px;
+    display: flex; align-items: baseline; gap: 14px;
+  }
+  .section-title .num-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--ink-muted);
+    font-weight: 400;
+    text-transform: none;
+  }
+  .section-subtitle {
+    font-size: 13px;
+    color: var(--ink-muted);
+    margin-bottom: 18px;
+    font-weight: 400;
+  }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .kpi {
+    background: var(--bg-card);
+    border: 2px solid var(--ink);
+    padding: 18px 20px;
+    position: relative;
+    box-shadow: var(--paper-shadow);
+    transition: transform 0.15s;
+  }
+  .kpi:hover { transform: translateY(-2px); }
+
+  .kpi.featured {
+    grid-column: span 2;
+    background: var(--tysa-darkest);
+    color: var(--bg);
+  }
+  .kpi.featured .kpi-label { color: rgba(255,255,255,0.6); }
+  .kpi.featured .kpi-value { color: var(--tysa-lime); }
+  .kpi.featured .kpi-foot { color: rgba(255,255,255,0.5); border-top-color: rgba(255,255,255,0.15); }
+
+  .kpi-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+  }
+  .kpi-value {
+    font-family: 'Anton', sans-serif;
+    font-size: 36px;
+    letter-spacing: 0.01em;
+    line-height: 1.05;
+    color: var(--ink);
+  }
+  .kpi.featured .kpi-value { font-size: 52px; }
+  .kpi-unit {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-muted);
+    font-weight: 500;
+    margin-left: 4px;
+  }
+  .kpi-foot {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line-faint);
+    display: flex; justify-content: space-between;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ink-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .kpi-status-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .status-card {
+    background: var(--bg-card);
+    border: 2px solid var(--ink);
+    padding: 14px 18px;
+    box-shadow: var(--paper-shadow);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .status-card.si { border-left: 6px solid var(--success); }
+  .status-card.no { border-left: 6px solid var(--danger); }
+  .status-card.pend { border-left: 6px solid var(--warn); }
+  .status-stamp {
+    font-family: 'Anton', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    padding: 4px 10px;
+    border: 2px solid;
+    transform: rotate(-3deg);
+  }
+  .status-stamp.si { color: var(--success); border-color: var(--success); }
+  .status-stamp.no { color: var(--danger); border-color: var(--danger); }
+  .status-stamp.pend { color: var(--warn); border-color: var(--warn); }
+  .status-num {
+    font-family: 'Anton', sans-serif;
+    font-size: 28px;
+    line-height: 1;
+  }
+  .status-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-left: auto;
+    text-align: right;
+  }
+  .status-meta strong { color: var(--ink); display: block; font-size: 13px; }
+
+  /* ============ PROJECT STATS ============ */
+  .project-stats-section {
+    background: linear-gradient(135deg, var(--tysa-darkest) 0%, var(--tysa-deep) 100%);
+    border: 3px solid var(--tysa-green);
+    margin: 20px 0 28px;
+    padding: 22px 24px;
+    box-shadow: var(--paper-shadow);
+  }
+  .project-stats-header {
+    margin-bottom: 18px;
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+    padding-bottom: 12px;
+  }
+  .stats-title {
+    font-family: 'Anton', sans-serif;
+    font-size: 20px;
+    letter-spacing: 0.08em;
+    color: var(--tysa-lime);
+  }
+  .stats-subtitle {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 4px;
+  }
+  .project-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .stats-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 18px 20px;
+  }
+  .stats-card-title {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 8px;
+  }
+  .stats-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 6px 0;
+  }
+  .stat-row.separator {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 12px;
+    margin-bottom: 6px;
+  }
+  .stat-row.minor {
+    padding: 4px 0 4px 12px;
+    font-size: 11px;
+    opacity: 0.8;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.8);
+    font-weight: 400;
+  }
+  .stat-row.minor .stat-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+  }
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--bg);
+    font-feature-settings: 'tnum' 1;
+  }
+  .stat-value.total { color: var(--tysa-lime); font-size: 22px; }
+  .stat-value.negative { color: #ff6b6b; }
+  .stat-value.highlighted { color: var(--tysa-green); font-size: 20px; }
+  .stat-value.warn { color: var(--warn); }
+  .stat-row.minor .stat-value { font-size: 14px; }
+
+  .progress-block {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .progress-main {
+    padding-bottom: 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .progress-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+  .progress-value {
+    font-family: 'Anton', sans-serif;
+    font-size: 42px;
+    color: var(--tysa-lime);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .progress-total {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: rgba(255,255,255,0.4);
+    font-weight: 400;
+  }
+  .progress-bar-wrap {
+    background: rgba(0,0,0,0.3);
+    height: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    margin: 10px 0 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--tysa-green) 0%, var(--tysa-lime) 100%);
+    transition: width 0.6s ease;
+    box-shadow: 0 0 8px rgba(25,178,105,0.6);
+  }
+  .progress-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--tysa-lime);
+    font-weight: 700;
+    text-align: right;
+  }
+
+  .projection-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .projection-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .projection-row.final {
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+  }
+  .proj-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    min-width: 110px;
+    letter-spacing: 0.05em;
+  }
+  .proj-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--bg);
+    font-feature-settings: 'tnum' 1;
+  }
+  .proj-value.highlighted {
+    color: var(--tysa-lime);
+    font-size: 18px;
+  }
+  .proj-value.final {
+    color: var(--tysa-green);
+    font-size: 14px;
+  }
+  .proj-unit {
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ============ CHARTS ============ */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .chart-card {
+    background: var(--bg-card);
+    border: 2px solid var(--ink);
+    padding: 20px;
+    box-shadow: var(--paper-shadow);
+    position: relative;
+  }
+  .chart-card::before {
+    content: attr(data-num);
+    position: absolute;
+    top: -10px; left: 16px;
+    background: var(--bg);
+    padding: 0 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--ink-muted);
+  }
+  .chart-title {
+    font-family: 'Anton', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+  .chart-sub {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-bottom: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+  .chart-host { position: relative; height: 280px; }
+  .chart-host.tall { height: 320px; }
+
+  /* ============ BREAKDOWN TABLES ============ */
+  .breakdowns {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .breakdown-card {
+    background: var(--bg-card);
+    border: 2px solid var(--ink);
+    box-shadow: var(--paper-shadow);
+    overflow: hidden;
+  }
+  .breakdown-head {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 14px 18px;
+    display: flex; align-items: baseline; justify-content: space-between;
+  }
+  .breakdown-head h3 {
+    font-family: 'Anton', sans-serif;
+    font-size: 18px;
+    letter-spacing: 0.02em;
+    font-weight: normal;
+  }
+  .breakdown-head .count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--tysa-lime);
+    letter-spacing: 0.1em;
+  }
+
+  table.data-tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  table.data-tbl th {
+    background: var(--bg-alt);
+    color: var(--ink-muted);
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--line);
+  }
+  table.data-tbl th.right, table.data-tbl td.right { text-align: right; }
+  table.data-tbl td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line-faint);
+    color: var(--ink);
+    vertical-align: middle;
+  }
+  table.data-tbl tr:hover td { background: var(--bg-alt); }
+  table.data-tbl tbody tr:last-child td { border-bottom: none; }
+  table.data-tbl tfoot td {
+    background: var(--tysa-darkest);
+    color: var(--tysa-lime);
+    font-weight: 600;
+    border-top: 2px solid var(--ink);
+    border-bottom: none;
+  }
+
+  /* compact bar inside cell */
+  .bar-cell {
+    position: relative;
+    display: inline-block;
+    width: 70px;
+    height: 6px;
+    background: var(--line-faint);
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .bar-cell .fill {
+    position: absolute;
+    top: 0; left: 0; height: 100%;
+    background: var(--tysa-green);
+  }
+
+  /* fc badges */
+  .fc-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 700;
+    border: 1px solid;
+  }
+  .fc-badge.si { color: var(--success); border-color: var(--success); background: rgba(22,163,74,0.08); }
+  .fc-badge.no { color: var(--danger); border-color: var(--danger); background: rgba(220,38,38,0.08); }
+  .fc-badge.pend { color: var(--warn); border-color: var(--warn); background: rgba(217,119,6,0.08); }
+
+  /* ============ DETAIL TABLE ============ */
+  .detail-card {
+    background: var(--bg-card);
+    border: 2px solid var(--ink);
+    box-shadow: var(--paper-shadow);
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .detail-head {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .detail-head h3 {
+    font-family: 'Anton', sans-serif;
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    font-weight: normal;
+    flex: 1;
+  }
+  .detail-head input[type="text"] {
+    background: var(--tysa-darkest);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--bg);
+    padding: 6px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    width: 220px;
+  }
+  .detail-head .pager {
+    color: var(--tysa-lime);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .detail-body {
+    max-height: 480px;
+    overflow: auto;
+  }
+  .detail-body table { width: 100%; }
+  .detail-body th {
+    position: sticky; top: 0;
+    background: var(--bg-alt);
+    z-index: 5;
+  }
+
+  /* ============ ACTION BAR (footer) ============ */
+  .action-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--tysa-darkest);
+    border-top: 2px solid var(--ink);
+    padding: 14px 22px;
+    display: flex; gap: 12px; align-items: center;
+    z-index: 40;
+    box-shadow: 0 -8px 24px rgba(10,20,16,0.1);
+  }
+  .action-bar .label {
+    color: rgba(255,255,255,0.55);
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+    margin-right: 6px;
+  }
+  .btn {
+    background: transparent;
+    color: var(--bg);
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 9px 18px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn:hover { background: rgba(255,255,255,0.06); border-color: var(--tysa-lime); color: var(--tysa-lime); }
+  .btn.primary {
+    background: var(--tysa-lime);
+    color: var(--tysa-darkest);
+    border-color: var(--tysa-lime);
+  }
+  .btn.primary:hover { background: var(--bg); border-color: var(--bg); color: var(--tysa-darkest); }
+  .btn svg { width: 14px; height: 14px; }
+
+  .action-bar .spacer { flex: 1; }
+
+  /* ============ MODAL ============ */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(5,26,17,0.7);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(6px);
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--bg);
+    border: 2px solid var(--ink);
+    max-width: 560px; width: 92%;
+    box-shadow: 6px 6px 0 var(--tysa-darkest);
+  }
+  .modal-head {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-head h3 { font-family: 'Anton', sans-serif; font-size: 20px; font-weight: normal; letter-spacing: 0.02em; }
+  .modal-close {
+    background: transparent; border: 1px solid rgba(255,255,255,0.3);
+    color: var(--bg); width: 28px; height: 28px;
+    font-size: 16px; cursor: pointer;
+  }
+  .modal-body { padding: 22px 20px; }
+  .modal-body p { color: var(--ink-soft); font-size: 13px; margin-bottom: 14px; }
+  .share-link-box {
+    background: var(--ink);
+    color: var(--tysa-lime);
+    padding: 12px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    word-break: break-all;
+    border: 1px solid var(--ink);
+    margin-bottom: 14px;
+  }
+  .share-actions { display: flex; gap: 10px; }
+
+  /* ============ EMPTY STATE ============ */
+  .empty {
+    padding: 60px 20px;
+    text-align: center;
+    border: 2px dashed var(--line-soft);
+    background: var(--bg-card);
+    color: var(--ink-muted);
+  }
+
+  /* ============ TOAST ============ */
+  .toast {
+    position: fixed; top: 90px; right: 24px;
+    background: var(--tysa-darkest);
+    color: var(--tysa-lime);
+    padding: 12px 18px;
+    border: 1px solid var(--tysa-lime);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    z-index: 200;
+    transform: translateX(120%);
+    transition: transform 0.3s;
+  }
+  .toast.show { transform: translateX(0); }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid { grid-template-columns: 1fr; }
+    .breakdowns { grid-template-columns: 1fr; }
+    .filters-grid { grid-template-columns: repeat(2, 1fr); }
+    .filter-cell:nth-child(2n) { border-right: none; }
+    .filter-cell:nth-child(4n) { border-right: 1px solid var(--line-faint); }
+  }
+  @media (max-width: 700px) {
+    .kpi-grid { grid-template-columns: 1fr; }
+    .kpi.featured { grid-column: span 1; }
+    .kpi-status-row { grid-template-columns: 1fr; }
+    .filters-grid { grid-template-columns: 1fr; }
+    .filter-cell { border-right: none !important; }
+    header.brand { flex-wrap: wrap; gap: 12px; padding: 12px 16px; }
+    .header-meta { font-size: 9px; gap: 12px; }
+    main { padding: 16px 12px 100px; }
+    .data-bar input[type="text"] { min-width: 200px; }
+    .action-bar { flex-wrap: wrap; gap: 8px; padding: 12px; }
+    .btn { padding: 8px 12px; font-size: 10px; }
+  }
+
+  /* ============ PRINT STYLES ============ */
+  @media print {
+    @page { size: letter; margin: 14mm 12mm; }
+    body { background: white !important; }
+    body::before { content: ''; display: none; }
+
+    header.brand {
+      position: static;
+      background: var(--tysa-darkest) !important;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      page-break-after: avoid;
+    }
+    .data-bar, .action-bar, .preset-row, .detail-head input,
+    #fileInput, #urlInput, .btn-pill, .modal-overlay,
+    .toast, .filters-card .filter-cell select,
+    .filters-card .filter-cell input,
+    .data-bar { display: none !important; }
+
+    /* Show a printable filter summary instead */
+    #printFilterSummary { display: block !important; }
+
+    main { max-width: 100%; padding: 8px 0 0; }
+    .kpi, .chart-card, .breakdown-card, .detail-card, .filters-card {
+      box-shadow: none !important;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      border: 1.5px solid #000 !important;
+    }
+    .kpi.featured { background: var(--tysa-darkest) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .breakdown-head, .detail-head { background: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .charts-grid { grid-template-columns: 1fr 1fr; }
+    .chart-host { height: 220px; }
+    .detail-body { max-height: none !important; overflow: visible; }
+    .breakdown-card, .chart-card, .kpi-section { margin-bottom: 14px; page-break-inside: avoid; }
+    table.data-tbl { font-size: 10px; }
+    table.data-tbl td, table.data-tbl th { padding: 4px 8px; }
+    .section-title { font-size: 22px; }
+    .kpi-value { font-size: 28px !important; }
+    .kpi.featured .kpi-value { font-size: 36px !important; }
+  }
+  #printFilterSummary { display: none; }
+  @media print {
+    #printFilterSummary {
+      padding: 14px 0;
+      border-bottom: 2px solid #000;
+      margin-bottom: 16px;
+    }
+    #printFilterSummary h2 {
+      font-family: 'Anton', sans-serif;
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    #printFilterSummary .meta-line {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #333;
+      margin: 3px 0;
+    }
+  }
+
+  /* Help info */
+  .help-tip {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .help-tip code {
+    background: var(--bg-alt);
+    padding: 1px 4px;
+    border: 1px solid var(--line-faint);
+    color: var(--ink);
+    font-size: 10px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="brand">
+  <div class="logo-block">
+    <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCACyAl4DASIAAhEBAxEB/8QAHQABAQEBAQEBAQEBAAAAAAAAAAgHBgUEAwIJAf/EAFYQAAEDAwEDBwQKDQsDAwUAAAEAAgMEBREGBxIhCBMxQVFhcSKBgpEUFRcjMjdCVZTSFhgzNlJWcnR1oaKxsiRDYpKTs7TBwtHTY3PDJTTwOFN2g5X/xAAaAQEAAwEBAQAAAAAAAAAAAAAAAQUGBAMC/8QAOBEAAgEDAQMJBgUEAwAAAAAAAAECAwQRBSExQRITIlFhkbHR8BQVcYGh4TI0UnLBBjM18SVCYv/aAAwDAQACEQMRAD8AnRERfRThERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBF3OxjQkmuNUCCcPZaqQCStkbwJHVGD2uwfAAnqVW0OkdLUNIykpdO2qOFgwG+xWH1kjJPeeKqr3VadrPkYywQyitLV9Fs+03ZZrvfbFY4qaPh5VBE50juprRu8XHs/yUs7RNW0WpK4ttOm7RY7ex3vbKWjjZK/ve9rQfMMDx6V9WWoO7fRg0usHJoi+i30NbcatlJb6SerqH/BihjL3u8AOKsm0trB86LUNObC9cXVrZayGktMR4/yqXL8fksyc9xwu4t3Jxo2tBuGqZ5HdYgpQwDzlxz6lwVNUtabw5923wBO6Ledb8n40NmmrdM3SoramFpeaWoY3elA6QxzceV2Ajj2rB3AtcWuBBBwQepe9td0rmLdN5wD/iIi6QEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAQcTgIuz2J2JuoNploo5Wb9PFL7JmBHDdjG9g9xIA8686tRUoOb3JZBTmxrSjNI6EoqGSMNrp2+yKw44844DyT+SMN83euycQ1pc4gADJJ6kWb8orVB07s9npqeTcrbo72JFg8WsI98d/V4eLgsFFTu6+OMmQYFtt1xNrPV0roJnG00TjFRMB4OA6ZPFxGfDAXBotT2D7M3avuPtxd43NsdK/Bb0GqePkD+iOs+YdZG2lKlZUNuyK9d5J+WyHZJcdZbl0ub5LfZAeEgHvlRjpEYPQP6R4dgPHFN6V0xYdL0Ao7HbYKSPAD3NGXyd7nHi4+JXqwRRQQsggjZFFG0NYxjcNaBwAAHQF816uttstvkuF2rYKKlj+FLK/dHgO09w4lZC7v615PHDgl62kH2IsR1XyhrPSvfDpy0z3Fw4CeodzMfiG8XEeO6s2ve2/X9xc4QV9NbYz8ikp2/xP3j6ivWjo11U2tY+IwVupv5Smzr2vq36ys0GKSof/AOoRMHCKQn7oO5x6e/x4ZnJr/XD5eddq6+B3Y2ukA9QOF7Vs2v62pqaSiuFdDeaGZhjlpq+EPa9pGCC4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ueThY5LLswpJJ2FktxldWkEcQ1wDWetrWnzqWNMMtDr5TOv00sVtjdv1AiYXSSNHHcaO13RkkAZytQ1jt5vlZF7A0tRRWSja3cZIQHzbo4DHyWcOoA46irLVKNa5iqNNbN7fAMobV2qbHpW2Pr71XxU7WtJZGXDnJSPksb0uP/w4UTajucl61BcLvM3dfW1Mk5bnO7vOJx5s4X4XGurblWPrLhVz1dTIcvlmkL3O8SeK+dfen6dGzTectkhERWYCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAL+4OaEzOfDzFvDfDCA7HXjPWv4RQDdNlmhtkep+b5u83OqrsZfb6uVsDu/AaMuHe1x8y3nTmnbHpyj9iWO101DEfhc0zDn97ndLj3klQnG98b2vjc5j2nLXNOCD2haroLbjqawNZSXlvt5RNGBzz92dg7pMHe9IE94VBqOm3FXbCbkup+sEFVritqO0ay6Gt5597aq6SNzT0THeUexz/wAFvf19WVkesuUHc62jNLpq1i2PeMOqZ3iWRv5LcYB7znwWK11XVV9ZLWVtRLU1Mrt6SWV5c557ST0rlstEnJ8qvsXUMH36s1DddUXye8XioM1TKfBsbepjR1NHZ/mvKRFqIxUUoxWwkIiL6AREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAf/9k=" alt="TYSA" class="logo-img" />
+  </div>
+
+  <div class="brand-divider"></div>
+
+  <div>
+    <div class="project-tag">PROJECT · VERIZON / LAMBERTS</div>
+    <div class="project-name">Warren Pole Transfer</div>
+  </div>
+
+  <div class="header-spacer"></div>
+
+  <div class="header-meta">
+    <div><span class="live-dot"></span>LIVE · <strong id="hdrDateRange">—</strong></div>
+    <div>RECORDS · <strong id="hdrRecCount">0</strong></div>
+    <div>VERSION · <strong>3.0</strong></div>
+  </div>
+</header>
+
+<!-- ============ DATA SOURCE BAR ============ -->
+<div class="data-bar">
+  <span class="label">Datos:</span>
+  <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm,.csv,.tsv,.txt" style="display:none">
+
+  <button class="btn-pill" onclick="loadWarrenLive()" title="Carga directa del Google Drive · 1 click" style="background: var(--tysa-lime); color: var(--tysa-darkest); font-weight: 800; padding: 8px 18px; box-shadow: 0 0 0 1px var(--tysa-lime), 0 0 12px rgba(178,230,123,0.5);">
+    ⚡ WARREN LIVE
+  </button>
+
+  <button class="btn-pill" onclick="document.getElementById('fileInput').click()" style="background: var(--tysa-green); color: white; font-weight: 700; padding: 8px 18px;">
+    📂 SUBIR ARCHIVO
+  </button>
+  
+  <span class="label" style="color: rgba(255,255,255,0.3); margin: 0 4px;">·</span>
+  
+  <button class="btn-pill ghost" onclick="openPasteModal()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">📋 Pegar</button>
+  <button class="btn-pill ghost" onclick="triggerFileInput()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">📂 Subir</button>
+
+  <span class="label" style="margin-left: 8px;">Link Sheets:</span>
+  <input type="text" id="urlInput" placeholder="https://docs.google.com/spreadsheets/d/..." style="min-width: 300px;" />
+  <button class="btn-pill ghost" onclick="loadFromUrl()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">↗ Cargar</button>
+
+  <button class="btn-pill ghost" onclick="loadDemoData()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">⟲ Demo</button>
+
+  <div class="data-status">
+    <span class="stat-pip" id="syncStatus" title="Estado de sincronización con Google Sheets" style="cursor: pointer;" onclick="loadWarrenLive()">
+      <span id="syncDot" style="display:inline-block; width:8px; height:8px; border-radius:50%; background: var(--ink-faint); margin-right:6px; vertical-align:middle;"></span><span id="syncText">Cargando...</span>
+    </span>
+    <span class="stat-pip" id="dataSourceLabel">WARREN POLE TRANSFER · 517 registros</span>
+  </div>
+</div>
+
+<script>
+// iOS PWA: el click() programático en file inputs a veces falla.
+// Esta función asegura que el dialog se abra confiablemente.
+function triggerFileInput() {
+  const input = document.getElementById('fileInput');
+  if (!input) {
+    showToast('Error: no se encontró el input. Recargá la página.');
+    return;
+  }
+  try {
+    input.click();
+  } catch (err) {
+    showToast('No se pudo abrir el selector. Probá "Pegar datos" en su lugar.');
+    console.error('File input trigger error:', err);
+  }
+}
+</script>
+
+<!-- ============ MAIN ============ -->
+<main>
+
+  <!-- Print summary header -->
+  <div id="printFilterSummary">
+    <h2>TYSA · WARREN POLE TRANSFER · REPORTE OPERATIVO</h2>
+    <div class="meta-line">Período: <span id="prtRange">—</span></div>
+    <div class="meta-line">Filtros aplicados: <span id="prtFilters">—</span></div>
+    <div class="meta-line">Generado: <span id="prtGen">—</span></div>
+  </div>
+
+  <!-- 01 · FILTERS -->
+  <div class="filters-card">
+    <div class="filters-grid">
+      <div class="filter-cell">
+        <label class="filter-label">Filtrar fechas por</label>
+        <select id="filterDateMode">
+          <option value="d_ins">DÍA INSTALACIÓN</option>
+          <option value="d_fact">DÍA FACTURACIÓN</option>
+        </select>
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Desde</label>
+        <input type="date" id="dateFrom" />
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Hasta</label>
+        <input type="date" id="dateTo" />
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Estado FC</label>
+        <select id="filterFc">
+          <option value="">TODOS</option>
+          <option value="SI">SOLO FACTURADO (SI)</option>
+          <option value="NO">SOLO NO FACTURADO</option>
+          <option value="PEND">SOLO PENDIENTE</option>
+        </select>
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Job</label>
+        <select id="filterJob"><option value="">TODOS LOS JOBS</option></select>
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Código</label>
+        <select id="filterCod"><option value="">TODOS LOS CÓDIGOS</option></select>
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Pole No</label>
+        <select id="filterPole"><option value="">TODOS LOS POLES</option></select>
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Agrupación</label>
+        <select id="filterGroup">
+          <option value="day">POR DÍA</option>
+          <option value="week">POR SEMANA</option>
+          <option value="month">POR MES</option>
+        </select>
+      </div>
+    </div>
+    <div class="preset-row">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: var(--ink-muted); align-self: center; margin-right: 6px;">PRESETS:</span>
+      <button class="preset-btn" data-preset="today">HOY</button>
+      <button class="preset-btn" data-preset="yesterday">AYER</button>
+      <button class="preset-btn" data-preset="thisWeek">ESTA SEMANA</button>
+      <button class="preset-btn" data-preset="lastWeek">SEMANA PASADA</button>
+      <button class="preset-btn" data-preset="thisMonth">ESTE MES</button>
+      <button class="preset-btn" data-preset="lastMonth">MES PASADO</button>
+      <button class="preset-btn" data-preset="last7">ÚLTIMOS 7</button>
+      <button class="preset-btn" data-preset="last30">ÚLTIMOS 30</button>
+      <button class="preset-btn" data-preset="last90">ÚLTIMOS 90</button>
+      <button class="preset-btn active" data-preset="all">TODO</button>
+    </div>
+  </div>
+
+  <!-- 02 · KPIs -->
+  <div class="kpi-section">
+    <div class="section-title">RESUMEN EJECUTIVO <span class="num-tag">02 · KPIs</span></div>
+    <div class="section-subtitle">Indicadores clave del período seleccionado</div>
+
+    <div class="kpi-grid">
+      <div class="kpi featured">
+        <div class="kpi-label">Volumen Total Facturable</div>
+        <div class="kpi-value"><span id="kpiTotal">$0</span><span class="kpi-unit">USD</span></div>
+        <div class="kpi-foot">
+          <span>PROMEDIO/DÍA · <strong id="kpiAvgDay">$0</strong></span>
+          <span>DÍAS ACTIVOS · <strong id="kpiActiveDays">0</strong></span>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Items / Líneas</div>
+        <div class="kpi-value"><span id="kpiItems">0</span></div>
+        <div class="kpi-foot">
+          <span>Q TOTAL · <strong id="kpiQ">0</strong></span>
+          <span>$ PROM/ITEM · <strong id="kpiAvgItem">$0</strong></span>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Postes Intervenidos</div>
+        <div class="kpi-value"><span id="kpiPolesIntervened">0</span><span class="kpi-unit">POSTES</span></div>
+        <div style="margin-top: 10px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: var(--tysa-green); font-weight: 700;">PROM ·</span>
+          <span id="kpiAvgPole" style="font-family: 'Anton', sans-serif; font-size: 32px; color: var(--tysa-green); font-weight: 400; letter-spacing: 0.02em; line-height: 1;">$0</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: var(--ink-muted); font-weight: 500;">/ POSTE</span>
+        </div>
+        <div class="kpi-foot">
+          <span>JOBS · <strong id="kpiJobs">0</strong></span>
+          <span>CÓDIGOS · <strong id="kpiCodes">0</strong></span>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Postes Solo V185</div>
+        <div class="kpi-value"><span id="kpiOnlyV185">0</span><span class="kpi-unit">PURO REMOVE</span></div>
+        <div style="margin-top: 10px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: var(--tysa-green); font-weight: 700;">$ ·</span>
+          <span id="kpiOnlyV185Revenue" style="font-family: 'Anton', sans-serif; font-size: 32px; color: var(--tysa-green); font-weight: 400; letter-spacing: 0.02em; line-height: 1;">$0</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: var(--ink-muted); font-weight: 500;">FACTURADO</span>
+        </div>
+        <div class="kpi-foot">
+          <span>% DEL TOTAL · <strong id="kpiOnlyV185Pct">0%</strong></span>
+          <span>TARIFA · <strong>$195.25</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECT STATS - Postes -->
+    <div class="project-stats-section">
+      <div class="project-stats-header">
+        <div class="stats-title">ESTADÍSTICAS DEL PROYECTO</div>
+        <div class="stats-subtitle">Warren Pole Transfer & Removal</div>
+      </div>
+      <div class="project-stats-grid">
+        <!-- Left: Postes Overview -->
+        <div class="stats-card main">
+          <div class="stats-card-title">INVENTARIO DE POSTES</div>
+          <div class="stats-metrics">
+            <div class="stat-row">
+              <span class="stat-label">Postes Asignados</span>
+              <span class="stat-value total">1,450</span>
+            </div>
+            <div class="stat-row separator">
+              <span class="stat-label">No Ejecutables</span>
+              <span class="stat-value negative">761</span>
+            </div>
+            <div class="stat-row minor">
+              <span class="stat-label">Requieren Revisión</span>
+              <span class="stat-value warn">29</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Por Ejecutar (neto)</span>
+              <span class="stat-value highlighted" id="polesNet">660</span>
+            </div>
+            <div class="stat-row minor">
+              <span class="stat-label">Listo para Ejecutar</span>
+              <span class="stat-value">660</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right: Progress & Projection -->
+        <div class="stats-card progress">
+          <div class="stats-card-title">AVANCE Y PROYECCIÓN</div>
+          <div class="progress-block">
+            <div class="progress-main">
+              <div class="progress-label">Postes Intervenidos</div>
+              <div class="progress-value">
+                <span id="polesIntervenedCount">0</span>
+                <span class="progress-total">/ <span id="polesNetDisplay">660</span></span>
+              </div>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div>
+              </div>
+              <div class="progress-pct" id="progressPct">0%</div>
+            </div>
+            <div class="projection-block">
+              <div class="projection-row">
+                <span class="proj-label">Tasa Promedio (2 sem)</span>
+                <span class="proj-value" id="ratePerDay">0</span>
+                <span class="proj-unit">postes/día</span>
+              </div>
+              <div class="projection-row">
+                <span class="proj-label">Días Restantes</span>
+                <span class="proj-value highlighted" id="daysRemaining">—</span>
+                <span class="proj-unit">días hábiles</span>
+              </div>
+              <div class="projection-row final">
+                <span class="proj-label">Finalización Proyectada</span>
+                <span class="proj-value final" id="projectedEnd">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-status-row">
+      <div class="status-card si">
+        <div class="status-stamp si">FACTURADO</div>
+        <div>
+          <div class="status-num" id="statSiAmt">$0</div>
+        </div>
+        <div class="status-meta">
+          <strong id="statSiCount">0 items</strong>
+          <span id="statSiPct">0%</span>
+        </div>
+      </div>
+      <div class="status-card no">
+        <div class="status-stamp no">NO FACT</div>
+        <div>
+          <div class="status-num" id="statNoAmt">$0</div>
+        </div>
+        <div class="status-meta">
+          <strong id="statNoCount">0 items</strong>
+          <span id="statNoPct">0%</span>
+        </div>
+      </div>
+      <div class="status-card pend">
+        <div class="status-stamp pend">PENDIENTE</div>
+        <div>
+          <div class="status-num" id="statPendAmt">$0</div>
+        </div>
+        <div class="status-meta">
+          <strong id="statPendCount">0 items</strong>
+          <span id="statPendPct">0%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03 · CHARTS -->
+  <div class="charts-grid">
+    <div class="chart-card" data-num="03 · TENDENCIA">
+      <div class="chart-title" id="trendTitle">Volumen por día</div>
+      <div class="chart-sub" id="trendSub">USD facturado vs no facturado</div>
+      <div class="chart-host tall"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="chart-card" data-num="04 · DISTRIBUCIÓN">
+      <div class="chart-title">Estado de facturación</div>
+      <div class="chart-sub">SI / NO / Pendiente</div>
+      <div class="chart-host tall"><canvas id="fcChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 05 · BREAKDOWNS -->
+  <div class="breakdowns">
+    <div class="breakdown-card">
+      <div class="breakdown-head">
+        <h3>05 · CÓDIGOS UTILIZADOS</h3>
+        <span class="count" id="codesCount">0 códigos</span>
+      </div>
+      <table class="data-tbl">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Descripción</th>
+            <th class="right">Q</th>
+            <th class="right">Total $</th>
+          </tr>
+        </thead>
+        <tbody id="codesBody"></tbody>
+        <tfoot id="codesFoot"></tfoot>
+      </table>
+    </div>
+
+    <div class="breakdown-card">
+      <div class="breakdown-head">
+        <h3>06 · TOP JOBS</h3>
+        <span class="count" id="jobsCount">0 jobs</span>
+      </div>
+      <table class="data-tbl">
+        <thead>
+          <tr>
+            <th>Job</th>
+            <th class="right">Items</th>
+            <th class="right">Poles</th>
+            <th class="right">Total $</th>
+          </tr>
+        </thead>
+        <tbody id="jobsBody"></tbody>
+        <tfoot id="jobsFoot"></tfoot>
+      </table>
+    </div>
+
+    <div class="breakdown-card">
+      <div class="breakdown-head">
+        <h3>07 · POR <span id="periodTitle">DÍA</span></h3>
+        <span class="count" id="periodCount">0 períodos</span>
+      </div>
+      <table class="data-tbl">
+        <thead>
+          <tr>
+            <th>Período</th>
+            <th class="right">Items</th>
+            <th class="right">Jobs</th>
+            <th class="right">SI</th>
+            <th class="right">NO/Pend</th>
+            <th class="right">Total $</th>
+          </tr>
+        </thead>
+        <tbody id="periodBody"></tbody>
+        <tfoot id="periodFoot"></tfoot>
+      </table>
+    </div>
+
+    <div class="breakdown-card">
+      <div class="breakdown-head">
+        <h3>08 · POSTES INTERVENIDOS</h3>
+        <span class="count" id="polesCount">0 poles</span>
+      </div>
+      <table class="data-tbl">
+        <thead>
+          <tr>
+            <th>Pole No</th>
+            <th>Job</th>
+            <th class="right">Items</th>
+            <th class="right">$ / Poste</th>
+            <th class="right">Total $</th>
+          </tr>
+        </thead>
+        <tbody id="polesBody"></tbody>
+        <tfoot id="polesFoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- 09 · ALERTAS · POSTES SIN V185 -->
+  <div class="alert-card" style="margin: 22px; background: #FFFDF5; border: 2px solid #DC2626; border-left-width: 6px; padding: 22px; box-shadow: 0 2px 0 0 #051A11;">
+    <div style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+      <div>
+        <h3 style="font-family: 'Anton', sans-serif; font-size: 22px; letter-spacing: 0.04em; color: #DC2626; margin: 0;">⚠ 09 · ALERTAS · POSTES SIN V185</h3>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5C6B62; margin-top: 4px;">Postes con códigos de trabajo (excl. V199) pero sin V185 (Remove Aerial Pole) — posible trabajo incompleto</div>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <div style="text-align: right;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #5C6B62; letter-spacing: 0.15em;">POSTES</div>
+          <div style="font-family: 'Anton', sans-serif; font-size: 32px; color: #DC2626; line-height: 1;" id="alertCount">0</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #5C6B62; letter-spacing: 0.15em;">USD AFECTADO</div>
+          <div style="font-family: 'Anton', sans-serif; font-size: 32px; color: #051A11; line-height: 1;" id="alertTotal">$0</div>
+        </div>
+      </div>
+    </div>
+    <table class="data-tbl">
+      <thead>
+        <tr>
+          <th>Job</th>
+          <th>Pole No</th>
+          <th>Códigos presentes</th>
+          <th class="right">Items</th>
+          <th class="right">Total $</th>
+          <th>FC</th>
+        </tr>
+      </thead>
+      <tbody id="alertBody"></tbody>
+      <tfoot id="alertFoot"></tfoot>
+    </table>
+  </div>
+
+  <!-- 10 · DETAIL TABLE -->
+  <div class="detail-card">
+    <div class="detail-head">
+      <h3>10 · DETALLE COMPLETO</h3>
+      <input type="text" id="detailSearch" placeholder="Buscar job, pole, código...">
+      <span class="pager" id="detailPager">0 filas</span>
+    </div>
+    <div class="detail-body">
+      <table class="data-tbl">
+        <thead>
+          <tr>
+            <th>NO</th>
+            <th>D. Inst.</th>
+            <th>D. Fact.</th>
+            <th>Job</th>
+            <th>Pole</th>
+            <th>Cód.</th>
+            <th>Descripción</th>
+            <th class="right">PR</th>
+            <th class="right">Q</th>
+            <th class="right">Total</th>
+            <th>FC</th>
+          </tr>
+        </thead>
+        <tbody id="detailBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- ============ ACTION BAR ============ -->
+<div class="action-bar">
+  <span class="label">Acciones:</span>
+  <button class="btn primary" onclick="exportStandaloneHtml()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+    DESCARGAR HTML COMPARTIBLE
+  </button>
+  <button class="btn" onclick="window.print()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+    IMPRIMIR / PDF
+  </button>
+  <button class="btn" onclick="exportCsv()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+    EXPORTAR CSV
+  </button>
+  <button class="btn" onclick="openShareHelp()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
+    ¿CÓMO COMPARTIR?
+  </button>
+  <div class="spacer"></div>
+  <span style="color: rgba(255,255,255,0.45); font-size: 10px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em;">© TYSA LLC · EDGEWATER, FL</span>
+</div>
+
+<!-- ============ MODAL: HELP — CÓMO COMPARTIR ============ -->
+<div class="modal-overlay" id="helpShareModal">
+  <div class="modal" style="max-width: 640px;">
+    <div class="modal-head">
+      <h3>CÓMO OBTENER UN LINK PARA COMPARTIR</h3>
+      <button class="modal-close" onclick="closeModal('helpShareModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size: 13px; line-height: 1.6;">
+        El botón <strong style="color: var(--tysa-deep);">"DESCARGAR HTML COMPARTIBLE"</strong> te genera un archivo
+        autocontenido con el reporte (filtros + datos incluidos). Puedes compartirlo de varias formas:
+      </p>
+
+      <div style="background: var(--bg-alt); border-left: 4px solid var(--tysa-green); padding: 12px 14px; margin: 16px 0;">
+        <strong style="font-size: 12px; letter-spacing: 0.15em; color: var(--tysa-deep);">OPCIÓN 1 · GOOGLE DRIVE (LINK REAL)</strong>
+        <ol style="margin: 8px 0 0 18px; font-size: 12px; line-height: 1.7;">
+          <li>Descarga el archivo HTML</li>
+          <li>Súbelo a tu Google Drive (drag &amp; drop)</li>
+          <li>Click derecho → <strong>"Compartir"</strong> → "Cualquier persona con el link"</li>
+          <li>Copia el link y mándalo por WhatsApp, email, lo que sea</li>
+        </ol>
+      </div>
+
+      <div style="background: var(--bg-alt); border-left: 4px solid var(--tysa-acid); padding: 12px 14px; margin: 16px 0;">
+        <strong style="font-size: 12px; letter-spacing: 0.15em; color: var(--tysa-deep);">OPCIÓN 2 · ENVIAR DIRECTO</strong>
+        <p style="margin: 6px 0 0; font-size: 12px; line-height: 1.7;">
+          Adjunta el archivo HTML directamente a un email o WhatsApp. Quien lo reciba lo abre en cualquier
+          navegador y ve el reporte completo (no necesita internet).
+        </p>
+      </div>
+
+      <div style="background: var(--bg-alt); border-left: 4px solid var(--warn); padding: 12px 14px; margin: 16px 0;">
+        <strong style="font-size: 12px; letter-spacing: 0.15em; color: var(--tysa-deep);">OPCIÓN 3 · IMPRIMIR / PDF</strong>
+        <p style="margin: 6px 0 0; font-size: 12px; line-height: 1.7;">
+          Si prefieres PDF, usa <strong>"IMPRIMIR / PDF"</strong> → "Guardar como PDF". También subible a Drive con un click.
+        </p>
+      </div>
+
+      <div class="share-actions" style="margin-top: 18px;">
+        <button class="btn-pill" onclick="exportStandaloneHtml(); closeModal('helpShareModal');">📄 DESCARGAR HTML AHORA</button>
+        <button class="btn-pill ghost" onclick="closeModal('helpShareModal')" style="color: var(--ink); border-color: var(--ink);">CERRAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: PASTE DATA ============ -->
+<div class="modal-overlay" id="pasteModal">
+  <div class="modal" style="max-width: 720px;">
+    <div class="modal-head">
+      <h3>📋 PEGAR DATOS DE GOOGLE SHEETS</h3>
+      <button class="modal-close" onclick="closeModal('pasteModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="background: var(--tysa-mint); border: 2px solid var(--tysa-green); padding: 12px 14px; margin-bottom: 14px;">
+        <strong style="color: var(--tysa-deep); font-size: 13px;">⚡ La forma más rápida en iPhone</strong>
+        <p style="margin: 6px 0 0; font-size: 12px; line-height: 1.6; color: var(--ink-soft);">
+          No necesitas subir archivos. Copiás de Google Sheets y pegás acá. Funciona perfecto en iPhone, iPad y desktop.
+        </p>
+      </div>
+
+      <p style="font-size: 12px; line-height: 1.6; margin-bottom: 6px;"><strong>Paso a paso en iPhone:</strong></p>
+      <ol style="margin: 0 0 14px 18px; font-size: 12px; line-height: 1.85; color: var(--ink-soft);">
+        <li>Abrí la <strong>app Google Sheets</strong> en tu iPhone, andá a tu hoja Warren</li>
+        <li>Tocá el cuadro gris superior izquierdo (donde se cruzan las letras y los números) <strong>para seleccionar TODA la hoja</strong></li>
+        <li>Tocá <strong>"Copiar"</strong> en el menú que aparece</li>
+        <li>Volvé acá, tocá el área grande de abajo y elegí <strong>"Pegar"</strong></li>
+        <li>Tocá <strong>"⚡ PROCESAR DATOS"</strong></li>
+      </ol>
+
+      <div style="background: var(--bg-alt); border-left: 4px solid var(--tysa-acid); padding: 10px 12px; margin-bottom: 12px; font-size: 11px; color: var(--ink-soft);">
+        <strong>Asegurate</strong> de que en la primera línea estén los encabezados: <code style="background: var(--bg); padding: 1px 4px; border: 1px solid var(--line-faint);">NO · DIA INS · DIA FACT · Job · Pol No · cod · PR · Q · TOTAL · DESCRIPTION · FC</code>
+      </div>
+
+      <textarea id="pasteArea" placeholder="Tocá aquí y pegá los datos copiados de Google Sheets..." style="
+        width: 100%;
+        min-height: 240px;
+        padding: 14px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        border: 2px solid var(--ink);
+        background: var(--bg-card);
+        color: var(--ink);
+        resize: vertical;
+        outline: none;
+        -webkit-appearance: none;
+      "></textarea>
+
+      <div class="share-actions" style="margin-top: 14px;">
+        <button class="btn-pill" onclick="processPastedData()" style="background: var(--tysa-lime); color: var(--tysa-darkest); font-weight: 700; padding: 10px 20px;">⚡ PROCESAR DATOS</button>
+        <button class="btn-pill ghost" onclick="document.getElementById('pasteArea').value=''" style="color: var(--ink); border-color: var(--ink);">LIMPIAR</button>
+        <button class="btn-pill ghost" onclick="closeModal('pasteModal')" style="color: var(--ink); border-color: var(--ink); margin-left: auto;">CANCELAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: SNAPSHOT BANNER ============ -->
+
+<div class="toast" id="toast">—</div>
+
+<!-- ============ EMBEDDED DATA ============ -->
+<script id="embeddedData" type="application/json">{"rows":[[1,"2026-03-26","2026-04-02","PV073159","SITE SURVEY","V199",150.0,25.0,3750.0,"SI"],[2,"2026-03-27","2026-04-03","PV073159","SITE SURVEY","V199",150.0,58.0,8700.0,"SI"],[3,"2026-03-28","2026-04-04","PV073159","SITE SURVEY","V199",150.0,19.0,2850.0,"SI"],[4,"2026-04-07","2026-04-07","PV073159","SITE SURVEY","V199",150.0,13.0,1950.0,"SI"],[5,"2026-04-08","2026-04-08","PV073159","SITE SURVEY","V199",150.0,41.0,6150.0,"SI"],[6,"2026-04-09","2026-04-09","PV073159","SITE SURVEY","V199",150.0,40.0,6000.0,"SI"],[7,"2026-04-10","2026-04-10","PV073159","SITE SURVEY","V199",150.0,75.0,11250.0,"SI"],[8,"2026-04-11","2026-04-11","PV073159","SITE SURVEY","V199",150.0,66.0,9900.0,"SI"],[9,"2026-04-14","2026-04-14","PV073159","SITE SURVEY","V199",150.0,42.0,6300.0,"SI"],[10,"2026-04-15","2026-04-15","PV073159","SITE SURVEY","V199",150.0,35.0,5250.0,"SI"],[11,"2026-04-17","2026-04-17","PV073159","SITE SURVEY","V199",150.0,80.0,12000.0,"SI"],[12,"2026-04-18","2026-04-18","PV073159","SITE SURVEY","V199",150.0,165.0,24750.0,"SI"],[13,"2026-04-19","2026-04-19","PV073159","SITE SURVEY","V199",150.0,97.0,14550.0,"SI"],[14,"2026-04-15","2026-04-15","PV073159","26608","V162",56.75,1.0,56.75,"SI"],[15,"2026-04-15","2026-04-15","PV073159","26608","V168",17.97,1.0,17.97,"SI"],[16,"2026-04-15","2026-04-15","PV073159","26608","V185",195.25,1.0,195.25,"SI"],[17,"2026-04-15","2026-04-15","PV073159","25585","V162",56.75,1.0,56.75,"SI"],[18,"2026-04-15","2026-04-15","PV073159","25585","V163",19.99,1.0,19.99,"SI"],[19,"2026-04-15","2026-04-15","PV073159","25585","V168",17.97,1.0,17.97,"SI"],[20,"2026-04-15","2026-04-15","PV073159","25585","V185",195.25,1.0,195.25,"SI"],[21,"2026-04-15","2026-04-15","PV073159","26616","V162",56.75,1.0,56.75,"SI"],[22,"2026-04-15","2026-04-15","PV073159","26616","V163",19.99,1.0,19.99,"SI"],[23,"2026-04-15","2026-04-15","PV073159","26616","V185",195.25,1.0,195.25,"SI"],[24,"2026-04-16","2026-04-16","PV073159","25877","V162",56.75,3.0,170.25,"SI"],[25,"2026-04-16","2026-04-16","PV073159","25877","V165",73.63,1.0,73.63,"SI"],[26,"2026-04-16","2026-04-16","PV073159","25877","V163",19.99,2.0,39.98,"SI"],[27,"2026-04-17","2026-04-17","PV073159","26612","V162",56.75,2.0,113.5,"SI"],[28,"2026-04-17","2026-04-17","PV073159","26612","V163",19.99,2.0,39.98,"SI"],[29,"2026-04-17","2026-04-17","PV073159","26612","V185",195.25,1.0,195.25,"SI"],[30,"2026-04-17","2026-04-17","PV073159","26613","V162",56.75,1.0,56.75,"SI"],[31,"2026-04-17","2026-04-17","PV073159","26613","V163",19.99,1.0,19.99,"SI"],[32,"2026-04-17","2026-04-17","PV073159","26613","V168",17.97,1.0,17.97,"SI"],[33,"2026-04-17","2026-04-17","PV073159","26613","V185",195.25,1.0,195.25,"SI"],[34,"2026-04-22","2026-04-22","PV073378","17495","V162",56.75,1.0,56.75,"SI"],[35,"2026-04-22","2026-04-22","PV073378","17495","V163",19.99,1.0,19.99,"SI"],[36,"2026-04-22","2026-04-22","PV073378","17495","V185",195.25,1.0,195.25,"SI"],[37,"2026-04-22","2026-04-22","PV073378","20607","V115",227.5,1.0,227.5,"SI"],[38,"2026-04-22","2026-04-22","PV073378","20607","V162",56.75,1.0,56.75,"SI"],[39,"2026-04-22","2026-04-22","PV073378","20607","V163",19.99,1.0,19.99,"SI"],[40,"2026-04-22","2026-04-22","PV073378","20607","V185",195.25,1.0,195.25,"SI"],[41,"2026-04-22","2026-04-22","PV073378","24473","V163",19.99,1.0,19.99,"SI"],[42,"2026-04-22","2026-04-22","PV073378","24473","V185",195.25,1.0,195.25,"SI"],[43,"2026-04-22","2026-04-22","PV073378","25526","V162",56.75,2.0,113.5,"SI"],[44,"2026-04-22","2026-04-22","PV073378","25526","V185",195.25,1.0,195.25,"SI"],[45,"2026-04-22","2026-04-22","PV073378","25708","V162",56.75,1.0,56.75,"SI"],[46,"2026-04-22","2026-04-22","PV073378","25708","V163",19.99,1.0,19.99,"SI"],[47,"2026-04-22","2026-04-22","PV073378","25708","V185",195.25,1.0,195.25,"SI"],[48,"2026-04-22","2026-04-22","PV073378","25939","V185",195.25,1.0,195.25,"SI"],[49,"2026-04-22","2026-04-22","PV073378","26149","V162",56.75,1.0,56.75,"SI"],[50,"2026-04-22","2026-04-22","PV073378","26149","V163",19.99,1.0,19.99,"SI"],[51,"2026-04-22","2026-04-22","PV073378","26149","V185",195.25,1.0,195.25,"SI"],[52,"2026-04-22","2026-04-22","PV073378","26152","V162",56.75,1.0,56.75,"SI"],[53,"2026-04-22","2026-04-22","PV073378","26152","V163",19.99,1.0,19.99,"SI"],[54,"2026-04-22","2026-04-22","PV073378","26152","V168",17.97,1.0,17.97,"SI"],[55,"2026-04-22","2026-04-22","PV073378","26152","V185",195.25,1.0,195.25,"SI"],[56,"2026-04-22","2026-04-22","PV073378","26441","V162",56.75,1.0,56.75,"SI"],[57,"2026-04-22","2026-04-22","PV073378","26441","V185",195.25,1.0,195.25,"SI"],[58,"2026-04-22","2026-04-22","PV073378","26606","V162",56.75,1.0,56.75,"SI"],[59,"2026-04-22","2026-04-22","PV073378","26606","V163",19.99,1.0,19.99,"SI"],[60,"2026-04-22","2026-04-22","PV073378","26606","V168",17.97,1.0,17.97,"SI"],[61,"2026-04-22","2026-04-22","PV073378","26606","V185",195.25,1.0,195.25,"SI"],[62,"2026-04-22","2026-04-22","PV073378","26607","V162",56.75,1.0,56.75,"SI"],[63,"2026-04-22","2026-04-22","PV073378","26607","V185",195.25,1.0,195.25,"SI"],[64,"2026-04-22","2026-04-22","PV073378","26617","V162",56.75,1.0,56.75,"SI"],[65,"2026-04-22","2026-04-22","PV073378","26617","V185",195.25,1.0,195.25,"SI"],[66,"2026-04-22","2026-04-22","PV073378","26724","V163",19.99,2.0,39.98,"SI"],[67,"2026-04-22","2026-04-22","PV073378","26724","V168",17.97,1.0,17.97,"SI"],[68,"2026-04-22","2026-04-22","PV073378","26724","V185",195.25,1.0,195.25,"SI"],[69,"2026-04-23","2026-04-23","PV073378","20418","V185",195.25,1.0,195.25,"SI"],[70,"2026-04-23","2026-04-23","PV073378","22155","V185",195.25,1.0,195.25,"SI"],[71,"2026-04-23","2026-04-23","PV073378","22493","V162",56.75,1.0,56.75,"SI"],[72,"2026-04-23","2026-04-23","PV073378","22493","V163",19.99,2.0,39.98,"SI"],[73,"2026-04-23","2026-04-23","PV073378","22497","V162",56.75,1.0,56.75,"SI"],[74,"2026-04-23","2026-04-23","PV073378","22497","V163",19.99,1.0,19.99,"SI"],[75,"2026-04-23","2026-04-23","PV073378","22497","V164",48.75,1.0,48.75,"SI"],[76,"2026-04-23","2026-04-23","PV073378","22497","V185",195.25,1.0,195.25,"SI"],[77,"2026-04-23","2026-04-23","PV073378","22789","V185",195.25,1.0,195.25,"SI"],[78,"2026-04-23","2026-04-23","PV073378","23806","V185",195.25,1.0,195.25,"SI"],[79,"2026-04-23","2026-04-23","PV073378","24214","V162",56.75,1.0,56.75,"SI"],[80,"2026-04-23","2026-04-23","PV073378","24214","V163",19.99,1.0,19.99,"SI"],[81,"2026-04-23","2026-04-23","PV073378","24214","V168",17.97,1.0,17.97,"SI"],[82,"2026-04-23","2026-04-23","PV073378","24214","V185",195.25,1.0,195.25,"SI"],[83,"2026-04-23","2026-04-23","PV073378","24215","V162",56.75,1.0,56.75,"SI"],[84,"2026-04-23","2026-04-23","PV073378","24215","V163",19.99,1.0,19.99,"SI"],[85,"2026-04-23","2026-04-23","PV073378","24215","V168",17.97,1.0,17.97,"SI"],[86,"2026-04-23","2026-04-23","PV073378","24215","V185",195.25,1.0,195.25,"SI"],[87,"2026-04-23","2026-04-23","PV073378","24290","V185",195.25,1.0,195.25,"SI"],[88,"2026-04-23","2026-04-23","PV073378","25376","V185",195.25,1.0,195.25,"SI"],[89,"2026-04-23","2026-04-23","PV073378","25953","V185",195.25,1.0,195.25,"SI"],[90,"2026-04-23","2026-04-23","PV073378","26364","V162",56.75,2.0,113.5,"SI"],[91,"2026-04-23","2026-04-23","PV073378","26364","V163",19.99,1.0,19.99,"SI"],[92,"2026-04-23","2026-04-23","PV073378","26364","V185",195.25,1.0,195.25,"SI"],[93,"2026-04-23","2026-04-23","PV073378","26367","V162",56.75,1.0,56.75,"SI"],[94,"2026-04-23","2026-04-23","PV073378","26367","V163",19.99,1.0,19.99,"SI"],[95,"2026-04-23","2026-04-23","PV073378","26367","V164",48.75,1.0,48.75,"SI"],[96,"2026-04-23","2026-04-23","PV073378","26367","V185",195.25,1.0,195.25,"SI"],[97,"2026-04-23","2026-04-23","PV073378","26369","V162",56.75,1.0,56.75,"SI"],[98,"2026-04-23","2026-04-23","PV073378","26369","V163",19.99,1.0,19.99,"SI"],[99,"2026-04-23","2026-04-23","PV073378","26369","V168",17.97,1.0,17.97,"SI"],[100,"2026-04-23","2026-04-23","PV073378","26369","V185",195.25,1.0,195.25,"SI"],[101,"2026-04-23","2026-04-23","PV073378","26436","V162",56.75,1.0,56.75,"SI"],[102,"2026-04-23","2026-04-23","PV073378","26436","V163",19.99,1.0,19.99,"SI"],[103,"2026-04-23","2026-04-23","PV073378","26436","V168",17.97,2.0,35.94,"SI"],[104,"2026-04-23","2026-04-23","PV073378","26436","V185",195.25,1.0,195.25,"SI"],[105,"2026-04-23","2026-04-23","PV073378","26690","V185",195.25,1.0,195.25,"SI"],[106,"2026-04-23","2026-04-23","PV073378","26865","V185",195.25,1.0,195.25,"SI"],[107,"2026-04-23","2026-04-23","PV073378","26866","V185",195.25,1.0,195.25,"SI"],[108,"2026-04-23","2026-04-23","PV073378","27823","V162",56.75,2.0,113.5,"SI"],[109,"2026-04-23","2026-04-23","PV073378","27823","V163",19.99,2.0,39.98,"SI"],[110,"2026-04-23","2026-04-23","PV073378","27823","V185",195.25,1.0,195.25,"SI"],[111,"2026-04-23","2026-04-23","PV073378","23827","V199",150.0,1.0,150.0,"SI"],[112,"2026-04-24","2026-04-24","PV073378","14642","V185",195.25,1.0,195.25,"SI"],[113,"2026-04-24","2026-04-24","PV073378","20260","V162",56.75,1.0,56.75,"SI"],[114,"2026-04-24","2026-04-24","PV073378","20260","V163",19.99,1.0,19.99,"SI"],[115,"2026-04-24","2026-04-24","PV073378","20260","V185",195.25,1.0,195.25,"SI"],[116,"2026-04-24","2026-04-24","PV073378","21842","V185",195.25,1.0,195.25,"SI"],[117,"2026-04-24","2026-04-24","PV073378","22661","V163",19.99,1.0,19.99,"SI"],[118,"2026-04-24","2026-04-24","PV073378","22661","V168",17.97,1.0,17.97,"SI"],[119,"2026-04-24","2026-04-24","PV073378","22661","V185",195.25,1.0,195.25,"SI"],[120,"2026-04-24","2026-04-24","PV073378","22937","V185",195.25,1.0,195.25,"SI"],[121,"2026-04-24","2026-04-24","PV073378","23458","V162",56.75,1.0,56.75,"SI"],[122,"2026-04-24","2026-04-24","PV073378","23458","V163",19.99,2.0,39.98,"SI"],[123,"2026-04-24","2026-04-24","PV073378","23458","V168",17.97,1.0,17.97,"SI"],[124,"2026-04-24","2026-04-24","PV073378","23458","V185",195.25,1.0,195.25,"SI"],[125,"2026-04-24","2026-04-24","PV073378","23862","V163",19.99,1.0,19.99,"SI"],[126,"2026-04-24","2026-04-24","PV073378","23862","V185",195.25,1.0,195.25,"SI"],[127,"2026-04-24","2026-04-24","PV073378","24490","V162",56.75,1.0,56.75,"SI"],[128,"2026-04-24","2026-04-24","PV073378","24490","V163",19.99,1.0,19.99,"SI"],[129,"2026-04-24","2026-04-24","PV073378","24490","V185",195.25,1.0,195.25,"SI"],[130,"2026-04-24","2026-04-24","PV073378","24631","V162",56.75,1.0,56.75,"SI"],[131,"2026-04-24","2026-04-24","PV073378","24631","V185",195.25,1.0,195.25,"SI"],[132,"2026-04-24","2026-04-24","PV073378","25375","V162",56.75,1.0,56.75,"SI"],[133,"2026-04-24","2026-04-24","PV073378","25375","V163",19.99,1.0,19.99,"SI"],[134,"2026-04-24","2026-04-24","PV073378","25375","V185",195.25,1.0,195.25,"SI"],[135,"2026-04-24","2026-04-24","PV073378","25697","V185",195.25,1.0,195.25,"SI"],[136,"2026-04-24","2026-04-24","PV073378","26365","V162",56.75,1.0,56.75,"SI"],[137,"2026-04-24","2026-04-24","PV073378","26365","V163",19.99,1.0,19.99,"SI"],[138,"2026-04-24","2026-04-24","PV073378","26365","V185",195.25,1.0,195.25,"SI"],[139,"2026-04-24","2026-04-24","PV073378","26726","V162",56.75,1.0,56.75,"SI"],[140,"2026-04-24","2026-04-24","PV073378","26726","V163",19.99,1.0,19.99,"SI"],[141,"2026-04-24","2026-04-24","PV073378","26726","V185",195.25,1.0,195.25,"SI"],[142,"2026-04-24","2026-04-24","PV073378","26884","V162",56.75,1.0,56.75,"SI"],[143,"2026-04-24","2026-04-24","PV073378","26884","V163",19.99,1.0,19.99,"SI"],[144,"2026-04-24","2026-04-24","PV073378","26884","V185",195.25,1.0,195.25,"SI"],[145,"2026-04-24","2026-04-24","PV073378","27822","V162",56.75,1.0,56.75,"SI"],[146,"2026-04-24","2026-04-24","PV073378","27822","V185",195.25,1.0,195.25,"SI"],[147,"2026-04-25","2026-04-25","PV073378","24493","V162",56.75,1.0,56.75,"SI"],[148,"2026-04-25","2026-04-25","PV073378","24493","V163",19.99,4.0,79.96,"SI"],[149,"2026-04-25","2026-04-25","PV073378","24493","V164",48.75,1.0,48.75,"SI"],[150,"2026-04-25","2026-04-25","PV073378","24493","V165",73.63,2.0,147.26,"SI"],[151,"2026-04-25","2026-04-25","PV073378","24493","V185",195.25,1.0,195.25,"SI"],[152,"2026-04-25","2026-04-25","PV073378","25793","V162",56.75,3.0,170.25,"SI"],[153,"2026-04-25","2026-04-25","PV073378","25793","V185",195.25,1.0,195.25,"SI"],[154,"2026-04-25","2026-04-25","PV073378","25881","V162",56.75,1.0,56.75,"SI"],[155,"2026-04-25","2026-04-25","PV073378","25881","V164",48.75,1.0,48.75,"SI"],[156,"2026-04-25","2026-04-25","PV073378","25881","V185",195.25,1.0,195.25,"SI"],[157,"2026-04-25","2026-04-25","PV073378","26368","V162",56.75,1.0,56.75,"SI"],[158,"2026-04-25","2026-04-25","PV073378","26368","V163",19.99,3.0,59.97,"SI"],[159,"2026-04-25","2026-04-25","PV073378","26368","V185",195.25,1.0,195.25,"SI"],[160,"2026-04-25","2026-04-25","PV073378","26370","V162",56.75,1.0,56.75,"SI"],[161,"2026-04-25","2026-04-25","PV073378","26370","V185",195.25,1.0,195.25,"SI"],[162,"2026-04-25","2026-04-25","PV073378","26578","V162",56.75,1.0,56.75,"SI"],[163,"2026-04-25","2026-04-25","PV073378","26578","V163",19.99,1.0,19.99,"SI"],[164,"2026-04-25","2026-04-25","PV073378","26578","V164",48.75,1.0,48.75,"SI"],[165,"2026-04-25","2026-04-25","PV073378","26578","V165",73.63,1.0,73.63,"SI"],[166,"2026-04-25","2026-04-25","PV073378","26578","V185",195.25,1.0,195.25,"SI"],[167,"2026-04-25","2026-04-25","PV073378","27390","V162",56.75,1.0,56.75,"SI"],[168,"2026-04-25","2026-04-25","PV073378","27390","V185",195.25,1.0,195.25,"SI"],[169,"2026-04-26","2026-04-26","PV073378","20459","V185",195.25,1.0,195.25,"SI"],[170,"2026-04-26","2026-04-26","PV073378","20740","V185",195.25,1.0,195.25,"SI"],[171,"2026-04-26","2026-04-26","PV073378","23394","V162",56.75,1.0,56.75,"SI"],[172,"2026-04-26","2026-04-26","PV073378","23394","V185",195.25,1.0,195.25,"SI"],[173,"2026-04-26","2026-04-26","PV073378","23567","V185",195.25,1.0,195.25,"SI"],[174,"2026-04-26","2026-04-26","PV073378","23857","V163",19.99,1.0,19.99,"SI"],[175,"2026-04-26","2026-04-26","PV073378","23857","V168",17.97,2.0,35.94,"SI"],[176,"2026-04-26","2026-04-26","PV073378","23857","V185",195.25,1.0,195.25,"SI"],[177,"2026-04-26","2026-04-26","PV073378","24775","V163",19.99,2.0,39.98,"SI"],[178,"2026-04-26","2026-04-26","PV073378","24775","V168",17.97,1.0,17.97,"SI"],[179,"2026-04-26","2026-04-26","PV073378","24775","V185",195.25,1.0,195.25,"SI"],[180,"2026-04-26","2026-04-26","PV073378","25735","V185",195.25,1.0,195.25,"SI"],[181,"2026-04-26","2026-04-26","PV073378","26390","V185",195.25,1.0,195.25,"SI"],[182,"2026-04-26","2026-04-26","PV073378","26431","V163",19.99,2.0,39.98,"SI"],[183,"2026-04-26","2026-04-26","PV073378","26431","V168",17.97,2.0,35.94,"SI"],[184,"2026-04-26","2026-04-26","PV073378","26431","V185",195.25,1.0,195.25,"SI"],[185,"2026-04-26","2026-04-26","PV073378","26780","V163",19.99,3.0,59.97,"SI"],[186,"2026-04-26","2026-04-26","PV073378","26780","V185",195.25,1.0,195.25,"SI"],[187,"2026-04-26","2026-04-26","PV073378","27391","V162",56.75,1.0,56.75,"SI"],[188,"2026-04-26","2026-04-26","PV073378","27391","V164",48.75,2.0,97.5,"SI"],[189,"2026-04-26","2026-04-26","PV073378","27391","V185",195.25,1.0,195.25,"SI"],[190,"2026-04-26","2026-04-26","PV073378","27410","V185",195.25,1.0,195.25,"SI"],[191,"2026-04-26","2026-04-26","PV073378","27854","V185",195.25,1.0,195.25,"SI"],[192,"2026-04-26","2026-04-26","PV073378","24328","V199",150.0,1.0,150.0,"SI"],[193,"2026-04-27","2026-04-27","PV073533","22140","V162",56.75,1.0,56.75,"SI"],[194,"2026-04-27","2026-04-27","PV073533","22140","V164",48.75,1.0,48.75,"SI"],[195,"2026-04-27","2026-04-27","PV073533","22140","V163",19.99,2.0,39.98,"SI"],[196,"2026-04-27","2026-04-27","PV073533","22140","V168",17.97,1.0,17.97,"SI"],[197,"2026-04-27","2026-04-27","PV073533","22140","V185",195.25,1.0,195.25,"SI"],[198,"2026-04-27","2026-04-27","PV073533","22140","V165",73.63,1.0,73.63,"SI"],[199,"2026-04-27","2026-04-27","PV073533","21254","V185",195.25,1.0,195.25,"SI"],[200,"2026-04-27","2026-04-27","PV073533","22662","V185",195.25,1.0,195.25,"SI"],[201,"2026-04-27","2026-04-27","PV073533","25662","V185",195.25,1.0,195.25,"SI"],[202,"2026-04-27","2026-04-27","PV073533","25661","V185",195.25,1.0,195.25,"SI"],[203,"2026-04-27","2026-04-27","PV073533","22681","V162",56.75,1.0,56.75,"SI"],[204,"2026-04-27","2026-04-27","PV073533","22681","V164",48.75,1.0,48.75,"SI"],[205,"2026-04-27","2026-04-27","PV073533","22681","V185",195.25,1.0,195.25,"SI"],[206,"2026-04-27","2026-04-27","PV073533","27377","V162",56.75,1.0,56.75,"SI"],[207,"2026-04-27","2026-04-27","PV073533","27377","V163",19.99,1.0,19.99,"SI"],[208,"2026-04-27","2026-04-27","PV073533","27377","V185",195.25,1.0,195.25,"SI"],[209,"2026-04-27","2026-04-27","PV073533","26196","V185",195.25,1.0,195.25,"SI"],[210,"2026-04-27","2026-04-27","PV073533","25469","V185",195.25,1.0,195.25,"SI"],[211,"2026-04-27","2026-04-27","PV073533","21846","V185",195.25,1.0,195.25,"SI"],[212,"2026-04-27","2026-04-27","PV073533","26409","V164",48.75,2.0,97.5,"SI"],[213,"2026-04-27","2026-04-27","PV073533","26409","V163",19.99,1.0,19.99,"SI"],[214,"2026-04-27","2026-04-27","PV073533","26409","V168",17.97,1.0,17.97,"SI"],[215,"2026-04-27","2026-04-27","PV073533","26409","V185",195.25,1.0,195.25,"SI"],[216,"2026-04-27","2026-04-27","PV073533","25879","V162",56.75,1.0,56.75,"SI"],[217,"2026-04-27","2026-04-27","PV073533","25879","V164",48.75,1.0,48.75,"SI"],[218,"2026-04-27","2026-04-27","PV073533","25879","V163",19.99,2.0,39.98,"SI"],[219,"2026-04-27","2026-04-27","PV073533","25879","V185",195.25,1.0,195.25,"SI"],[220,"2026-04-28","2026-04-28","PV073533","26128","V162",56.75,3.0,170.25,"SI"],[221,"2026-04-28","2026-04-28","PV073533","26128","V164",48.75,1.0,48.75,"SI"],[222,"2026-04-28","2026-04-28","PV073533","26128","V185",195.25,1.0,195.25,"SI"],[223,"2026-04-28","2026-04-28","PV073533","26872","V162",56.75,3.0,170.25,"SI"],[224,"2026-04-28","2026-04-28","PV073533","26872","V164",48.75,1.0,48.75,"SI"],[225,"2026-04-28","2026-04-28","PV073533","26872","V185",195.25,1.0,195.25,"SI"],[226,"2026-04-28","2026-04-28","PV073533","17492","V185",195.25,1.0,195.25,"SI"],[227,"2026-04-28","2026-04-28","PV073533","26923","V185",195.25,1.0,195.25,"SI"],[228,"2026-04-28","2026-04-28","PV073533","24437","V185",195.25,1.0,195.25,"SI"],[229,"2026-04-28","2026-04-28","PV073533","21454","V185",195.25,1.0,195.25,"SI"],[230,"2026-04-28","2026-04-28","PV073533","26504","V185",195.25,1.0,195.25,"SI"],[231,"2026-04-28","2026-04-28","PV073533","26589","V185",195.25,1.0,195.25,"SI"],[232,"2026-04-28","2026-04-28","PV073533","26589","V162",56.75,2.0,113.5,"SI"],[233,"2026-04-28","2026-04-28","PV073533","26589","V164",48.75,1.0,48.75,"SI"],[234,"2026-04-28","2026-04-28","PV073533","26589","V165",73.63,1.0,73.63,"SI"],[235,"2026-04-28","2026-04-28","PV073533","26405","V163",19.99,3.0,59.97,"SI"],[236,"2026-04-28","2026-04-28","PV073533","26405","V168",17.97,1.0,17.97,"SI"],[237,"2026-04-28","2026-04-28","PV073533","26405","V185",195.25,1.0,195.25,"SI"],[238,"2026-04-28","2026-04-28","PV073533","26535","V163",19.99,2.0,39.98,"SI"],[239,"2026-04-28","2026-04-28","PV073533","26535","V185",195.25,1.0,195.25,"SI"],[240,"2026-04-28","2026-04-28","PV073533","26389","V162",56.75,1.0,56.75,"SI"],[241,"2026-04-28","2026-04-28","PV073533","26389","V185",195.25,1.0,195.25,"SI"],[242,"2026-04-28","2026-04-28","PV073533","26363","V162",56.75,1.0,56.75,"SI"],[243,"2026-04-28","2026-04-28","PV073533","26363","V163",19.99,1.0,19.99,"SI"],[244,"2026-04-28","2026-04-28","PV073533","26363","V165",73.63,2.0,147.26,"SI"],[245,"2026-04-28","2026-04-28","PV073533","26363","V164",48.75,1.0,48.75,"SI"],[246,"2026-04-28","2026-04-28","PV073533","26363","V185",195.25,1.0,195.25,"SI"],[247,"2026-04-28","2026-04-28","PV073533","26366","V162",56.75,1.0,56.75,"SI"],[248,"2026-04-28","2026-04-28","PV073533","26366","V163",19.99,1.0,19.99,"SI"],[249,"2026-04-28","2026-04-28","PV073533","26366","V185",195.25,1.0,195.25,"SI"],[250,"2026-04-28","2026-04-28","PV073533","25702","V185",195.25,1.0,195.25,"SI"],[251,"2026-04-29","2026-04-29","PV073533","26414","V185",195.25,1.0,195.25,"SI"],[252,"2026-04-29","2026-04-29","PV073533","26414","V168",17.97,1.0,17.97,"SI"],[253,"2026-04-29","2026-04-29","PV073533","26414","V163",19.99,1.0,19.99,"SI"],[254,"2026-04-29","2026-04-29","PV073533","26429","V162",56.75,3.0,170.25,"SI"],[255,"2026-04-29","2026-04-29","PV073533","26429","V185",195.25,1.0,195.25,"SI"],[256,"2026-04-29","2026-04-29","PV073533","27725","V185",195.25,1.0,195.25,"SI"],[257,"2026-04-29","2026-04-29","PV073533","27697","V185",195.25,1.0,195.25,"SI"],[258,"2026-04-29","2026-04-29","PV073533","27697","V162",56.75,1.0,56.75,"SI"],[259,"2026-04-29","2026-04-29","PV073533","23912","V185",195.25,1.0,195.25,"SI"],[260,"2026-04-29","2026-04-29","PV073533","23912","V162",56.75,1.0,56.75,"SI"],[261,"2026-04-29","2026-04-29","PV073533","25695","V185",195.25,1.0,195.25,"SI"],[262,"2026-04-29","2026-04-29","PV073533","25695","V163",19.99,2.0,39.98,"SI"],[263,"2026-04-29","2026-04-29","PV073533","25185","V185",195.25,1.0,195.25,"SI"],[264,"2026-04-29","2026-04-29","PV073533","24423","V185",195.25,1.0,195.25,"SI"],[265,"2026-04-29","2026-04-29","PV073533","24423","V163",19.99,2.0,39.98,"SI"],[266,"2026-04-29","2026-04-29","PV073533","26341","V185",195.25,1.0,195.25,"SI"],[267,"2026-04-29","2026-04-29","PV073533","24314","V185",195.25,1.0,195.25,"SI"],[268,"2026-04-29","2026-04-29","PV073533","25041","V185",195.25,1.0,195.25,"SI"],[269,"2026-04-29","2026-04-29","PV073533","26437","V162",56.75,1.0,56.75,"SI"],[270,"2026-04-29","2026-04-29","PV073533","26437","V163",19.99,3.0,59.97,"SI"],[271,"2026-04-29","2026-04-29","PV073533","26437","V165",73.63,2.0,147.26,"SI"],[272,"2026-04-29","2026-04-29","PV073533","26437","V185",195.25,1.0,195.25,"SI"],[273,"2026-04-29","2026-04-29","PV073533","27813","V162",56.75,1.0,56.75,"SI"],[274,"2026-04-29","2026-04-29","PV073533","27813","V164",48.75,1.0,48.75,"SI"],[275,"2026-04-29","2026-04-29","PV073533","27813","V185",195.25,1.0,195.25,"SI"],[276,"2026-04-29","2026-04-29","PV073533","22781","V162",56.75,1.0,56.75,"SI"],[277,"2026-04-29","2026-04-29","PV073533","22781","V163",19.99,1.0,19.99,"SI"],[278,"2026-04-29","2026-04-29","PV073533","22781","V164",48.75,1.0,48.75,"SI"],[279,"2026-04-29","2026-04-29","PV073533","22781","V185",195.25,1.0,195.25,"SI"],[280,"2026-04-29","2026-04-29","PV073533","23232","V185",195.25,1.0,195.25,"SI"],[281,"2026-04-29","2026-04-29","PV073533","27239","V162",56.75,1.0,56.75,"SI"],[282,"2026-04-29","2026-04-29","PV073533","27239","V185",195.25,1.0,195.25,"SI"],[283,"2026-04-29","2026-04-29","PV073533","24476","V162",56.75,2.0,113.5,"SI"],[284,"2026-04-29","2026-04-29","PV073533","24476","V163",19.99,2.0,39.98,"SI"],[285,"2026-04-29","2026-04-29","PV073533","24476","V185",195.25,1.0,195.25,"SI"],[286,"2026-04-30","2026-04-30","PV073533","23286","V162",56.75,1.0,56.75,"SI"],[287,"2026-04-30","2026-04-30","PV073533","23286","V163",19.99,3.0,59.97,"SI"],[288,"2026-04-30","2026-04-30","PV073533","23286","V185",195.25,1.0,195.25,"SI"],[289,"2026-04-30","2026-04-30","PV073533","25392","V162",56.75,1.0,56.75,"SI"],[290,"2026-04-30","2026-04-30","PV073533","25392","V185",195.25,1.0,195.25,"SI"],[291,"2026-04-30","2026-04-30","PV073533","26688","V162",56.75,1.0,56.75,"SI"],[292,"2026-04-30","2026-04-30","PV073533","26688","V163",19.99,1.0,19.99,"SI"],[293,"2026-04-30","2026-04-30","PV073533","26688","V185",195.25,1.0,195.25,"SI"],[294,"2026-04-30","2026-04-30","PV073533","26847","V163",19.99,2.0,39.98,"SI"],[295,"2026-04-30","2026-04-30","PV073533","26847","V185",195.25,1.0,195.25,"SI"],[296,"2026-04-30","2026-04-30","PV073533","26848","V163",19.99,2.0,39.98,"SI"],[297,"2026-04-30","2026-04-30","PV073533","26848","V185",195.25,1.0,195.25,"SI"],[298,"2026-04-30","2026-04-30","PV073533","26691","V163",19.99,2.0,39.98,"SI"],[299,"2026-04-30","2026-04-30","PV073533","26691","V165",73.63,1.0,73.63,"SI"],[300,"2026-04-30","2026-04-30","PV073533","26691","V185",195.25,1.0,195.25,"SI"],[301,"2026-04-30","2026-04-30","PV073533","26157","V162",56.75,1.0,56.75,"SI"],[302,"2026-04-30","2026-04-30","PV073533","26157","V185",195.25,1.0,195.25,"SI"],[303,"2026-04-30","2026-04-30","PV073533","26164","V162",56.75,1.0,56.75,"SI"],[304,"2026-04-30","2026-04-30","PV073533","26164","V185",195.25,1.0,195.25,"SI"],[305,"2026-04-30","2026-04-30","PV073533","25298","V185",195.25,1.0,195.25,"SI"],[306,"2026-04-30","2026-04-30","PV073533","27329","V185",195.25,1.0,195.25,"SI"],[307,"2026-04-30","2026-04-30","PV073533","26161","V162",56.75,1.0,56.75,"SI"],[308,"2026-04-30","2026-04-30","PV073533","26161","V163",19.99,1.0,19.99,"SI"],[309,"2026-04-30","2026-04-30","PV073533","26161","V185",195.25,1.0,195.25,"SI"],[310,"2026-04-30","2026-04-30","PV073533","26160","V162",56.75,1.0,56.75,"SI"],[311,"2026-04-30","2026-04-30","PV073533","26160","V163",19.99,1.0,19.99,"SI"],[312,"2026-04-30","2026-04-30","PV073533","26160","V185",195.25,1.0,195.25,"SI"],[313,"2026-04-30","2026-04-30","PV073533","26155","V162",56.75,1.0,56.75,"SI"],[314,"2026-04-30","2026-04-30","PV073533","26155","V185",195.25,1.0,195.25,"SI"],[315,"2026-04-30","2026-04-30","PV073533","26159","V162",56.75,1.0,56.75,"SI"],[316,"2026-04-30","2026-04-30","PV073533","26159","V185",195.25,1.0,195.25,"SI"],[317,"2026-04-30","2026-04-30","PV073533","26555","V185",195.25,1.0,195.25,"SI"],[318,"2026-04-30","2026-04-30","PV073533","27313","V185",195.25,1.0,195.25,"SI"],[319,"2026-04-30","2026-04-30","PV073533","25508","V185",195.25,1.0,195.25,"SI"],[320,"2026-04-30","2026-04-30","PV073533","27212","V185",195.25,1.0,195.25,"SI"],[321,"2026-04-30","2026-04-30","PV073533","27214","V185",195.25,1.0,195.25,"SI"],[322,"2026-04-30","2026-04-30","PV073533","27211","V185",195.25,1.0,195.25,"SI"],[323,"2026-04-30","2026-04-30","PV073533","27215","V185",195.25,1.0,195.25,"SI"],[324,"2026-04-30","2026-04-30","PV073533","27210","V185",195.25,1.0,195.25,"SI"],[325,"2026-04-30","2026-04-30","PV073533","27369","V185",195.25,1.0,195.25,"SI"],[326,"2026-04-30","2026-04-30","PV073533","26554","V185",195.25,1.0,195.25,"SI"],[327,"2026-05-01","2026-05-01","PV073533","25393","V162",56.75,1.0,56.75,"SI"],[328,"2026-05-01","2026-05-01","PV073533","25393","V185",195.25,1.0,195.25,"SI"],[329,"2026-05-01","2026-05-01","PV073533","25394","V162",56.75,1.0,56.75,"SI"],[330,"2026-05-01","2026-05-01","PV073533","25394","V185",195.25,1.0,195.25,"SI"],[331,"2026-05-01","2026-05-01","PV073533","26686","V162",56.75,1.0,56.75,"SI"],[332,"2026-05-01","2026-05-01","PV073533","26686","V185",195.25,1.0,195.25,"SI"],[333,"2026-05-01","2026-05-01","PV073533","26154","V162",56.75,1.0,56.75,"SI"],[334,"2026-05-01","2026-05-01","PV073533","26154","V185",195.25,1.0,195.25,"SI"],[335,"2026-05-01","2026-05-01","PV073533","23564","V162",56.75,1.0,56.75,"SI"],[336,"2026-05-01","2026-05-01","PV073533","23564","V185",195.25,1.0,195.25,"SI"],[337,"2026-05-01","2026-05-01","PV073533","26153","V162",56.75,1.0,56.75,"SI"],[338,"2026-05-01","2026-05-01","PV073533","26153","V185",195.25,1.0,195.25,"SI"],[339,"2026-05-01","2026-05-01","PV073533","26037","V163",19.99,5.0,99.95,"SI"],[340,"2026-05-01","2026-05-01","PV073533","26037","V185",195.25,1.0,195.25,"SI"],[341,"2026-05-01","2026-05-01","PV073533","21881","V163",19.99,2.0,39.98,"SI"],[342,"2026-05-01","2026-05-01","PV073533","21881","V185",195.25,1.0,195.25,"SI"],[343,"2026-05-01","2026-05-01","PV073533","23892","V199",150.0,1.0,150.0,"SI"],[344,"2026-05-02","2026-05-02","PV073533","22238","V163",19.99,1.0,19.99,"SI"],[345,"2026-05-02","2026-05-02","PV073533","22238","V185",195.25,1.0,195.25,"SI"],[346,"2026-05-02","2026-05-02","PV073533","24444","V168",17.97,1.0,17.97,"SI"],[347,"2026-05-02","2026-05-02","PV073533","24444","V163",19.99,1.0,19.99,"SI"],[348,"2026-05-02","2026-05-02","PV073533","24444","V185",195.25,1.0,195.25,"SI"],[349,"2026-05-02","2026-05-02","PV073533","24615","V162",56.75,2.0,113.5,"SI"],[350,"2026-05-02","2026-05-02","PV073533","24615","V164",48.75,2.0,97.5,"SI"],[351,"2026-05-02","2026-05-02","PV073533","24615","V163",19.99,1.0,19.99,"SI"],[352,"2026-05-02","2026-05-02","PV073533","24615","V185",195.25,1.0,195.25,"SI"],[353,"2026-05-02","2026-05-02","PV073533","25055","V162",56.75,1.0,56.75,"SI"],[354,"2026-05-02","2026-05-02","PV073533","25055","V163",19.99,9.0,179.91,"SI"],[355,"2026-05-02","2026-05-02","PV073533","25055","V185",195.25,1.0,195.25,"SI"],[356,"2026-05-02","2026-05-02","PV073533","25055","V164",48.75,1.0,48.75,"SI"],[357,"2026-05-02","2026-05-02","PV073533","25055","V168",17.97,1.0,17.97,"SI"],[358,"2026-05-04","2026-05-04","PV073710","24856","V185",195.25,1.0,195.25,"NO"],[359,"2026-05-04","2026-05-04","PV073710","24856","V163",19.99,1.0,19.99,"NO"],[360,"2026-05-04","2026-05-04","PV073710","25833","V163",19.99,13.0,259.87,"NO"],[361,"2026-05-04","2026-05-04","PV073710","25833","V162",56.75,2.0,113.5,"NO"],[362,"2026-05-04","2026-05-04","PV073710","25833","V168",17.97,1.0,17.97,"NO"],[363,"2026-05-04","2026-05-04","PV073710","25833","V185",195.25,1.0,195.25,"NO"],[364,"2026-05-04","2026-05-04","PV073710","24847","V163",19.99,2.0,39.98,"NO"],[365,"2026-05-04","2026-05-04","PV073710","24847","V162",56.75,1.0,56.75,"NO"],[366,"2026-05-04","2026-05-04","PV073710","24847","V168",17.97,1.0,17.97,"NO"],[367,"2026-05-04","2026-05-04","PV073710","24847","V185",195.25,1.0,195.25,"NO"],[368,"2026-05-04","2026-05-04","PV073710","27666","V185",195.25,1.0,195.25,"NO"],[369,"2026-05-04","2026-05-04","PV073710","27666","V163",19.99,3.0,59.97,"NO"],[370,"2026-05-04","2026-05-04","PV073710","27666","V168",17.97,2.0,35.94,"NO"],[371,"2026-05-04","2026-05-04","PV073710","24846","V163",19.99,3.0,59.97,"NO"],[372,"2026-05-04","2026-05-04","PV073710","24846","V165",73.63,2.0,147.26,"NO"],[373,"2026-05-04","2026-05-04","PV073710","24846","V164",48.75,1.0,48.75,"NO"],[374,"2026-05-04","2026-05-04","PV073710","24846","V162",56.75,1.0,56.75,"NO"],[375,"2026-05-04","2026-05-04","PV073710","24846","V185",195.25,1.0,195.25,"NO"],[376,"2026-05-04","2026-05-04","PV073710","20466","V163",19.99,1.0,19.99,"NO"],[377,"2026-05-04","2026-05-04","PV073710","20466","V185",195.25,1.0,195.25,"NO"],[378,"2026-05-04","2026-05-04","PV073710","26800","V163",19.99,2.0,39.98,"NO"],[379,"2026-05-04","2026-05-04","PV073710","26800","V185",195.25,1.0,195.25,"NO"],[380,"2026-05-04","2026-05-04","PV073710","26701","V163",19.99,1.0,19.99,"NO"],[381,"2026-05-04","2026-05-04","PV073710","26701","V185",195.25,1.0,195.25,"NO"],[382,"2026-05-04","2026-05-04","PV073710","24816","V163",19.99,1.0,19.99,"NO"],[383,"2026-05-04","2026-05-04","PV073710","24816","V185",195.25,1.0,195.25,"NO"],[384,"2026-05-04","2026-05-04","PV073710","24501","V163",19.99,2.0,39.98,"NO"],[385,"2026-05-04","2026-05-04","PV073710","24501","V162",56.75,2.0,113.5,"NO"],[386,"2026-05-04","2026-05-04","PV073710","24501","V185",195.25,1.0,195.25,"NO"],[387,"2026-05-05","2026-05-05","PV073710","27386","V163",19.99,2.0,39.98,"NO"],[388,"2026-05-05","2026-05-05","PV073710","27386","V168",17.97,1.0,17.97,"NO"],[389,"2026-05-05","2026-05-05","PV073710","27386","V185",195.25,1.0,195.25,"NO"],[390,"2026-05-05","2026-05-05","PV073710","24608","V163",19.99,1.0,19.99,"NO"],[391,"2026-05-05","2026-05-05","PV073710","24608","V185",195.25,1.0,195.25,"NO"],[392,"2026-05-05","2026-05-05","PV073710","27673","V163",19.99,5.0,99.95,"NO"],[393,"2026-05-05","2026-05-05","PV073710","27673","V168",17.97,1.0,17.97,"NO"],[394,"2026-05-05","2026-05-05","PV073710","27673","V185",195.25,1.0,195.25,"NO"],[395,"2026-05-05","2026-05-05","PV073710","22674","V162",56.75,1.0,56.75,"NO"],[396,"2026-05-05","2026-05-05","PV073710","22674","V164",48.75,1.0,48.75,"NO"],[397,"2026-05-05","2026-05-05","PV073710","22674","V185",195.25,1.0,195.25,"NO"],[398,"2026-05-05","2026-05-05","PV073710","27675","V164",48.75,1.0,48.75,"NO"],[399,"2026-05-05","2026-05-05","PV073710","27675","V162",56.75,1.0,56.75,"NO"],[400,"2026-05-05","2026-05-05","PV073710","27675","V185",195.25,1.0,195.25,"NO"],[401,"2026-05-05","2026-05-05","PV073710","27028","V162",56.75,2.0,113.5,"NO"],[402,"2026-05-05","2026-05-05","PV073710","27028","V163",19.99,2.0,39.98,"NO"],[403,"2026-05-05","2026-05-05","PV073710","27028","V185",195.25,1.0,195.25,"NO"],[404,"2026-05-05","2026-05-05","PV073710","24635","V163",19.99,3.0,59.97,"NO"],[405,"2026-05-05","2026-05-05","PV073710","24635","V168",17.97,1.0,17.97,"NO"],[406,"2026-05-05","2026-05-05","PV073710","24635","V185",195.25,1.0,195.25,"NO"],[407,"2026-05-05","2026-05-05","PV073710","24661","V162",56.75,1.0,56.75,"NO"],[408,"2026-05-05","2026-05-05","PV073710","24661","V164",48.75,1.0,48.75,"NO"],[409,"2026-05-05","2026-05-05","PV073710","24661","V185",195.25,1.0,195.25,"NO"],[410,"2026-05-05","2026-05-05","PV073710","25595","V163",19.99,2.0,39.98,"NO"],[411,"2026-05-05","2026-05-05","PV073710","25595","V168",17.97,1.0,17.97,"NO"],[412,"2026-05-05","2026-05-05","PV073710","25595","V185",195.25,1.0,195.25,"NO"],[413,"2026-05-05","2026-05-05","PV073710","24596","V162",56.75,1.0,56.75,"NO"],[414,"2026-05-05","2026-05-05","PV073710","24596","V163",19.99,3.0,59.97,"NO"],[415,"2026-05-05","2026-05-05","PV073710","24596","V165",73.63,2.0,147.26,"NO"],[416,"2026-05-05","2026-05-05","PV073710","24596","V168",17.97,1.0,17.97,"NO"],[417,"2026-05-05","2026-05-05","PV073710","24596","V185",195.25,1.0,195.25,"NO"],[418,"2026-05-06","2026-05-06","PV073710","20290","V163",19.99,1.0,19.99,"NO"],[419,"2026-05-06","2026-05-06","PV073710","20290","V185",195.25,1.0,195.25,"NO"],[420,"2026-05-06","2026-05-06","PV073710","25363","V163",19.99,4.0,79.96,"NO"],[421,"2026-05-06","2026-05-06","PV073710","25363","V185",195.25,1.0,195.25,"NO"],[422,"2026-05-06","2026-05-06","PV073710","25268","V163",19.99,3.0,59.97,"NO"],[423,"2026-05-06","2026-05-06","PV073710","25268","V168",17.97,1.0,17.97,"NO"],[424,"2026-05-06","2026-05-06","PV073710","25268","V162",56.75,1.0,56.75,"NO"],[425,"2026-05-06","2026-05-06","PV073710","25268","V185",195.25,1.0,195.25,"NO"],[426,"2026-05-06","2026-05-06","PV073710","25268","V165",73.63,1.0,73.63,"NO"],[427,"2026-05-06","2026-05-06","PV073710","26447","V162",56.75,1.0,56.75,"NO"],[428,"2026-05-06","2026-05-06","PV073710","26447","V163",19.99,3.0,59.97,"NO"],[429,"2026-05-06","2026-05-06","PV073710","26447","V185",195.25,1.0,195.25,"NO"],[430,"2026-05-06","2026-05-06","PV073710","25269","V162",56.75,2.0,113.5,"NO"],[431,"2026-05-06","2026-05-06","PV073710","25269","V185",195.25,1.0,195.25,"NO"],[432,"2026-05-06","2026-05-06","PV073710","26824","V163",19.99,3.0,59.97,"NO"],[433,"2026-05-06","2026-05-06","PV073710","26824","V185",195.25,1.0,195.25,"NO"],[434,"2026-05-06","2026-05-06","PV073710","27127","V162",56.75,1.0,56.75,"NO"],[435,"2026-05-06","2026-05-06","PV073710","27127","V163",19.99,3.0,59.97,"NO"],[436,"2026-05-06","2026-05-06","PV073710","27127","V185",195.25,1.0,195.25,"NO"],[437,"2026-05-06","2026-05-06","PV073710","27047","V163",19.99,2.0,39.98,"NO"],[438,"2026-05-06","2026-05-06","PV073710","27047","V168",17.97,1.0,17.97,"NO"],[439,"2026-05-06","2026-05-06","PV073710","27047","V185",195.25,1.0,195.25,"NO"],[440,"2026-05-06","2026-05-06","PV073710","24482","V165",73.63,1.0,73.63,"NO"],[441,"2026-05-06","2026-05-06","PV073710","24482","V185",195.25,1.0,195.25,"NO"],[442,"2026-05-06","2026-05-06","PV073710","24482","V163",19.99,4.0,79.96,"NO"],[443,"2026-05-07","2026-05-07","PV073710","24821","V163",19.99,1.0,19.99,"NO"],[444,"2026-05-07","2026-05-07","PV073710","24821","V162",56.75,1.0,56.75,"NO"],[445,"2026-05-07","2026-05-07","PV073710","24821","V164",48.75,1.0,48.75,"NO"],[446,"2026-05-07","2026-05-07","PV073710","24821","V168",17.97,1.0,17.97,"NO"],[447,"2026-05-07","2026-05-07","PV073710","24821","V185",195.25,1.0,195.25,"NO"],[448,"2026-05-07","2026-05-07","PV073710","17498","V162",56.75,1.0,56.75,"NO"],[449,"2026-05-07","2026-05-07","PV073710","17498","V163",19.99,1.0,19.99,"NO"],[450,"2026-05-07","2026-05-07","PV073710","17498","V185",195.25,1.0,195.25,"NO"],[451,"2026-05-07","2026-05-07","PV073710","24823","V185",195.25,1.0,195.25,"NO"],[452,"2026-05-07","2026-05-07","PV073710","23975","V163",19.99,1.0,19.99,"NO"],[453,"2026-05-07","2026-05-07","PV073710","23975","V185",195.25,1.0,195.25,"NO"],[454,"2026-05-07","2026-05-07","PV073710","27450","V185",195.25,1.0,195.25,"NO"],[455,"2026-05-07","2026-05-07","PV073710","25000","V185",195.25,1.0,195.25,"NO"],[456,"2026-05-07","2026-05-07","PV073710","23045","V163",19.99,1.0,19.99,"NO"],[457,"2026-05-07","2026-05-07","PV073710","23045","V185",195.25,1.0,195.25,"NO"],[458,"2026-05-07","2026-05-07","PV073710","24961","V185",195.25,1.0,195.25,"NO"],[459,"2026-05-07","2026-05-07","PV073710","24547","V164",48.75,1.0,48.75,"NO"],[460,"2026-05-07","2026-05-07","PV073710","24547","V162",56.75,1.0,56.75,"NO"],[461,"2026-05-07","2026-05-07","PV073710","24547","V163",19.99,1.0,19.99,"NO"],[462,"2026-05-07","2026-05-07","PV073710","24547","V185",195.25,1.0,195.25,"NO"],[463,"2026-05-07","2026-05-07","PV073710","24727","V185",195.25,1.0,195.25,"NO"],[464,"2026-05-07","2026-05-07","PV073710","25685","V162",56.75,1.0,56.75,"NO"],[465,"2026-05-07","2026-05-07","PV073710","25685","V185",195.25,1.0,195.25,"NO"],[466,"2026-05-07","2026-05-07","PV073710","24889","V185",195.25,1.0,195.25,"NO"],[467,"2026-05-07","2026-05-07","PV073710","24844","V199",150.0,1.0,150.0,"NO"],[468,"2026-05-07","2026-05-07","PV073710","25629","V185",195.25,1.0,195.25,"NO"],[469,"2026-05-07","2026-05-07","PV073710","24826","V163",19.99,2.0,39.98,"NO"],[470,"2026-05-07","2026-05-07","PV073710","24826","V168",17.97,1.0,17.97,"NO"],[471,"2026-05-07","2026-05-07","PV073710","24826","V185",195.25,1.0,195.25,"NO"],[472,"2026-05-07","2026-05-07","PV073710","27665","V185",195.25,1.0,195.25,"NO"],[473,"2026-05-07","2026-05-07","PV073710","24849","V185",195.25,1.0,195.25,"NO"],[474,"2026-05-07","2026-05-07","PV073710","26176","V163",19.99,2.0,39.98,"NO"],[475,"2026-05-07","2026-05-07","PV073710","26176","V162",56.75,1.0,56.75,"NO"],[476,"2026-05-07","2026-05-07","PV073710","26176","V185",195.25,1.0,195.25,"NO"],[477,"2026-05-07","2026-05-07","PV073710","27301","V185",195.25,1.0,195.25,"NO"],[478,"2026-05-07","2026-05-07","PV073710","22720","V163",19.99,4.0,79.96,"NO"],[479,"2026-05-07","2026-05-07","PV073710","22720","V185",195.25,1.0,195.25,"NO"],[480,"2026-05-07","2026-05-07","PV073710","23367","V168",17.97,1.0,17.97,"NO"],[481,"2026-05-07","2026-05-07","PV073710","23367","V185",195.25,1.0,195.25,"NO"],[482,"2026-05-07","2026-05-07","PV073710","23367","V163",19.99,2.0,39.98,"NO"],[483,"2026-05-07","2026-05-07","PV073710","24944","V162",56.75,1.0,56.75,"NO"],[484,"2026-05-07","2026-05-07","PV073710","24944","V185",195.25,1.0,195.25,"NO"],[485,"2026-05-08","2026-05-08","PV073710","24754","V162",56.75,2.0,113.5,"NO"],[486,"2026-05-08","2026-05-08","PV073710","24754","V163",19.99,1.0,19.99,"NO"],[487,"2026-05-08","2026-05-08","PV073710","24754","V185",195.25,1.0,195.25,"NO"],[488,"2026-05-08","2026-05-08","PV073710","24753","V162",56.75,2.0,113.5,"NO"],[489,"2026-05-08","2026-05-08","PV073710","24753","V163",19.99,6.0,119.94,"NO"],[490,"2026-05-08","2026-05-08","PV073710","24753","V164",48.75,1.0,48.75,"NO"],[491,"2026-05-08","2026-05-08","PV073710","24753","V165",73.63,2.0,147.26,"NO"],[492,"2026-05-08","2026-05-08","PV073710","24753","V185",195.25,1.0,195.25,"NO"],[493,"2026-05-08","2026-05-08","PV073710","25580","V162",56.75,1.0,56.75,"NO"],[494,"2026-05-08","2026-05-08","PV073710","25580","V164",48.75,1.0,48.75,"NO"],[495,"2026-05-08","2026-05-08","PV073710","25580","V165",73.63,1.0,73.63,"NO"],[496,"2026-05-08","2026-05-08","PV073710","25580","V185",195.25,1.0,195.25,"NO"],[497,"2026-05-08","2026-05-08","PV073710","24842","V163",19.99,2.0,39.98,"NO"],[498,"2026-05-08","2026-05-08","PV073710","24842","V185",195.25,1.0,195.25,"NO"],[499,"2026-05-08","2026-05-08","PV073710","27160","V163",19.99,1.0,19.99,"NO"],[500,"2026-05-08","2026-05-08","PV073710","27160","V185",195.25,1.0,195.25,"NO"],[501,"2026-05-08","2026-05-08","PV073710","25932","V162",56.75,1.0,56.75,"NO"],[502,"2026-05-08","2026-05-08","PV073710","25932","V165",73.63,1.0,73.63,"NO"],[503,"2026-05-08","2026-05-08","PV073710","25932","V185",195.25,1.0,195.25,"NO"],[504,"2026-05-08","2026-05-08","PV073710","23401","V163",19.99,1.0,19.99,"NO"],[505,"2026-05-08","2026-05-08","PV073710","23401","V185",195.25,1.0,195.25,"NO"],[506,"2026-05-08","2026-05-08","PV073710","25398","V163",19.99,1.0,19.99,"NO"],[507,"2026-05-08","2026-05-08","PV073710","25398","V185",195.25,1.0,195.25,"NO"],[508,"2026-05-08","2026-05-08","PV073710","26456","V163",19.99,2.0,39.98,"NO"],[509,"2026-05-08","2026-05-08","PV073710","26456","V168",17.97,1.0,17.97,"NO"],[510,"2026-05-08","2026-05-08","PV073710","26456","V185",195.25,1.0,195.25,"NO"],[511,"2026-05-08","2026-05-08","PV073710","24638","V162",56.75,1.0,56.75,"NO"],[512,"2026-05-08","2026-05-08","PV073710","24638","V164",48.75,1.0,48.75,"NO"],[513,"2026-05-08","2026-05-08","PV073710","24638","V185",195.25,1.0,195.25,"NO"],[514,"2026-05-08","2026-05-08","PV073710","27341","V163",19.99,1.0,19.99,"NO"],[515,"2026-05-08","2026-05-08","PV073710","27341","V185",195.25,1.0,195.25,"NO"],[516,"2026-05-08","2026-05-08","PV073710","26618","V163",19.99,1.0,19.99,"NO"],[517,"2026-05-08","2026-05-08","PV073710","26618","V185",195.25,1.0,195.25,"NO"]],"codeDesc":{"V199":"Move charge - Aerial - For any poles found that cannot be completed","V162":"Transfer Aerial - Strand attachment and hardware","V168":"Transfer Aerial - pole mounted wire terminal","V185":"Remove Aerial - Poles - all types and sizes","V163":"Transfer Aerial - Service wire attachment","V165":"Transfer Aerial - Apparatus - pole or strand mount","V115":"Place Aerial - Anchor - bust type - hand","V164":"Transfer Aerial - Guy attachment - pole or anchor mount"}}</script>
+
+<!-- ============ MAIN APP SCRIPT ============ -->
+<script>
+/* =====================================================================
+   TYSA · Warren Pole Transfer · Operations Intelligence
+   ===================================================================== */
+
+// State
+let state = {
+  rawRows: [],       // [no, d_ins, d_fact, job, pole, cod, pr, q, total, fc]
+  codeDesc: {},
+  filtered: [],
+  charts: { trend: null, fc: null },
+  filters: {
+    dateMode: 'd_ins',
+    from: '', to: '',
+    fc: '', job: '', cod: '', pole: '',
+    group: 'day',
+    preset: 'all',
+    search: ''
+  },
+  source: 'demo'
+};
+
+// Load embedded data (WARREN POLE TRANSFER)
+function loadEmbedded() {
+  try {
+    const raw = document.getElementById('embeddedData').textContent;
+    const parsed = JSON.parse(raw);
+    state.rawRows = parsed.rows || [];
+    state.codeDesc = parsed.codeDesc || {};
+    state.source = 'embedded';
+    document.getElementById('dataSourceLabel').textContent =
+      `WARREN POLE TRANSFER · ${state.rawRows.length.toLocaleString('en-US')} registros`;
+  } catch(e) {
+    console.error('Error loading embedded data', e);
+  }
+}
+
+// =================== HELPERS ===================
+const fmtUSD = (v) => '$' + (v||0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const fmtUSD2 = (v) => '$' + (v||0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtNum = (v) => (v||0).toLocaleString('en-US');
+const fmtDate = (iso) => {
+  if (!iso) return '—';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y.slice(2)}`;
+};
+const fmtDateLong = (iso) => {
+  if (!iso) return '—';
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' });
+};
+
+const FC_KEYS = { 'SI':'si', 'NO':'no', '':'pend' };
+const FC_LABEL = { 'SI':'SI', 'NO':'NO', '':'—' };
+
+// Get ISO week start (Monday)
+function weekKey(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d.setDate(diff));
+  return monday.toISOString().slice(0, 10);
+}
+function monthKey(iso) { return iso.slice(0, 7); }
+function dayKey(iso) { return iso; }
+
+function periodKey(iso, group) {
+  if (!iso) return '';
+  if (group === 'week') return weekKey(iso);
+  if (group === 'month') return monthKey(iso);
+  return dayKey(iso);
+}
+function periodLabel(key, group) {
+  if (group === 'week') {
+    const start = new Date(key + 'T00:00:00');
+    const end = new Date(start); end.setDate(end.getDate() + 6);
+    const fmt = (d) => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+    return `${fmt(start)} – ${fmt(end)}`;
+  }
+  if (group === 'month') {
+    const [y,m] = key.split('-');
+    const names = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+    return `${names[parseInt(m)-1]} ${y}`;
+  }
+  return fmtDate(key);
+}
+
+// =================== ROW HELPERS ===================
+const ROW = { no:0, d_ins:1, d_fact:2, job:3, pole:4, cod:5, pr:6, q:7, total:8, fc:9 };
+
+function getDate(row) { return state.filters.dateMode === 'd_fact' ? row[ROW.d_fact] : row[ROW.d_ins]; }
+
+// =================== FILTER ===================
+function applyFilters() {
+  const f = state.filters;
+  state.filtered = state.rawRows.filter(r => {
+    const d = getDate(r);
+    if (!d && (f.from || f.to)) return false;
+    if (f.from && d < f.from) return false;
+    if (f.to && d > f.to) return false;
+    if (f.fc) {
+      const fc = r[ROW.fc];
+      if (f.fc === 'PEND' && fc !== '') return false;
+      if (f.fc === 'SI' && fc !== 'SI') return false;
+      if (f.fc === 'NO' && fc !== 'NO') return false;
+    }
+    if (f.job && r[ROW.job] !== f.job) return false;
+    if (f.cod && r[ROW.cod] !== f.cod) return false;
+    if (f.pole && r[ROW.pole] !== f.pole) return false;
+    return true;
+  });
+}
+
+// =================== AGGREGATIONS ===================
+function totalsByFc(rows) {
+  let si = 0, no = 0, pend = 0, siC = 0, noC = 0, pendC = 0;
+  for (const r of rows) {
+    const t = r[ROW.total];
+    const fc = r[ROW.fc];
+    if (fc === 'SI') { si += t; siC++; }
+    else if (fc === 'NO') { no += t; noC++; }
+    else { pend += t; pendC++; }
+  }
+  return { si, no, pend, siC, noC, pendC };
+}
+
+function topByCode(rows) {
+  const map = new Map();
+  for (const r of rows) {
+    const c = r[ROW.cod] || '—';
+    if (!map.has(c)) map.set(c, { cod: c, q: 0, total: 0, count: 0 });
+    const m = map.get(c);
+    m.q += r[ROW.q] || 0;
+    m.total += r[ROW.total] || 0;
+    m.count++;
+  }
+  return [...map.values()].sort((a,b) => b.total - a.total);
+}
+
+function topByJob(rows) {
+  const map = new Map();
+  for (const r of rows) {
+    const j = r[ROW.job] || '—';
+    if (!map.has(j)) map.set(j, { job: j, items: 0, poles: new Set(), total: 0 });
+    const m = map.get(j);
+    m.items++;
+    if (r[ROW.pole]) m.poles.add(r[ROW.pole]);
+    m.total += r[ROW.total] || 0;
+  }
+  return [...map.values()].map(j => ({...j, poles: j.poles.size})).sort((a,b) => b.total - a.total);
+}
+
+function topByPole(rows) {
+  const map = new Map();
+  for (const r of rows) {
+    const p = r[ROW.pole] || '—';
+    if (p === '—') continue;
+    // Excluir SITE SURVEY - no es un poste intervenido
+    if (/^site\s*survey$/i.test(p)) continue;
+    const k = p + '|' + (r[ROW.job] || '');
+    if (!map.has(k)) map.set(k, { pole: p, job: r[ROW.job] || '', items: 0, total: 0 });
+    const m = map.get(k);
+    m.items++;
+    m.total += r[ROW.total] || 0;
+  }
+  return [...map.values()].sort((a,b) => b.total - a.total);
+}
+
+function byPeriod(rows, group) {
+  const map = new Map();
+  for (const r of rows) {
+    const d = getDate(r);
+    if (!d) continue;
+    const k = periodKey(d, group);
+    if (!map.has(k)) map.set(k, { key: k, items: 0, jobs: new Set(), poles: new Set(), si: 0, noPend: 0, total: 0 });
+    const m = map.get(k);
+    m.items++;
+    m.jobs.add(r[ROW.job]);
+    // Postes intervenidos = poles únicos excluyendo SITE SURVEY
+    if (r[ROW.pole] && !/^site\s*survey$/i.test(r[ROW.pole])) {
+      m.poles.add(r[ROW.pole]);
+    }
+    m.total += r[ROW.total] || 0;
+    if (r[ROW.fc] === 'SI') m.si += r[ROW.total] || 0;
+    else m.noPend += r[ROW.total] || 0;
+  }
+  return [...map.values()].map(p => ({...p, jobs: p.jobs.size, polesIntervened: p.poles.size})).sort((a,b) => a.key.localeCompare(b.key));
+}
+
+// =================== RENDER ===================
+function renderKPIs() {
+  const rows = state.filtered;
+  const total = rows.reduce((s,r) => s + (r[ROW.total]||0), 0);
+  const totalQ = rows.reduce((s,r) => s + (r[ROW.q]||0), 0);
+  const dates = new Set(rows.map(r => getDate(r)).filter(Boolean));
+  const jobs = new Set(rows.map(r => r[ROW.job]).filter(Boolean));
+  const poles = new Set(rows.map(r => r[ROW.pole]).filter(Boolean));
+  // Postes intervenidos = poles únicos donde hubo trabajo real (excluyendo SITE SURVEY)
+  const interventionRows = rows.filter(r => r[ROW.pole] && r[ROW.pole] !== 'SITE SURVEY' && !/^site\s*survey$/i.test(r[ROW.pole]));
+  const polesIntervened = new Set(interventionRows.map(r => r[ROW.pole]));
+  // Total $ asociado SOLO a postes intervenidos (excluyendo SITE SURVEY) para promedio limpio por poste
+  const totalIntervention = interventionRows.reduce((s,r) => s + (r[ROW.total]||0), 0);
+  const avgPerPole = polesIntervened.size > 0 ? totalIntervention / polesIntervened.size : 0;
+  // Postes SOLO V185 (puro remove, sin códigos de transfer)
+  const poleCodeMap = new Map();
+  const poleRevMap = new Map();
+  for (const r of interventionRows) {
+    const pole = r[ROW.pole];
+    const cod = String(r[ROW.cod] || '').toUpperCase();
+    if (!cod) continue;
+    if (!poleCodeMap.has(pole)) { poleCodeMap.set(pole, new Set()); poleRevMap.set(pole, 0); }
+    poleCodeMap.get(pole).add(cod);
+    poleRevMap.set(pole, poleRevMap.get(pole) + (r[ROW.total] || 0));
+  }
+  let onlyV185Count = 0, onlyV185Revenue = 0;
+  for (const [pole, codeSet] of poleCodeMap.entries()) {
+    if (codeSet.size === 1 && codeSet.has('V185')) {
+      onlyV185Count++;
+      onlyV185Revenue += poleRevMap.get(pole) || 0;
+    }
+  }
+  const onlyV185Pct = polesIntervened.size > 0 ? (onlyV185Count / polesIntervened.size * 100).toFixed(1) + '%' : '0%';
+  const codes = new Set(rows.map(r => r[ROW.cod]).filter(Boolean));
+  const t = totalsByFc(rows);
+
+  document.getElementById('kpiTotal').textContent = fmtUSD(total);
+  document.getElementById('kpiAvgDay').textContent = dates.size > 0 ? fmtUSD(total / dates.size) : '$0';
+  document.getElementById('kpiActiveDays').textContent = dates.size;
+  document.getElementById('kpiItems').textContent = fmtNum(rows.length);
+  document.getElementById('kpiQ').textContent = fmtNum(Math.round(totalQ));
+  document.getElementById('kpiAvgItem').textContent = rows.length > 0 ? fmtUSD(total / rows.length) : '$0';
+  document.getElementById('kpiJobs').textContent = jobs.size;
+  document.getElementById('kpiPolesIntervened').textContent = polesIntervened.size;
+  document.getElementById('kpiAvgPole').textContent = fmtUSD(avgPerPole);
+  document.getElementById('kpiCodes').textContent = codes.size;
+  document.getElementById('kpiOnlyV185').textContent = onlyV185Count;
+  document.getElementById('kpiOnlyV185Revenue').textContent = fmtUSD(onlyV185Revenue);
+  document.getElementById('kpiOnlyV185Pct').textContent = onlyV185Pct;
+
+  const pct = (v) => total > 0 ? ((v/total)*100).toFixed(1) + '%' : '0%';
+  document.getElementById('statSiAmt').textContent = fmtUSD(t.si);
+  document.getElementById('statSiCount').textContent = `${t.siC} items`;
+  document.getElementById('statSiPct').textContent = pct(t.si);
+  document.getElementById('statNoAmt').textContent = fmtUSD(t.no);
+  document.getElementById('statNoCount').textContent = `${t.noC} items`;
+  document.getElementById('statNoPct').textContent = pct(t.no);
+  document.getElementById('statPendAmt').textContent = fmtUSD(t.pend);
+  document.getElementById('statPendCount').textContent = `${t.pendC} items`;
+  document.getElementById('statPendPct').textContent = pct(t.pend);
+
+  // Header meta
+  const allDates = [...dates].sort();
+  document.getElementById('hdrDateRange').textContent = allDates.length > 0
+    ? `${fmtDate(allDates[0])} – ${fmtDate(allDates[allDates.length-1])}`
+    : '—';
+  document.getElementById('hdrRecCount').textContent = fmtNum(rows.length);
+  
+  // Project Stats
+  renderProjectStats(rows, polesIntervened.size, dates);
+}
+
+function renderProjectStats(rows, polesIntervenedCount, datesSet) {
+  // Constants
+  const POSTES_ASIGNADOS = 1450;
+  const NO_EJECUTABLES = 761;
+  const REQUIEREN_REVISION = 29;
+  const POSTES_POR_EJECUTAR = POSTES_ASIGNADOS - NO_EJECUTABLES - REQUIEREN_REVISION; // 660
+  
+  // Update intervened count
+  document.getElementById('polesIntervenedCount').textContent = polesIntervenedCount;
+  document.getElementById('polesNetDisplay').textContent = POSTES_POR_EJECUTAR;
+  document.getElementById('polesNet').textContent = POSTES_POR_EJECUTAR.toLocaleString('en-US');
+  
+  // Calculate progress percentage
+  const progressPct = POSTES_POR_EJECUTAR > 0 ? (polesIntervenedCount / POSTES_POR_EJECUTAR) * 100 : 0;
+  document.getElementById('progressBarFill').style.width = `${Math.min(progressPct, 100)}%`;
+  document.getElementById('progressPct').textContent = `${progressPct.toFixed(1)}%`;
+  
+  // Calculate rate based on LAST 2 WEEKS only
+  const allDates = [...datesSet].sort();
+  if (allDates.length > 0) {
+    const mostRecentDate = new Date(allDates[allDates.length - 1]);
+    const twoWeeksAgo = new Date(mostRecentDate);
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    
+    // Filter rows from last 2 weeks
+    const recentRows = rows.filter(r => {
+      const rowDate = getDate(r);
+      if (!rowDate) return false;
+      const rd = new Date(rowDate);
+      return rd >= twoWeeksAgo && rd <= mostRecentDate;
+    });
+    
+    // Count unique poles and dates in last 2 weeks
+    const recentPoles = new Set(
+      recentRows
+        .filter(r => r[ROW.pole] && r[ROW.pole] !== 'SITE SURVEY' && !/^site\s*survey$/i.test(r[ROW.pole]))
+        .map(r => r[ROW.pole])
+    );
+    const recentDates = new Set(recentRows.map(r => getDate(r)).filter(Boolean));
+    
+    const recentPolesCount = recentPoles.size;
+    const recentActiveDays = recentDates.size;
+    
+    if (recentActiveDays > 0 && recentPolesCount > 0) {
+      const ratePerDay = recentPolesCount / recentActiveDays;
+      document.getElementById('ratePerDay').textContent = ratePerDay.toFixed(1);
+      
+      const polesRemaining = POSTES_POR_EJECUTAR - polesIntervenedCount;
+      if (polesRemaining > 0) {
+        const daysRemaining = Math.ceil(polesRemaining / ratePerDay);
+        document.getElementById('daysRemaining').textContent = daysRemaining;
+        
+        // Calculate projected end date (business days only - exclude weekends)
+        let projectedDate = new Date(mostRecentDate);
+        let businessDaysAdded = 0;
+        
+        while (businessDaysAdded < daysRemaining) {
+          projectedDate.setDate(projectedDate.getDate() + 1);
+          const dayOfWeek = projectedDate.getDay();
+          // Skip weekends (0 = Sunday, 6 = Saturday)
+          if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            businessDaysAdded++;
+          }
+        }
+        
+        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const projectedStr = `${projectedDate.getDate()} ${months[projectedDate.getMonth()]} ${projectedDate.getFullYear()}`;
+        document.getElementById('projectedEnd').textContent = projectedStr;
+      } else {
+        document.getElementById('daysRemaining').textContent = '0';
+        document.getElementById('projectedEnd').textContent = '✓ Completado';
+      }
+    } else {
+      // Not enough recent data
+      document.getElementById('ratePerDay').textContent = '—';
+      document.getElementById('daysRemaining').textContent = '—';
+      document.getElementById('projectedEnd').textContent = 'Sin datos recientes';
+    }
+  } else {
+    document.getElementById('ratePerDay').textContent = '—';
+    document.getElementById('daysRemaining').textContent = '—';
+    document.getElementById('projectedEnd').textContent = '—';
+  }
+}
+
+function renderCharts() {
+  // Trend chart - dual axis: bars (USD facturado) + line (postes intervenidos)
+  const periods = byPeriod(state.filtered, state.filters.group);
+  const labels = periods.map(p => periodLabel(p.key, state.filters.group));
+  const dataSi = periods.map(p => p.si);
+  const dataNoPend = periods.map(p => p.noPend);
+  const dataPoles = periods.map(p => p.polesIntervened);
+
+  if (state.charts.trend) state.charts.trend.destroy();
+  const ctx = document.getElementById('trendChart').getContext('2d');
+  state.charts.trend = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'bar',
+          label: 'Facturado (SI) USD',
+          data: dataSi,
+          backgroundColor: '#16A34A',
+          borderRadius: 0,
+          stack: 'a',
+          yAxisID: 'y'
+        },
+        {
+          type: 'bar',
+          label: 'NO / Pendiente USD',
+          data: dataNoPend,
+          backgroundColor: '#D97706',
+          borderRadius: 0,
+          stack: 'a',
+          yAxisID: 'y'
+        },
+        {
+          type: 'line',
+          label: 'Postes Intervenidos',
+          data: dataPoles,
+          borderColor: '#051A11',
+          backgroundColor: '#BEF264',
+          borderWidth: 2.5,
+          pointBackgroundColor: '#BEF264',
+          pointBorderColor: '#051A11',
+          pointBorderWidth: 2,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          tension: 0.3,
+          yAxisID: 'y1',
+          order: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'JetBrains Mono', size: 11 }, color: '#2D3A33', boxWidth: 12, boxHeight: 12, usePointStyle: false } },
+        tooltip: {
+          backgroundColor: '#051A11',
+          titleFont: { family: 'JetBrains Mono' },
+          bodyFont: { family: 'JetBrains Mono' },
+          callbacks: {
+            label: (c) => {
+              if (c.dataset.label === 'Postes Intervenidos') return `${c.dataset.label}: ${c.raw} postes`;
+              return `${c.dataset.label}: $${c.raw.toLocaleString('en-US')}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { stacked: true, ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#5C6B62', maxRotation: 60, minRotation: 0 }, grid: { display: false } },
+        y: {
+          stacked: true,
+          position: 'left',
+          title: { display: true, text: 'USD', font: { family: 'JetBrains Mono', size: 10 }, color: '#5C6B62' },
+          ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#5C6B62', callback: (v) => '$' + (v >= 1000 ? (v/1000).toFixed(0) + 'K' : v) },
+          grid: { color: '#E5DEC4' }
+        },
+        y1: {
+          position: 'right',
+          title: { display: true, text: 'Postes', font: { family: 'JetBrains Mono', size: 10 }, color: '#051A11' },
+          ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#051A11', precision: 0 },
+          grid: { display: false },
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  document.getElementById('trendTitle').textContent =
+    `Volumen por ${state.filters.group === 'week' ? 'semana' : state.filters.group === 'month' ? 'mes' : 'día'}`;
+  document.getElementById('trendSub').textContent = 'USD facturado (barras) + postes intervenidos (línea)';
+
+  // FC pie
+  const t = totalsByFc(state.filtered);
+  if (state.charts.fc) state.charts.fc.destroy();
+  const ctx2 = document.getElementById('fcChart').getContext('2d');
+  state.charts.fc = new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+      labels: ['Facturado', 'No facturado', 'Pendiente'],
+      datasets: [{
+        data: [t.si, t.no, t.pend],
+        backgroundColor: ['#16A34A', '#DC2626', '#D97706'],
+        borderColor: '#FFFDF5',
+        borderWidth: 3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'JetBrains Mono', size: 11 }, color: '#2D3A33', boxWidth: 12, boxHeight: 12 } },
+        tooltip: {
+          backgroundColor: '#051A11',
+          titleFont: { family: 'JetBrains Mono' },
+          bodyFont: { family: 'JetBrains Mono' },
+          callbacks: { label: (c) => `${c.label}: $${c.raw.toLocaleString('en-US')}` }
+        }
+      }
+    }
+  });
+}
+
+function renderBreakdowns() {
+  const rows = state.filtered;
+  const codes = topByCode(rows); // TODOS los códigos, sin límite
+  const codeMax = codes[0]?.total || 1;
+  document.getElementById('codesCount').textContent = `${codes.length} códigos`;
+  document.getElementById('codesBody').innerHTML = codes.map(c => `
+    <tr>
+      <td><strong>${c.cod}</strong></td>
+      <td style="font-size: 11px; color: var(--ink-soft);">${(state.codeDesc[c.cod] || '—').slice(0, 50)}${(state.codeDesc[c.cod]||'').length > 50 ? '…' : ''}</td>
+      <td class="right">${fmtNum(Math.round(c.q))}</td>
+      <td class="right">
+        ${fmtUSD(c.total)}
+        <span class="bar-cell"><span class="fill" style="width: ${(c.total/codeMax*100).toFixed(0)}%;"></span></span>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="4" style="text-align: center; padding: 30px; color: var(--ink-muted);">Sin datos</td></tr>';
+  const codeTotal = codes.reduce((s,c) => s + c.total, 0);
+  const codeTotalQ = codes.reduce((s,c) => s + c.q, 0);
+  document.getElementById('codesFoot').innerHTML = codes.length > 0
+    ? `<tr><td colspan="2">TOTAL ${codes.length} CÓDIGOS</td><td class="right">${fmtNum(Math.round(codeTotalQ))}</td><td class="right">${fmtUSD(codeTotal)}</td></tr>`
+    : '';
+
+  const jobs = topByJob(rows).slice(0, 15);
+  document.getElementById('jobsCount').textContent = `${topByJob(rows).length} jobs`;
+  document.getElementById('jobsBody').innerHTML = jobs.map(j => `
+    <tr>
+      <td><strong>${j.job}</strong></td>
+      <td class="right">${j.items}</td>
+      <td class="right">${j.poles}</td>
+      <td class="right">${fmtUSD(j.total)}</td>
+    </tr>`).join('') || '<tr><td colspan="4" style="text-align: center; padding: 30px; color: var(--ink-muted);">Sin datos</td></tr>';
+  const jobsTotal = jobs.reduce((s,j) => s + j.total, 0);
+  const jobsItems = jobs.reduce((s,j) => s + j.items, 0);
+  document.getElementById('jobsFoot').innerHTML = jobs.length > 0
+    ? `<tr><td>TOTAL TOP ${jobs.length}</td><td class="right">${jobsItems}</td><td class="right">—</td><td class="right">${fmtUSD(jobsTotal)}</td></tr>`
+    : '';
+
+  const periods = byPeriod(rows, state.filters.group);
+  document.getElementById('periodTitle').textContent = state.filters.group === 'week' ? 'SEMANA' : state.filters.group === 'month' ? 'MES' : 'DÍA';
+  document.getElementById('periodCount').textContent = `${periods.length} ${state.filters.group === 'week' ? 'semanas' : state.filters.group === 'month' ? 'meses' : 'días'}`;
+  document.getElementById('periodBody').innerHTML = periods.slice().reverse().slice(0, 30).map(p => `
+    <tr>
+      <td><strong>${periodLabel(p.key, state.filters.group)}</strong></td>
+      <td class="right">${p.items}</td>
+      <td class="right">${p.jobs}</td>
+      <td class="right" style="color: var(--success);">${fmtUSD(p.si)}</td>
+      <td class="right" style="color: var(--warn);">${fmtUSD(p.noPend)}</td>
+      <td class="right"><strong>${fmtUSD(p.total)}</strong></td>
+    </tr>`).join('') || '<tr><td colspan="6" style="text-align: center; padding: 30px; color: var(--ink-muted);">Sin datos</td></tr>';
+  const pTotal = periods.reduce((s,p) => s + p.total, 0);
+  const pSi = periods.reduce((s,p) => s + p.si, 0);
+  const pNoPend = periods.reduce((s,p) => s + p.noPend, 0);
+  const pItems = periods.reduce((s,p) => s + p.items, 0);
+  document.getElementById('periodFoot').innerHTML = periods.length > 0
+    ? `<tr><td>TOTAL ${periods.length}</td><td class="right">${pItems}</td><td class="right">—</td><td class="right">${fmtUSD(pSi)}</td><td class="right">${fmtUSD(pNoPend)}</td><td class="right">${fmtUSD(pTotal)}</td></tr>`
+    : '';
+
+  const polesArr = topByPole(rows); // TODOS los postes ejecutados, sin límite
+  document.getElementById('polesCount').textContent = `${polesArr.length} postes`;
+  document.getElementById('polesBody').innerHTML = polesArr.map(p => `
+    <tr>
+      <td><strong>${p.pole}</strong></td>
+      <td>${p.job}</td>
+      <td class="right">${p.items}</td>
+      <td class="right" style="color: var(--ink-muted);">${fmtUSD(p.total / p.items)}</td>
+      <td class="right"><strong>${fmtUSD(p.total)}</strong></td>
+    </tr>`).join('') || '<tr><td colspan="5" style="text-align: center; padding: 30px; color: var(--ink-muted);">Sin datos de poles</td></tr>';
+  const polesTotal = polesArr.reduce((s,p) => s + p.total, 0);
+  const polesItems = polesArr.reduce((s,p) => s + p.items, 0);
+  const polesAvg = polesArr.length > 0 ? polesTotal / polesArr.length : 0;
+  document.getElementById('polesFoot').innerHTML = polesArr.length > 0
+    ? `<tr><td colspan="2">TOTAL ${polesArr.length} POSTES · PROM ${fmtUSD(polesAvg)}/poste</td><td class="right">${polesItems}</td><td class="right">—</td><td class="right">${fmtUSD(polesTotal)}</td></tr>`
+    : '';
+}
+
+// =================== ALERTS: POSTES SIN V185 ===================
+function findPolesWithoutV185(rows) {
+  // Agrupar por (job + pole) y recolectar todos los códigos
+  const map = new Map();
+  for (const r of rows) {
+    const pole = r[ROW.pole];
+    const job = r[ROW.job];
+    if (!pole || /^site\s*survey$/i.test(pole)) continue;
+    const key = job + '||' + pole;
+    if (!map.has(key)) {
+      map.set(key, {
+        job: job,
+        pole: pole,
+        codes: new Set(),
+        items: 0,
+        total: 0,
+        fc: new Set()
+      });
+    }
+    const entry = map.get(key);
+    entry.codes.add(r[ROW.cod]);
+    entry.items++;
+    entry.total += r[ROW.total] || 0;
+    if (r[ROW.fc]) entry.fc.add(r[ROW.fc]);
+  }
+  // Filtrar: postes con al menos un código (excluyendo V199) pero SIN V185
+  // V199 es "Move charge - poles that cannot be completed", no cuenta como trabajo real
+  const alerts = [];
+  for (const entry of map.values()) {
+    // Códigos relevantes = todos menos V199
+    const relevantCodes = [...entry.codes].filter(c => c !== 'V199');
+    if (!entry.codes.has('V185') && relevantCodes.length > 0) {
+      alerts.push({
+        job: entry.job,
+        pole: entry.pole,
+        codes: relevantCodes.sort(),
+        items: entry.items,
+        total: entry.total,
+        fc: [...entry.fc].sort().join(', ') || '—'
+      });
+    }
+  }
+  alerts.sort((a, b) => b.total - a.total);
+  return alerts;
+}
+
+function renderAlerts() {
+  const alerts = findPolesWithoutV185(state.filtered);
+  const totalAffected = alerts.reduce((s, a) => s + a.total, 0);
+  const totalItems = alerts.reduce((s, a) => s + a.items, 0);
+
+  document.getElementById('alertCount').textContent = alerts.length;
+  document.getElementById('alertTotal').textContent = fmtUSD(totalAffected);
+
+  if (alerts.length === 0) {
+    document.getElementById('alertBody').innerHTML = `
+      <tr><td colspan="6" style="text-align: center; padding: 30px; color: #16A34A; font-family: 'JetBrains Mono', monospace;">
+        ✓ Todos los postes intervenidos tienen V185. Sin alertas.
+      </td></tr>`;
+    document.getElementById('alertFoot').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('alertBody').innerHTML = alerts.map(a => `
+    <tr>
+      <td>${a.job}</td>
+      <td><strong>${a.pole}</strong></td>
+      <td style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">${a.codes.map(c => `<span style="display:inline-block; padding:2px 6px; margin:1px; background:#FEF3C7; color:#92400E; border:1px solid #D97706; font-weight:700;">${c}</span>`).join('')}</td>
+      <td class="right">${a.items}</td>
+      <td class="right"><strong>${fmtUSD(a.total)}</strong></td>
+      <td><span style="display:inline-block; padding:2px 8px; background:${a.fc.includes('SI') ? '#16A34A' : '#D97706'}; color:white; font-family:'JetBrains Mono', monospace; font-size:10px; font-weight:700;">${a.fc}</span></td>
+    </tr>`).join('');
+
+  document.getElementById('alertFoot').innerHTML =
+    `<tr style="background:#FEE2E2;"><td colspan="3" style="font-weight:700; color:#DC2626;">⚠ TOTAL ${alerts.length} POSTES SIN V185</td><td class="right">${totalItems}</td><td class="right" style="font-weight:700; color:#DC2626;">${fmtUSD(totalAffected)}</td><td></td></tr>`;
+}
+
+function renderDetail() {
+  const search = state.filters.search.toLowerCase();
+  let rows = state.filtered;
+  if (search) {
+    rows = rows.filter(r => {
+      const desc = state.codeDesc[r[ROW.cod]] || '';
+      return (r[ROW.job]||'').toLowerCase().includes(search)
+        || (r[ROW.pole]||'').toLowerCase().includes(search)
+        || (r[ROW.cod]||'').toLowerCase().includes(search)
+        || desc.toLowerCase().includes(search);
+    });
+  }
+  const max = 200;
+  const display = rows.slice(0, max);
+  document.getElementById('detailPager').textContent =
+    rows.length > max ? `Mostrando ${max} de ${fmtNum(rows.length)} filas` : `${fmtNum(rows.length)} filas`;
+
+  const fcCls = (fc) => fc === 'SI' ? 'si' : fc === 'NO' ? 'no' : 'pend';
+  const fcLab = (fc) => fc === 'SI' ? 'SI' : fc === 'NO' ? 'NO' : 'PEND';
+
+  document.getElementById('detailBody').innerHTML = display.map(r => `
+    <tr>
+      <td>${r[ROW.no]}</td>
+      <td>${fmtDate(r[ROW.d_ins])}</td>
+      <td>${fmtDate(r[ROW.d_fact])}</td>
+      <td><strong>${r[ROW.job]}</strong></td>
+      <td>${r[ROW.pole] || '—'}</td>
+      <td><strong>${r[ROW.cod]}</strong></td>
+      <td style="font-size: 11px; color: var(--ink-soft);">${(state.codeDesc[r[ROW.cod]] || '').slice(0, 60)}</td>
+      <td class="right">${fmtUSD2(r[ROW.pr])}</td>
+      <td class="right">${r[ROW.q].toFixed(2)}</td>
+      <td class="right"><strong>${fmtUSD2(r[ROW.total])}</strong></td>
+      <td><span class="fc-badge ${fcCls(r[ROW.fc])}">${fcLab(r[ROW.fc])}</span></td>
+    </tr>`).join('') || '<tr><td colspan="11" style="text-align: center; padding: 40px; color: var(--ink-muted);">Sin resultados</td></tr>';
+}
+
+function populateFilterDropdowns() {
+  const jobs = [...new Set(state.rawRows.map(r => r[ROW.job]).filter(Boolean))].sort();
+  const codes = [...new Set(state.rawRows.map(r => r[ROW.cod]).filter(Boolean))].sort();
+  const poles = [...new Set(state.rawRows.map(r => r[ROW.pole]).filter(Boolean))].sort();
+
+  const jobSel = document.getElementById('filterJob');
+  jobSel.innerHTML = '<option value="">TODOS LOS JOBS</option>' + jobs.map(j => `<option value="${j}">${j}</option>`).join('');
+  const codSel = document.getElementById('filterCod');
+  codSel.innerHTML = '<option value="">TODOS LOS CÓDIGOS</option>' + codes.map(c => `<option value="${c}">${c} · ${(state.codeDesc[c]||'').slice(0,40)}</option>`).join('');
+  const poleSel = document.getElementById('filterPole');
+  poleSel.innerHTML = '<option value="">TODOS LOS POLES</option>' + poles.map(p => `<option value="${p}">${p}</option>`).join('');
+}
+
+// =================== PRESETS ===================
+function applyPreset(preset) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const iso = (d) => d.toISOString().slice(0,10);
+  let from = '', to = '';
+
+  // Use the data's most recent date as anchor for "today" if there's no data covering today
+  const dates = state.rawRows.map(r => r[state.filters.dateMode === 'd_fact' ? ROW.d_fact : ROW.d_ins]).filter(Boolean).sort();
+  const dataMax = dates[dates.length - 1];
+  const anchor = dataMax && dataMax > iso(today) ? new Date(dataMax + 'T00:00:00') : today;
+
+  const start = (offsetDays) => { const d = new Date(anchor); d.setDate(d.getDate() + offsetDays); return d; };
+
+  if (preset === 'today') { from = to = iso(anchor); }
+  else if (preset === 'yesterday') { from = to = iso(start(-1)); }
+  else if (preset === 'thisWeek') {
+    const day = anchor.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    const monday = start(diff);
+    from = iso(monday); to = iso(anchor);
+  }
+  else if (preset === 'lastWeek') {
+    const day = anchor.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    const monday = start(diff);
+    const lastMonday = new Date(monday); lastMonday.setDate(lastMonday.getDate() - 7);
+    const lastSunday = new Date(lastMonday); lastSunday.setDate(lastSunday.getDate() + 6);
+    from = iso(lastMonday); to = iso(lastSunday);
+  }
+  else if (preset === 'thisMonth') {
+    from = iso(new Date(anchor.getFullYear(), anchor.getMonth(), 1));
+    to = iso(anchor);
+  }
+  else if (preset === 'lastMonth') {
+    const firstThisMonth = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+    const lastMonthEnd = new Date(firstThisMonth); lastMonthEnd.setDate(lastMonthEnd.getDate() - 1);
+    const lastMonthStart = new Date(lastMonthEnd.getFullYear(), lastMonthEnd.getMonth(), 1);
+    from = iso(lastMonthStart); to = iso(lastMonthEnd);
+  }
+  else if (preset === 'last7') { from = iso(start(-6)); to = iso(anchor); }
+  else if (preset === 'last30') { from = iso(start(-29)); to = iso(anchor); }
+  else if (preset === 'last90') { from = iso(start(-89)); to = iso(anchor); }
+  else if (preset === 'all') { from = ''; to = ''; }
+
+  state.filters.from = from;
+  state.filters.to = to;
+  state.filters.preset = preset;
+  document.getElementById('dateFrom').value = from;
+  document.getElementById('dateTo').value = to;
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === preset));
+  refresh();
+}
+
+// =================== REFRESH ===================
+function refresh() {
+  applyFilters();
+  renderKPIs();
+  renderCharts();
+  renderBreakdowns();
+  renderAlerts();
+  renderDetail();
+  updatePrintSummary();
+}
+
+function updatePrintSummary() {
+  const f = state.filters;
+  const range = (f.from || f.to)
+    ? `${f.from ? fmtDateLong(f.from) : 'inicio'} → ${f.to ? fmtDateLong(f.to) : 'fin'}`
+    : 'TODO EL RANGO';
+  document.getElementById('prtRange').textContent = range;
+  const filt = [];
+  filt.push(`Modo: ${f.dateMode === 'd_fact' ? 'Día Facturación' : 'Día Instalación'}`);
+  if (f.fc) filt.push(`Estado FC: ${f.fc}`);
+  if (f.job) filt.push(`Job: ${f.job}`);
+  if (f.cod) filt.push(`Código: ${f.cod}`);
+  if (f.pole) filt.push(`Pole: ${f.pole}`);
+  filt.push(`Agrupado por ${f.group === 'week' ? 'semana' : f.group === 'month' ? 'mes' : 'día'}`);
+  document.getElementById('prtFilters').textContent = filt.join(' · ');
+  document.getElementById('prtGen').textContent = new Date().toLocaleString('es-CO');
+}
+
+// =================== EVENT WIRING ===================
+function wireEvents() {
+  document.querySelectorAll('.preset-btn').forEach(b => b.addEventListener('click', () => applyPreset(b.dataset.preset)));
+
+  ['dateFrom','dateTo','filterDateMode','filterFc','filterJob','filterCod','filterPole','filterGroup'].forEach(id => {
+    document.getElementById(id).addEventListener('change', (e) => {
+      const map = { dateFrom:'from', dateTo:'to', filterDateMode:'dateMode', filterFc:'fc', filterJob:'job', filterCod:'cod', filterPole:'pole', filterGroup:'group' };
+      state.filters[map[id]] = e.target.value;
+      if (id === 'dateFrom' || id === 'dateTo') {
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        state.filters.preset = 'custom';
+      }
+      refresh();
+    });
+  });
+
+  document.getElementById('detailSearch').addEventListener('input', (e) => {
+    state.filters.search = e.target.value;
+    renderDetail();
+  });
+
+  document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+}
+
+// =================== FILE UPLOAD ===================
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const name = file.name || 'archivo';
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  const mime = file.type || '';
+
+  showToast(`Procesando ${name}...`);
+
+  // Heuristic: detect Excel vs CSV/text by extension OR mime OR magic bytes
+  const isExcel = ext === 'xlsx' || ext === 'xls' || ext === 'xlsm' ||
+                  /spreadsheetml|ms-excel/i.test(mime);
+  const isText = ext === 'csv' || ext === 'tsv' || ext === 'txt' ||
+                 /^text\//i.test(mime);
+
+  // First try: read as ArrayBuffer (works for both Excel and text on iOS)
+  const reader = new FileReader();
+
+  reader.onerror = () => showToast(`Error leyendo archivo: ${reader.error?.message || 'desconocido'}`);
+
+  reader.onload = (ev) => {
+    try {
+      const buf = ev.target.result;
+      // Check first bytes - Excel files start with PK (zip) or D0CF (old xls)
+      const bytes = new Uint8Array(buf.slice(0, 4));
+      const isPK = bytes[0] === 0x50 && bytes[1] === 0x4B; // PK
+      const isOldXls = bytes[0] === 0xD0 && bytes[1] === 0xCF; // old xls
+
+      if (isPK || isOldXls || isExcel) {
+        // Excel route
+        if (typeof XLSX === 'undefined') {
+          showToast('Error: librería Excel no cargó. Revisá tu conexión.');
+          return;
+        }
+        const wb = XLSX.read(buf, { type: 'array' });
+        let sheet = wb.SheetNames.find(n => /warren|pole|transfer/i.test(n)) || wb.SheetNames[0];
+        const json = XLSX.utils.sheet_to_json(wb.Sheets[sheet], { defval: '', raw: false });
+        if (json.length === 0) {
+          showToast(`Hoja "${sheet}" está vacía. Probá con otro archivo o usá "Pegar datos".`);
+          return;
+        }
+        ingestParsedRows(json, name);
+      } else {
+        // Text route — convert ArrayBuffer to string
+        const text = new TextDecoder('utf-8').decode(buf);
+        // Auto-detect delimiter: tab > semicolon > comma
+        const firstLine = text.split('\n')[0] || '';
+        const delim = firstLine.includes('\t') ? '\t' : firstLine.split(';').length > firstLine.split(',').length ? ';' : ',';
+        Papa.parse(text, {
+          header: true, skipEmptyLines: true, delimiter: delim,
+          complete: (res) => {
+            if (!res.data || res.data.length === 0) {
+              showToast(`Archivo vacío o sin encabezados. Probá "Pegar datos".`);
+              return;
+            }
+            ingestParsedRows(res.data, name);
+          },
+          error: (err) => showToast(`Error parseando: ${err.message}`)
+        });
+      }
+    } catch(err) {
+      console.error('File parse error:', err);
+      showToast(`Error: ${err.message}. Probá usar "Pegar datos" en su lugar.`);
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+
+  // Reset input so same file can be re-selected
+  e.target.value = '';
+}
+
+// =================== PASTE DATA (iOS-friendly fallback) ===================
+function openPasteModal() { openModal('pasteModal'); }
+
+function processPastedData() {
+  const text = document.getElementById('pasteArea').value.trim();
+  if (!text) { showToast('Pegá los datos primero'); return; }
+
+  // Auto-detect delimiter
+  const firstLine = text.split('\n')[0] || '';
+  const tabCount = (firstLine.match(/\t/g) || []).length;
+  const commaCount = (firstLine.match(/,/g) || []).length;
+  const semiCount = (firstLine.match(/;/g) || []).length;
+  let delim = '\t'; // Sheets/Excel paste defaults to tab
+  if (commaCount > tabCount && commaCount > semiCount) delim = ',';
+  else if (semiCount > tabCount && semiCount > commaCount) delim = ';';
+
+  Papa.parse(text, {
+    header: true, skipEmptyLines: true, delimiter: delim,
+    complete: (res) => {
+      if (!res.data || res.data.length === 0) {
+        showToast('No se detectaron filas. Verificá que copiaste con encabezados.');
+        return;
+      }
+      ingestParsedRows(res.data, `Pegado (${res.data.length} filas)`);
+      closeModal('pasteModal');
+      document.getElementById('pasteArea').value = '';
+    },
+    error: (err) => showToast(`Error: ${err.message}`)
+  });
+}
+
+function ingestParsedRows(arr, srcName) {
+  if (!arr || arr.length === 0) { showToast('Archivo vacío'); return; }
+  // Try to detect column names flexibly (matches common variants)
+  const sample = arr[0];
+  const keys = Object.keys(sample);
+  const find = (...patterns) => {
+    for (const p of patterns) {
+      const k = keys.find(k => new RegExp(p, 'i').test(k.trim()));
+      if (k) return k;
+    }
+    return null;
+  };
+  const kNo = find('^no$', '^numero$', '^#$', '^entry$');
+  const kIns = find('dia.ins', 'd.ins', 'install', 'instalaci', 'fecha.ins');
+  const kFact = find('dia.fact', 'd.fact', 'fact', 'invoice');
+  const kJob = find('^job$', 'work order', 'trabajo');
+  const kPole = find('pol.no', 'pole', 'poste');
+  const kCod = find('^cod', 'codigo', 'code', 'unit');
+  const kPr = find('^pr$', 'price', 'precio', 'rate', 'tarifa', 'unit.*price');
+  const kQ = find('^q$', 'qty', 'cant', 'quantity', 'cantidad');
+  const kTot = find('total', 'amount', 'monto', 'valor');
+  const kDesc = find('descrip', 'desc');
+  const kFc = find('^fc$', 'facturado', 'invoiced', 'billed', 'estado');
+
+  const fixDate = (s) => {
+    if (!s) return '';
+    s = String(s).trim();
+    // ISO already
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+    // MM/DD/YYYY or M/D/YYYY
+    let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if (m) {
+      let [_,mm,dd,yy] = m;
+      if (yy.length === 2) yy = '20' + yy;
+      else if (yy.length === 3) yy = '20' + yy.slice(-2);
+      return `${yy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
+    }
+    // Try Date parse
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+    return '';
+  };
+
+  const newDesc = { ...state.codeDesc };
+  const rows = [];
+  for (const r of arr) {
+    const cod = String(kCod ? r[kCod] || '' : '').trim().toUpperCase();
+    const desc = String(kDesc ? r[kDesc] || '' : '').trim();
+    if (cod && desc && !newDesc[cod]) newDesc[cod] = desc;
+    const fcRaw = String(kFc ? r[kFc] || '' : '').trim().toUpperCase();
+    const fc = fcRaw === 'SI' ? 'SI' : fcRaw === 'NO' ? 'NO' : '';
+    
+    // Parse numbers - handles European (150,00), American (150.00), and mixed formats (1.500,00)
+    const num = (v) => {
+      let s = String(v).trim().replace(/[$]/g, '');
+      
+      // Detect format by finding the last separator (decimal)
+      const lastComma = s.lastIndexOf(',');
+      const lastDot = s.lastIndexOf('.');
+      
+      if (lastComma > lastDot) {
+        // European/Colombian format: comma is decimal, dot is thousands
+        // Examples: "150,00", "1.500,00", "1500,5"
+        s = s.replace(/\./g, '').replace(',', '.');
+      } else if (lastDot > lastComma) {
+        // American format: dot is decimal, comma is thousands
+        // Examples: "150.00", "1,500.00"
+        s = s.replace(/,/g, '');
+      } else if (lastComma === -1 && lastDot === -1) {
+        // No separators - just a number
+        // Example: "150"
+        // do nothing
+      }
+      
+      const n = parseFloat(s);
+      return isNaN(n) ? 0 : n;
+    };
+    
+    // Extract PR and Q
+    const pr = num(kPr ? r[kPr] : 0);
+    const q = num(kQ ? r[kQ] : 0);
+    
+    // Try to get Total from column, but if it's a formula or 0, calculate from PR × Q
+    let total = num(kTot ? r[kTot] : 0);
+    if (total === 0 && pr > 0 && q > 0) {
+      total = pr * q;
+    }
+
+    rows.push([
+      String(kNo ? r[kNo] || '' : ''),
+      fixDate(kIns ? r[kIns] : ''),
+      fixDate(kFact ? r[kFact] : ''),
+      String(kJob ? r[kJob] || '' : '').trim(),
+      String(kPole ? r[kPole] || '' : '').trim(),
+      cod,
+      pr,
+      q,
+      total,
+      fc
+    ]);
+  }
+  state.rawRows = rows;
+  state.codeDesc = newDesc;
+  state.source = 'upload';
+  document.getElementById('dataSourceLabel').textContent = `${srcName.toUpperCase()} · ${rows.length.toLocaleString('en-US')} filas`;
+  populateFilterDropdowns();
+  applyPreset('all');
+  showToast(`Cargadas ${rows.length} filas desde ${srcName}`);
+}
+
+// =================== WARREN LIVE SHEET (Direct Load) ===================
+async function loadWarrenSheet() {
+  // Warren PA Project - Main Data Sheet
+  const WARREN_SHEET_ID = '1de-ETTCpxA3G1g1lEP2_3CXCfIlCI0SHbqMXC7ewPFQ';
+  const gid = '617915464'; // Hoja: warren pole transfer
+  
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${WARREN_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
+  showToast('🔄 Cargando Warren Live desde Google Sheets...');
+  
+  try {
+    const res = await fetch(csvUrl);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} - No se pudo acceder al Sheet`);
+    }
+    
+    const csv = await res.text();
+    
+    // Check if response is HTML (means sheet is not publicly accessible)
+    if (csv.trim().startsWith('<')) {
+      throw new Error('Sheet no público. Ve a Google Sheets → Compartir → "Anyone with the link" → Viewer');
+    }
+    
+    Papa.parse(csv, {
+      header: true,
+      skipEmptyLines: 'greedy', // Only skip completely empty lines, not lines with some empty fields
+      complete: (result) => {
+        console.log(`[DEBUG] Papa.parse recibió ${result.data.length} filas`);
+        if (result.data && result.data.length > 0) {
+          ingestParsedRows(result.data, 'Warren Live');
+          showToast(`✓ Warren Live cargado: ${result.data.length} registros`);
+        } else {
+          showToast('⚠ El Sheet está vacío o no tiene datos válidos');
+        }
+      },
+      error: (err) => {
+        showToast(`Error al parsear CSV: ${err.message}`);
+        console.error('Papa Parse error:', err);
+      }
+    });
+    
+  } catch (err) {
+    showToast(`❌ Error: ${err.message}`);
+    console.error('Warren Sheet load error:', err);
+    
+    // Provide helpful instructions
+    const helpMsg = document.createElement('div');
+    helpMsg.style.cssText = `
+      position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+      background: var(--tysa-darkest); color: var(--tysa-lime);
+      border: 2px solid var(--tysa-lime);
+      padding: 20px 30px; max-width: 600px; z-index: 1000;
+      font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; line-height: 1.6;
+    `;
+    helpMsg.innerHTML = `
+      <div style="font-weight: 700; font-size: 15px; margin-bottom: 10px; font-family: 'Anton', sans-serif; letter-spacing: 0.05em;">
+        CONFIGURACIÓN REQUERIDA
+      </div>
+      <div style="margin-bottom: 12px;">
+        Para cargar datos en vivo, el Google Sheet debe estar configurado como <strong>"Anyone with the link can view"</strong>:
+      </div>
+      <ol style="margin: 12px 0 12px 24px; color: rgba(255,255,255,0.9);">
+        <li>Abre el Google Sheet en tu navegador</li>
+        <li>Click en <strong>Compartir</strong> (botón verde arriba-derecha)</li>
+        <li>En "Acceso general" selecciona <strong>"Anyone with the link"</strong></li>
+        <li>Rol: <strong>Viewer</strong></li>
+        <li>Guarda los cambios</li>
+      </ol>
+      <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 11px; color: rgba(255,255,255,0.7);">
+        Sheet ID: <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; font-family: 'JetBrains Mono', monospace;">${WARREN_SHEET_ID}</code>
+      </div>
+      <button onclick="this.parentElement.remove()" style="
+        position: absolute; top: 10px; right: 10px;
+        background: transparent; border: 1px solid rgba(255,255,255,0.3);
+        color: white; padding: 4px 12px; cursor: pointer; font-size: 11px;
+      ">CERRAR</button>
+    `;
+    document.body.appendChild(helpMsg);
+    setTimeout(() => helpMsg.remove(), 12000);
+  }
+}
+
+// =================== WARREN LIVE · ONE-CLICK GOOGLE DRIVE LOAD ===================
+const WARREN_LIVE_ID = '1de-ETTCpxA3G1g1lEP2_3CXCfIlCI0SHbqMXC7ewPFQ';
+const WARREN_LIVE_SHEET = 'WARREN POLE TRANSFER'; // Solo se lee esta pestaña · las demás se ignoran
+const WARREN_LIVE_GID = '617915464'; // GID exacto de la pestaña WARREN POLE TRANSFER · permite carga directa por gid
+const WARREN_LIVE_VIEW_URL = `https://docs.google.com/spreadsheets/d/${WARREN_LIVE_ID}/edit`;
+
+// Estado de sincronización: timestamp de la última carga exitosa desde el Sheet
+let lastSyncTime = null;
+
+// Actualiza el indicador de sincronización (verde = ok, amarillo = cargando, rojo = error)
+function updateSyncStatus(state, detail) {
+  const dot = document.getElementById('syncDot');
+  const text = document.getElementById('syncText');
+  if (!dot || !text) return;
+
+  if (state === 'syncing') {
+    dot.style.background = 'var(--warn)';
+    dot.style.animation = 'pulse 1.5s infinite';
+    text.textContent = 'Sincronizando...';
+  } else if (state === 'synced') {
+    lastSyncTime = Date.now();
+    dot.style.background = 'var(--tysa-lime)';
+    dot.style.animation = '';
+    text.textContent = '✓ Sincronizado · ahora';
+  } else if (state === 'offline') {
+    dot.style.background = 'var(--danger)';
+    dot.style.animation = '';
+    text.textContent = `⚠ Sin conexión${detail ? ' · ' + detail : ''}`;
+  }
+}
+
+// Refresca el texto "hace X seg/min" cada 30 segundos
+function refreshSyncTimer() {
+  const text = document.getElementById('syncText');
+  if (!text || !lastSyncTime) return;
+  const sec = Math.floor((Date.now() - lastSyncTime) / 1000);
+  let timeStr;
+  if (sec < 10) timeStr = 'ahora';
+  else if (sec < 60) timeStr = `hace ${sec} seg`;
+  else if (sec < 3600) timeStr = `hace ${Math.floor(sec/60)} min`;
+  else timeStr = `hace ${Math.floor(sec/3600)} h`;
+  text.textContent = `✓ Sincronizado · ${timeStr}`;
+}
+setInterval(refreshSyncTimer, 30000);
+
+async function loadWarrenLive(silent) {
+  if (!silent) showToast('⚡ Conectando con Google Sheets...');
+  updateSyncStatus('syncing');
+
+  // Sheet nativo + gviz CSV con nombre de hoja explícito → CORS OK, sin proxy
+  const sheetParam = encodeURIComponent(WARREN_LIVE_SHEET);
+
+  // Validador: confirma que un CSV tiene el header de WARREN POLE TRANSFER
+  // (descarta si export?format=csv trae otra pestaña por error)
+  const isWarrenSheetCsv = (text) => {
+    if (!text || text.length < 50 || text.trim().startsWith('<') || !text.includes(',')) return false;
+    const firstLine = text.split('\n')[0].toLowerCase();
+    return firstLine.includes('pol') && firstLine.includes('cod') && firstLine.includes('total');
+  };
+
+  // ---- Estrategia 1: export?format=csv&gid=GID (LA MÁS CONFIABLE — apunta directo a la pestaña por GID) ----
+  // Este endpoint resuelve TODOS los problemas: targeting de pestaña exacta, sin truncamiento, sin auto-detect.
+  try {
+    const csvGidUrl = `https://docs.google.com/spreadsheets/d/${WARREN_LIVE_ID}/export?format=csv&gid=${WARREN_LIVE_GID}`;
+    const res = await fetch(csvGidUrl, { redirect: 'follow' });
+    if (res.ok) {
+      const text = await res.text();
+      if (isWarrenSheetCsv(text)) {
+        await parseCsvAndIngest(text, `Live · gid=${WARREN_LIVE_GID}`, silent);
+        updateSyncStatus('synced');
+        return;
+      }
+    }
+  } catch(e) { /* sigue al siguiente */ }
+
+  // ---- Estrategia 2: gviz CSV con nombre de hoja + rango forzado (LEE SOLO WARREN POLE TRANSFER) ----
+  // Garantiza leer solo la pestaña correcta, sin importar qué otras pestañas tenga el Sheet.
+  try {
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${WARREN_LIVE_ID}/gviz/tq?tqx=out:csv&sheet=${sheetParam}&range=A:L&headers=1`;
+    const res = await fetch(csvUrl, { redirect: 'follow' });
+    if (res.ok) {
+      const text = await res.text();
+      if (isWarrenSheetCsv(text)) {
+        await parseCsvAndIngest(text, `Live · ${WARREN_LIVE_SHEET}`, silent);
+        updateSyncStatus('synced');
+        return;
+      }
+    }
+  } catch(e) { /* sigue al siguiente */ }
+
+  // ---- Estrategia 2: gviz CSV con nombre de hoja, sin rango forzado ----
+  try {
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${WARREN_LIVE_ID}/gviz/tq?tqx=out:csv&sheet=${sheetParam}`;
+    const res = await fetch(csvUrl, { redirect: 'follow' });
+    if (res.ok) {
+      const text = await res.text();
+      if (isWarrenSheetCsv(text)) {
+        await parseCsvAndIngest(text, `Live · ${WARREN_LIVE_SHEET}`, silent);
+        updateSyncStatus('synced');
+        return;
+      }
+    }
+  } catch(e) { /* sigue al siguiente */ }
+
+  // ---- Estrategia 3: export?format=csv (con validación · descarta si trae otra pestaña) ----
+  try {
+    const csvExportUrl = `https://docs.google.com/spreadsheets/d/${WARREN_LIVE_ID}/export?format=csv`;
+    const res = await fetch(csvExportUrl, { redirect: 'follow' });
+    if (res.ok) {
+      const text = await res.text();
+      if (isWarrenSheetCsv(text)) {
+        await parseCsvAndIngest(text, 'Live · CSV completo', silent);
+        updateSyncStatus('synced');
+        return;
+      }
+    }
+  } catch(e) { /* sigue al siguiente */ }
+
+  // ---- Estrategia 4: gviz CSV sin nombre de hoja (último intento) ----
+  try {
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${WARREN_LIVE_ID}/gviz/tq?tqx=out:csv`;
+    const res = await fetch(csvUrl, { redirect: 'follow' });
+    if (res.ok) {
+      const text = await res.text();
+      if (isWarrenSheetCsv(text)) {
+        await parseCsvAndIngest(text, 'Live · CSV directo', silent);
+        updateSyncStatus('synced');
+        return;
+      }
+    }
+  } catch(e) { /* sigue al siguiente */ }
+
+  // ---- Estrategia 4: proxy CORS sobre el XLSX export (último recurso) ----
+  if (!silent) showToast('⚡ Probando vía proxy...');
+  try {
+    const xlsxUrl = `https://docs.google.com/spreadsheets/d/${WARREN_LIVE_ID}/export?format=xlsx`;
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(xlsxUrl)}`;
+    const res = await fetch(proxyUrl);
+    if (!res.ok) throw new Error(`Proxy HTTP ${res.status}`);
+    const buf = await res.arrayBuffer();
+    const head = new Uint8Array(buf.slice(0, 4));
+    if (head[0] !== 0x50 || head[1] !== 0x4B) {
+      throw new Error('Drive no devolvió un XLSX válido · revisa permisos de compartir');
+    }
+    if (typeof XLSX === 'undefined') throw new Error('Librería XLSX no cargó');
+    const wb = XLSX.read(buf, { type: 'array' });
+    const sheet = wb.SheetNames.find(n => /warren|pole|transfer/i.test(n)) || wb.SheetNames[0];
+    const json = XLSX.utils.sheet_to_json(wb.Sheets[sheet], { defval: '', raw: false });
+    if (!json || json.length === 0) throw new Error(`Hoja "${sheet}" vacía`);
+    ingestParsedRows(json, `Live · ${json.length} filas · ${new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})}`);
+    if (!silent) showToast(`✓ ${json.length} filas vía proxy (hoja: ${sheet})`);
+    updateSyncStatus('synced');
+    return;
+  } catch(err) {
+    console.error('Warren Live · todas las estrategias fallaron:', err);
+    updateSyncStatus('offline', 'datos embebidos');
+    // Solo mostrar el modal grande de error si fue una llamada manual (no silent)
+    if (!silent) showLiveLoadError(err.message);
+  }
+}
+
+// Helper compartido para parsear CSV e inyectar
+function parseCsvAndIngest(csv, sourceLabel, silent) {
+  return new Promise((resolve) => {
+    Papa.parse(csv, {
+      header: true,
+      skipEmptyLines: 'greedy',
+      complete: (r) => {
+        if (r.data && r.data.length > 0) {
+          // ingestParsedRows ya agrega "· N filas" al label, no lo duplicamos acá
+          ingestParsedRows(r.data, sourceLabel);
+          if (!silent) showToast(`✓ ${r.data.length} filas cargadas (${sourceLabel})`);
+        } else {
+          if (!silent) showToast('⚠ Respuesta vacía del Sheet');
+        }
+        resolve();
+      },
+      error: (e) => { if (!silent) showToast(`Error parseando CSV: ${e.message}`); resolve(); }
+    });
+  });
+}
+
+// Mensaje claro de error con instrucciones cuando TODO falla
+function showLiveLoadError(detail) {
+  const helpMsg = document.createElement('div');
+  helpMsg.style.cssText = `
+    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+    background: var(--tysa-darkest); color: var(--tysa-lime);
+    border: 2px solid var(--tysa-lime);
+    padding: 22px 28px; max-width: 620px; z-index: 1000;
+    font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; line-height: 1.55;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  `;
+  helpMsg.innerHTML = `
+    <div style="font-family:'Anton',sans-serif; font-size: 18px; letter-spacing: 0.05em; margin-bottom: 12px;">
+      ⚠ NO SE PUDO CARGAR EL ARCHIVO
+    </div>
+    <div style="font-size: 11px; color: rgba(255,255,255,0.65); margin-bottom: 14px; font-family:'JetBrains Mono',monospace;">${detail}</div>
+    <div style="margin-bottom: 8px; color: rgba(255,255,255,0.9);"><strong>Solución más rápida (1 vez):</strong> convertí el XLSX a Google Sheet nativo</div>
+    <ol style="margin: 8px 0 14px 22px; color: rgba(255,255,255,0.85); font-size: 12.5px;">
+      <li>Abrí el archivo en Drive</li>
+      <li>Menú: <strong>Archivo → Guardar como Hoja de cálculo de Google</strong></li>
+      <li>Compartí el nuevo Sheet: <strong>"Cualquiera con el enlace · Lector"</strong></li>
+      <li>Pasame la URL del nuevo Sheet y actualizo el botón</li>
+    </ol>
+    <div style="border-top: 1px solid rgba(255,255,255,0.15); padding-top: 12px; margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
+      <a href="${WARREN_LIVE_VIEW_URL}" target="_blank" style="background: var(--tysa-lime); color: var(--tysa-darkest); padding: 6px 14px; text-decoration: none; font-weight: 700; font-size: 11px; letter-spacing: 0.1em;">ABRIR ARCHIVO EN DRIVE ↗</a>
+      <button onclick="document.getElementById('fileInput').click(); this.parentElement.parentElement.remove();" style="background: transparent; border: 1px solid var(--tysa-lime); color: var(--tysa-lime); padding: 6px 14px; cursor: pointer; font-size: 11px; letter-spacing: 0.1em;">📂 SUBIR MANUAL</button>
+      <button onclick="this.parentElement.parentElement.remove()" style="margin-left: auto; background: transparent; border: 1px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.7); padding: 6px 14px; cursor: pointer; font-size: 11px;">CERRAR</button>
+    </div>
+  `;
+  document.body.appendChild(helpMsg);
+  setTimeout(() => { if (helpMsg.parentElement) helpMsg.remove(); }, 18000);
+}
+
+// =================== GOOGLE SHEETS URL LOAD ===================
+async function loadFromUrl() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { showToast('Pega una URL de Google Sheets'); return; }
+  // Convert standard share URL to CSV export URL
+  const m = url.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (!m) { showToast('URL no válida — debe ser un Google Sheet'); return; }
+  const id = m[1];
+  const gidMatch = url.match(/[#&?]gid=(\d+)/);
+  const gid = gidMatch ? gidMatch[1] : '0';
+
+  // Try the gviz CSV endpoint (works for "anyone with link can view" sheets)
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${gid}`;
+  showToast('Cargando desde Google Sheets...');
+  try {
+    const res = await fetch(csvUrl);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const csv = await res.text();
+    if (csv.trim().startsWith('<')) throw new Error('La hoja no es pública. Comparte como "anyone with link can view" o publica como CSV.');
+    Papa.parse(csv, {
+      header: true, skipEmptyLines: true,
+      complete: (res) => ingestParsedRows(res.data, 'Google Sheets')
+    });
+  } catch (err) {
+    showToast(`Error: ${err.message}. Tip: Archivo > Compartir > "Anyone with link" o exporta CSV y súbelo.`);
+    console.error(err);
+  }
+}
+
+function loadDemoData() {
+  loadEmbedded();
+  populateFilterDropdowns();
+  applyPreset('all');
+  showToast('Datos Warren recargados');
+}
+
+// =================== EXPORT CSV ===================
+function exportCsv() {
+  const rows = state.filtered;
+  const headers = ['NO','DIA_INS','DIA_FACT','Job','Pole','Cod','Descripcion','PR','Q','Total','FC'];
+  const lines = [headers.join(',')];
+  for (const r of rows) {
+    const desc = (state.codeDesc[r[ROW.cod]] || '').replace(/"/g,'""');
+    lines.push([
+      r[ROW.no],
+      r[ROW.d_ins],
+      r[ROW.d_fact],
+      `"${r[ROW.job]}"`,
+      `"${r[ROW.pole]}"`,
+      r[ROW.cod],
+      `"${desc}"`,
+      r[ROW.pr],
+      r[ROW.q],
+      r[ROW.total],
+      r[ROW.fc] || 'PEND'
+    ].join(','));
+  }
+  const csv = lines.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `tysa_warren_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`Exportadas ${rows.length} filas a CSV`);
+}
+
+// =================== EXPORT STANDALONE HTML (verdadero "link compartible") ===================
+async function exportStandaloneHtml() {
+  showToast('Generando archivo HTML compartible...');
+  try {
+    // Clone the current document
+    const html = document.documentElement.outerHTML;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    // Replace embedded data with current state (preserves any uploaded data)
+    const dataEl = doc.getElementById('embeddedData');
+    if (dataEl) {
+      dataEl.textContent = JSON.stringify({
+        rows: state.rawRows,
+        codeDesc: state.codeDesc
+      });
+    }
+
+    // Inject standalone flag and snapshot meta
+    const flagScript = doc.createElement('script');
+    const dateRange = (() => {
+      const dates = state.filtered.map(r => getDate(r)).filter(Boolean).sort();
+      return dates.length > 0 ? `${dates[0]} → ${dates[dates.length-1]}` : 'completo';
+    })();
+    flagScript.textContent = `
+window.__TYSA_STANDALONE__ = true;
+window.__TYSA_SNAPSHOT__ = ${JSON.stringify({
+      filters: state.filters,
+      sourceLabel: document.getElementById('dataSourceLabel').textContent,
+      generatedAt: new Date().toISOString(),
+      dateRange: dateRange
+    })};`;
+    dataEl.parentNode.insertBefore(flagScript, dataEl);
+
+    // Build final HTML
+    const final = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
+
+    // Trigger download
+    const blob = new Blob([final], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().slice(0,10);
+    const periodTag = state.filters.preset === 'all' ? 'completo' : state.filters.preset;
+    a.href = url;
+    a.download = `TYSA-Warren-Reporte-${dateStr}-${periodTag}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('✓ Archivo descargado · súbelo a Drive para obtener un link');
+  } catch(err) {
+    showToast('Error: ' + err.message);
+    console.error(err);
+  }
+}
+
+function openShareHelp() { openModal('helpShareModal'); }
+
+// =================== UI HELPERS ===================
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('active'); });
+});
+
+// =================== STANDALONE SNAPSHOT MODE ===================
+function applyStandaloneMode() {
+  const snap = window.__TYSA_SNAPSHOT__;
+  // Hide data input controls (file upload, URL paste, demo button)
+  const dataBar = document.querySelector('.data-bar');
+  if (dataBar) dataBar.style.display = 'none';
+
+  // Add a "Snapshot" indicator banner above the filters
+  const banner = document.createElement('div');
+  banner.style.cssText = `
+    background: var(--tysa-darkest);
+    color: var(--tysa-lime);
+    padding: 12px 22px;
+    border-bottom: 2px solid var(--tysa-lime);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  `;
+  const generated = snap?.generatedAt ? new Date(snap.generatedAt).toLocaleString('es-CO') : '—';
+  banner.innerHTML = `
+    <span style="background: var(--tysa-lime); color: var(--tysa-darkest); padding: 4px 10px; font-weight: 700; letter-spacing: 0.2em;">📸 SNAPSHOT</span>
+    <span>Reporte estático generado el <strong>${generated}</strong></span>
+    <span style="color: rgba(255,255,255,0.4);">·</span>
+    <span>Origen: ${snap?.sourceLabel || '—'}</span>
+    <span style="margin-left: auto; color: rgba(255,255,255,0.6);">Los filtros pueden ajustarse pero los datos están congelados</span>
+  `;
+  document.querySelector('header.brand').after(banner);
+
+  // Apply snapshot filters to the UI
+  if (snap?.filters) {
+    Object.assign(state.filters, snap.filters);
+    document.getElementById('filterDateMode').value = state.filters.dateMode || 'd_ins';
+    document.getElementById('dateFrom').value = state.filters.from || '';
+    document.getElementById('dateTo').value = state.filters.to || '';
+    document.getElementById('filterFc').value = state.filters.fc || '';
+    document.getElementById('filterGroup').value = state.filters.group || 'day';
+  }
+
+  // Update source label (still useful even though hidden, for share again)
+  if (snap?.sourceLabel) {
+    document.getElementById('dataSourceLabel').textContent = snap.sourceLabel;
+  }
+}
+
+// =================== INIT ===================
+function init() {
+  loadEmbedded();
+  populateFilterDropdowns();
+  wireEvents();
+
+  if (window.__TYSA_STANDALONE__) {
+    applyStandaloneMode();
+    // Apply the snapshot's filters to UI selectors after dropdowns are populated
+    document.getElementById('filterJob').value = state.filters.job || '';
+    document.getElementById('filterCod').value = state.filters.cod || '';
+    document.getElementById('filterPole').value = state.filters.pole || '';
+    // Set preset button state
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === state.filters.preset));
+    refresh();
+    // Snapshot mode: ocultar el indicador de sync (no aplica)
+    const syncEl = document.getElementById('syncStatus');
+    if (syncEl) syncEl.style.display = 'none';
+  } else {
+    applyPreset('all');
+    // Auto-sync con el Sheet en background (silencioso · cae a embedded si falla)
+    // Pequeño delay para dejar que la UI termine de pintar primero
+    setTimeout(() => loadWarrenLive(true), 300);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
