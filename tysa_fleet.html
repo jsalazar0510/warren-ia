@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TYSA Fleet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+:root{
+  --tysa-dark:#123329; --tysa-mid:#1C4A3B; --tysa-green:#19B269; --tysa-lime:#B2E67B; --tysa-pale:#DFF4E0;
+  --paper:#F3F8F4; --card:#FFFFFF; --plate-a:#1A4634; --plate-b:#0F2B22;
+  --ok:#19B269; --warn:#E09E00; --danger:#C6403D;
+  --line:#D7E2DA; --ink:#123329; --ink-soft:#587065;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --disp:'Archivo','Helvetica Neue',Arial,sans-serif;
+  --body:'Archivo',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--paper);color:var(--ink);font-size:15px;line-height:1.5}
+a{color:var(--tysa-mid)}
+button{font-family:var(--body);cursor:pointer}
+
+.topbar{background:var(--tysa-dark);color:#fff;display:flex;align-items:center;gap:14px;padding:10px 20px;position:sticky;top:0;z-index:20}
+.topbar .brand{font-family:var(--disp);font-weight:800;font-size:20px;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:9px;cursor:pointer}
+.topbar .brand span.lm{color:var(--tysa-lime)}
+.topbar .sub{font-size:12px;color:#9CC4AE;letter-spacing:.04em}
+.topbar .grow{flex:1}
+.topbar button{background:transparent;border:1px solid #3A6B52;color:#DFF4E0;border-radius:6px;padding:6px 12px;font-size:13px}
+.topbar button:hover{border-color:var(--tysa-lime);color:#fff}
+.topbar button.primary{background:var(--tysa-green);border-color:var(--tysa-green);color:#fff;font-weight:700}
+.langtoggle{display:flex;border:1px solid #3A6B52;border-radius:6px;overflow:hidden}
+.langtoggle button{border:none;border-radius:0;padding:6px 10px}
+.langtoggle button.active{background:var(--tysa-lime);color:#123329;font-weight:700}
+
+main{max-width:1080px;margin:0 auto;padding:24px 20px 90px}
+.backbtn{background:none;border:none;color:var(--ink-soft);font-size:13px;font-weight:700;margin-bottom:14px}
+.backbtn:hover{color:var(--tysa-dark)}
+.loading{text-align:center;padding:80px 20px;color:var(--ink-soft)}
+.loading .spinbig{width:36px;height:36px;border:4px solid var(--tysa-pale);border-top-color:var(--tysa-green);border-radius:50%;margin:0 auto 14px;animation:sp 1s linear infinite}
+
+/* setup */
+.setup{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:28px;max-width:720px;margin:32px auto}
+.setup h2{font-family:var(--disp);font-weight:800;font-size:22px;letter-spacing:.04em;margin-bottom:8px;text-transform:uppercase}
+.setup ol{margin:12px 0 20px 20px;color:var(--ink-soft)}
+.setup ol li{margin-bottom:8px}
+.gids{display:grid;grid-template-columns:repeat(2,1fr);gap:0 16px}
+.errbox{background:#FBEDEC;border:1px solid #E7B6B3;color:#8C2F2B;border-radius:8px;padding:12px 14px;font-size:13px;margin-top:16px}
+
+/* forms genéricos */
+.frm label{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);margin:14px 0 5px;text-transform:uppercase;letter-spacing:.05em}
+.frm input,.frm select,.frm textarea{width:100%;padding:12px 13px;border:2px solid var(--line);border-radius:10px;font-size:16px;font-family:var(--body);background:#fff}
+.frm input.mono{font-family:var(--mono)}
+.frm input:focus,.frm select:focus,.frm textarea:focus{outline:none;border-color:var(--tysa-green)}
+.frm .two{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.formcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;max-width:620px;margin:0 auto}
+.formcard h1{font-family:var(--disp);font-weight:800;font-size:22px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.formcard .lead{color:var(--ink-soft);font-size:13.5px;margin-bottom:8px}
+.sendbtn{width:100%;background:var(--tysa-green);color:#fff;border:none;border-radius:14px;padding:16px;font-family:var(--disp);font-weight:800;font-size:18px;letter-spacing:.06em;text-transform:uppercase;margin-top:20px}
+.sendbtn:disabled{background:#9CC4AE}
+.sendbtn:hover:not(:disabled){background:#0F8A4F}
+.dmsg{font-size:13px;color:var(--danger);text-align:center;margin-top:10px;font-weight:600}
+
+/* fleet */
+.fleethead{display:flex;align-items:baseline;gap:14px;margin:6px 0 18px;flex-wrap:wrap}
+.fleethead h1{font-family:var(--disp);font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:.05em}
+.fleethead .meta{color:var(--ink-soft);font-size:13px}
+.kpirow{display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 16px;min-width:130px}
+.kpi .n{font-family:var(--disp);font-weight:800;font-size:26px;line-height:1}
+.kpi .l{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.kpi.red .n{color:var(--danger)} .kpi.amber .n{color:var(--warn)} .kpi.green .n{color:var(--ok)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.vcard{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .15s}
+.vcard:hover{box-shadow:0 6px 18px rgba(18,51,41,.14);transform:translateY(-2px)}
+.vcard .strip{height:6px}
+.strip.ok{background:var(--ok)} .strip.warn{background:var(--warn)} .strip.danger{background:var(--danger)} .strip.na{background:#9AA5AE}
+.vcard .in{padding:14px 16px 16px}
+.vcard .id{font-family:var(--disp);font-weight:800;font-size:24px;letter-spacing:.06em;color:var(--tysa-dark)}
+.vcard .model{color:var(--ink-soft);font-size:13px;margin-bottom:10px}
+.vcard .row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-top:1px dashed var(--line)}
+.vcard .row .k{color:var(--ink-soft)}
+.vcard .row .v{font-family:var(--mono);font-size:12.5px}
+.badges{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px}
+.badge.red{background:#FBEDEC;color:var(--danger)} .badge.amber{background:#FCF3DC;color:#8A6400}
+.badge.green{background:#DFF4E0;color:#0F7A47} .badge.gray{background:#EDF0F2;color:var(--ink-soft)}
+.addcard{border:2px dashed var(--tysa-green);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px;cursor:pointer;color:#0F8A4F;background:#F7FCF6;font-weight:700;gap:6px}
+.addcard:hover{background:var(--tysa-pale)}
+.addcard .plus{font-size:34px;line-height:1}
+
+/* placa */
+.plate{background:linear-gradient(160deg,var(--plate-a),var(--plate-b));border:1px solid #0B2119;border-radius:14px;padding:22px 26px;position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 3px 10px rgba(18,51,41,.25);margin-bottom:18px}
+.plate::before,.plate::after,.plate .r1::before,.plate .r1::after{content:"";position:absolute;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#96A0A7 60%,#6E7880);box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
+.plate::before{top:10px;left:10px}.plate::after{top:10px;right:10px}
+.plate .r1::before{bottom:10px;left:10px}.plate .r1::after{bottom:10px;right:10px}
+.plate .toprow{display:flex;align-items:flex-start;gap:18px;flex-wrap:wrap}
+.plate .vid{font-family:var(--disp);font-size:44px;font-weight:800;letter-spacing:.1em;line-height:1;color:var(--tysa-lime)}
+.plate .vtype{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8FBCA8;margin-top:4px}
+.plate .statusbig{margin-left:auto;text-align:right}
+.plate .statusbig .chip{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:.08em;padding:6px 14px;border-radius:6px;color:#fff;text-transform:uppercase}
+.chip.ok{background:var(--ok)} .chip.warn{background:var(--warn)} .chip.danger{background:var(--danger)} .chip.na{background:#9AA5AE}
+.plate .specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px 22px;margin-top:18px;padding-top:14px;border-top:1px solid rgba(223,244,224,.22)}
+.spec .k{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7FA893}
+.spec .v{font-family:var(--mono);font-size:14px;color:#fff;word-break:break-all}
+
+.section{background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:18px;overflow:hidden}
+.section>h3{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:.08em;text-transform:uppercase;padding:12px 18px;border-bottom:1px solid var(--line);background:#FAFCFA;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.section>h3 .count{font-family:var(--body);font-size:11px;background:#EDF0F2;color:var(--ink-soft);border-radius:20px;padding:2px 8px;font-weight:700}
+.section>h3 .act{margin-left:auto;font-family:var(--body);font-size:12px;font-weight:700;background:var(--tysa-green);color:#fff;border:none;border-radius:8px;padding:6px 12px;text-transform:none;letter-spacing:0}
+.section>h3 .act:hover{background:#0F8A4F}
+.section .body{padding:6px 18px 16px;overflow-x:auto}
+.subhead{font-family:var(--disp);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin:14px 0 2px;display:flex;align-items:center;gap:8px}
+.subhead .tag{font-family:var(--body);font-size:10px;background:var(--tysa-pale);color:#0F7A47;border-radius:4px;padding:2px 7px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-soft);padding:10px 8px 6px;border-bottom:1px solid var(--line)}
+td{padding:8px;border-bottom:1px solid #EEF3EF;vertical-align:top}
+td.mono{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+td .st{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap}
+.st.ok{background:#DFF4E0;color:#0F7A47} .st.warn{background:#FCF3DC;color:#8A6400} .st.danger{background:#FBEDEC;color:var(--danger)} .st.gray{background:#EDF0F2;color:var(--ink-soft)}
+.money{text-align:right;font-family:var(--mono);white-space:nowrap}
+tfoot td{font-weight:700;border-top:2px solid var(--tysa-dark);border-bottom:none}
+.donebtn{border:1px solid var(--tysa-green);background:#fff;color:#0F8A4F;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;white-space:nowrap}
+.donebtn:hover{background:var(--tysa-pale)}
+.photolinks a{display:inline-block;font-size:11.5px;background:#EDF2EE;border-radius:6px;padding:2px 8px;margin:2px 3px 0 0;text-decoration:none;color:var(--tysa-mid)}
+.photolinks a:hover{background:var(--tysa-lime);color:#123329}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.thumbs img{width:88px;height:66px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.coststrip{display:flex;gap:12px;flex-wrap:wrap;padding:14px 18px}
+.costbox{flex:1;min-width:150px;border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.costbox .n{font-family:var(--disp);font-weight:800;font-size:24px}
+.costbox .l{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em}
+.pbar{height:8px;border-radius:6px;background:#EDF0F2;overflow:hidden;display:flex;margin:6px 18px 16px}
+.pbar .prev{background:var(--ok)} .pbar .corr{background:var(--danger)}
+.pbarleg{display:flex;gap:16px;font-size:12px;color:var(--ink-soft);padding:0 18px 14px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+.empty{color:var(--ink-soft);font-size:13px;padding:14px 4px;font-style:italic}
+.detailactions{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.detailactions button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700}
+.detailactions button:hover{border-color:var(--tysa-dark)}
+.docsgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding:14px 18px}
+.doccard{border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.doccard .ic{font-size:26px}
+.doccard .tt{font-weight:700;font-size:14px}
+.doccard .ss{font-size:12px;color:var(--ink-soft)}
+.doccard a.open{margin-left:auto;background:var(--tysa-green);color:#fff;text-decoration:none;font-size:12.5px;font-weight:700;padding:7px 14px;border-radius:8px;white-space:nowrap}
+.doccard a.open:hover{background:#0F8A4F}
+.doccard .miss{margin-left:auto;font-size:11.5px;color:var(--ink-soft);font-style:italic}
+
+/* modo conductor */
+.driver{max-width:560px;margin:0 auto}
+.driver h1{font-family:var(--disp);font-weight:800;font-size:24px;text-transform:uppercase;letter-spacing:.05em;margin:4px 0 2px}
+.driver .lead{color:var(--ink-soft);font-size:14px;margin-bottom:18px}
+.dstep{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+.dstep .dl{font-family:var(--disp);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--tysa-dark);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.dstep .dl .num{background:var(--tysa-dark);color:var(--tysa-lime);width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:none}
+.menu-opt{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px;cursor:pointer;display:flex;align-items:center;gap:14px}
+.menu-opt:hover{border-color:var(--tysa-green);background:#F7FCF6}
+.menu-opt .mi{font-size:30px}
+.menu-opt .mt{font-family:var(--disp);font-weight:800;font-size:17px}
+.menu-opt .ms{font-size:12.5px;color:var(--ink-soft)}
+.vehbtns{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.vehbtn{border:2px solid var(--line);background:#fff;border-radius:12px;padding:14px 10px;text-align:center;font-family:var(--disp);font-weight:800;font-size:18px;letter-spacing:.05em}
+.vehbtn small{display:block;font-family:var(--body);font-weight:500;font-size:11px;color:var(--ink-soft)}
+.vehbtn.sel{border-color:var(--tysa-green);background:var(--tysa-pale)}
+.dinput{width:100%;padding:14px;border:2px solid var(--line);border-radius:12px;font-size:17px;font-family:var(--body)}
+.dinput:focus{outline:none;border-color:var(--tysa-green)}
+.dinput.mono{font-family:var(--mono);font-size:19px}
+.checkitem{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line)}
+.checkitem:last-child{border-bottom:none}
+.checkitem .cn{flex:1;font-weight:600;font-size:15px}
+.seg{display:flex;border:2px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:none;background:#fff;padding:9px 13px;font-size:13px;font-weight:700;color:var(--ink-soft);min-width:52px}
+.seg button.ok.on{background:var(--ok);color:#fff}
+.seg button.falla.on{background:var(--danger);color:#fff}
+.seg button.na.on{background:#9AA5AE;color:#fff}
+.photozone{border:2px dashed var(--tysa-green);border-radius:12px;padding:18px;text-align:center;color:#0F8A4F;font-weight:700;font-size:15px;background:#F7FCF6;cursor:pointer;display:block}
+.photozone input{display:none}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:10px}
+.pgrid .pv{position:relative}
+.pgrid img{width:100%;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.pgrid .pdfchip{height:80px;display:flex;align-items:center;justify-content:center;background:#EDF2EE;border-radius:8px;font-weight:700;font-size:12px;color:var(--tysa-mid)}
+.pgrid .rm{position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:12px;line-height:1}
+.aptobtns{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.aptobtn{border:2px solid var(--line);background:#fff;border-radius:12px;padding:16px;font-family:var(--disp);font-weight:800;font-size:19px}
+.aptobtn.yes.sel{border-color:var(--ok);background:#DFF4E0;color:#0F7A47}
+.aptobtn.no.sel{border-color:var(--danger);background:#FBEDEC;color:var(--danger)}
+.dsuccess{text-align:center;padding:60px 20px}
+.dsuccess .big{font-size:64px}
+.dsuccess h2{font-family:var(--disp);font-weight:800;font-size:24px;margin:10px 0 6px;text-transform:uppercase}
+.dsuccess p{color:var(--ink-soft);margin-bottom:24px}
+.dsuccess .warnmsg{background:#FCF3DC;border:1px solid #EAD189;color:#8A6400;border-radius:10px;padding:12px;margin:0 auto 24px;max-width:420px;font-weight:600}
+.spin{display:inline-block;width:18px;height:18px;border:3px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp 1s linear infinite;vertical-align:-4px;margin-right:8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* modal + toast */
+.overlay{position:fixed;inset:0;background:rgba(18,51,41,.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+.modal{background:#fff;border-radius:14px;padding:22px;max-width:420px;width:100%}
+.modal h3{font-family:var(--disp);font-weight:800;font-size:17px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.modal .msub{font-size:13px;color:var(--ink-soft);margin-bottom:8px}
+.modal .mact{display:flex;gap:10px;margin-top:18px}
+.modal .mact button{flex:1;padding:12px;border-radius:10px;font-weight:800;border:1px solid var(--line);background:#fff}
+.modal .mact button.go{background:var(--tysa-green);color:#fff;border-color:var(--tysa-green)}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--tysa-dark);color:#fff;padding:12px 20px;border-radius:12px;font-weight:600;font-size:14px;z-index:60;transition:transform .25s;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:90vw;text-align:center}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+footer{max-width:1080px;margin:0 auto;padding:0 20px 30px;color:#8A96A0;font-size:12px}
+.printhead{display:none}
+@media print{
+  .printhead{display:flex;align-items:center;gap:10px;padding:0 0 14px;border-bottom:3px solid #19B269;margin-bottom:16px}
+  .printhead .ph-t{font-family:var(--disp);font-weight:800;font-size:20px;letter-spacing:.08em;color:#123329}
+  .printhead .ph-s{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#587065}
+  .topbar,.backbtn,.detailactions,footer,.section>h3 .act,.donebtn{display:none!important}
+  body{background:#fff}
+  main{max-width:100%;padding:0}
+  .section,.plate{break-inside:avoid;box-shadow:none}
+}
+@media (max-width:640px){
+  .plate .vid{font-size:32px}
+  .gids,.frm .two{grid-template-columns:1fr}
+  .topbar{padding:10px 12px;gap:8px}
+  .topbar .sub{display:none}
+}
+@media (prefers-reduced-motion:reduce){.spin,.loading .spinbig{animation:none}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand" onclick="go('#/')">
+    <svg width="26" height="26" viewBox="0 0 100 100" aria-hidden="true">
+      <g fill="#B2E67B"><path id="bl" d="M50 50 C 52 26, 64 10, 82 12 C 66 18, 56 34, 55 50 Z"/>
+      <use href="#bl" transform="rotate(51.4 50 50)"/><use href="#bl" transform="rotate(102.8 50 50)"/>
+      <use href="#bl" transform="rotate(154.2 50 50)"/><use href="#bl" transform="rotate(205.7 50 50)"/>
+      <use href="#bl" transform="rotate(257.1 50 50)"/><use href="#bl" transform="rotate(308.5 50 50)"/></g>
+      <circle cx="50" cy="50" r="6" fill="#19B269"/></svg>
+    <span style="color:#fff">TYSA</span> <span class="lm">FLEET</span>
+  </div>
+  <div class="grow"></div>
+  <button class="primary" onclick="go('#/conductor')">🚚 <span class="hide-sm">Conductores</span></button>
+  <button id="btnRefresh" style="display:none" onclick="refreshData()">⟳</button>
+  <div class="langtoggle">
+    <button id="btnES" class="active" onclick="setLang('es')">ES</button>
+    <button id="btnEN" onclick="setLang('en')">EN</button>
+  </div>
+</div>
+
+<div class="printhead"><svg width="30" height="30" viewBox="0 0 100 100"><g fill="#19B269"><path id="blp" d="M50 50 C 52 26, 64 10, 82 12 C 66 18, 56 34, 55 50 Z"/><use href="#blp" transform="rotate(51.4 50 50)"/><use href="#blp" transform="rotate(102.8 50 50)"/><use href="#blp" transform="rotate(154.2 50 50)"/><use href="#blp" transform="rotate(205.7 50 50)"/><use href="#blp" transform="rotate(257.1 50 50)"/><use href="#blp" transform="rotate(308.5 50 50)"/></g><circle cx="50" cy="50" r="6" fill="#123329"/></svg><div><div class="ph-t">TYSA LLC</div><div class="ph-s">Fleet Maintenance Record</div></div></div>
+
+<main id="app"></main>
+<div id="modalRoot"></div>
+<div id="toast"></div>
+<footer id="foot"></footer>
+
+<script>
+/* =====================================================================
+   CONFIGURACIÓN (versión desplegada en GitHub Pages)
+   - sheetId + gids : lectura del Google Sheet (compartido como Lector)
+   - scriptUrl      : Apps Script Web App (Code.gs) — TODAS las escrituras
+                      pasan por aquí: pre-trips, tanqueos, vehículos nuevos,
+                      documentos, órdenes de trabajo y cierres de tareas.
+   Link conductores:  .../index.html#/conductor
+===================================================================== */
+const CONFIG = {
+  sheetId: "1xSU1vdc7rVCetpXN-PfuBqbq8C2opPuOHW3-Hr9BIa8",  // ✔ Sheet real de TYSA (configurado)
+  scriptUrl: "https://script.google.com/macros/s/AKfycbwb2OTTu55cw9pcXlUwGdyWrKK1Rk2O7oDDcSJTa4jSD-8ZCmaU50QiAwGYewLbFRBB/exec"  // ✔ Apps Script de TYSA (configurado)
+};
+
+/* ---------- i18n (consulta; formularios operativos siempre en español) ---------- */
+const I18N = {
+  es:{sub:"Hoja de vida por vehículo",fleet:"Flota TYSA",vehicles:"vehículos",updated:"Datos en vivo del Google Sheet",
+    kOverdue:"Vencidos",kSoon:"Próximos",kOpenOT:"OTs abiertas",kActive:"Activos",
+    resp:"Responsable",mileage:"Millaje",plate:"Placa",back:"← Atrás",addVeh:"Agregar vehículo",
+    print:"Imprimir hoja de vida",report:"Report (EN) → PDF",
+    specVin:"VIN",specYear:"Año",specBrand:"Marca / Modelo",specResp:"Responsable",specMi:"Millaje actual",specMiDate:"Últ. lectura",specPlate:"Placa",
+    secDocs:"Documentos",docTitle:"Título del vehículo",docIns:"Póliza de seguro",docOpen:"Ver",docMiss:"Sin cargar",docUpload:"📎 Subir documento",
+    insExp:"Vence",insExpired:"SEGURO VENCIDO",insSoon:"Seguro por vencer",
+    secPlan:"Plan preventivo",sysChassis:"Chasis",sysBoom:"Boom",secOT:"Órdenes de trabajo",secInsp:"Inspecciones pre-trip",secCost:"Costos",
+    secFuel:"Combustible",fYtd:"Combustible año actual",fGal:"Galones año actual",fMpg:"Rendimiento prom.",fCpm:"Costo por milla",
+    thGal:"Galones",thPpg:"$ / galón",thStation:"Estación",thReceipt:"Recibo",
+    btnTeam:"👷 Equipo",teamTitle:"Conductores y responsables",teamAdd:"＋ Agregar persona",thName:"Nombre",thRole:"Rol",thPhone:"Teléfono",thAssigned:"Vehículo asignado",thLic:"Venc. licencia",licExpired:"LICENCIA VENCIDA",licSoon:"Licencia por vencer",frTitle:"Reporte de combustible",frFrom:"Desde",frTo:"Hasta",frVeh:"Vehículo",frAll:"Todos",frFills:"Tanqueos",frGal:"Galones",frCost:"Costo total",frAvg:"$/gal promedio",frByWeek:"Por semana",frByVeh:"Por vehículo",frWeek:"Semana",btnFuel:"⛽ Combustible",prThisWeek:"Esta semana",prLastWeek:"Semana pasada",prThisMonth:"Este mes",prLastMonth:"Mes pasado",pr30:"Últimos 30 días",prYear:"Este año",
+    secWash:"Lavadas",wLast:"Última lavada",wDaysAgo:"hace {d} días",wToday:"hoy",wYtd:"Lavadas año actual",wCount:"Lavadas totales",wOverdue:"Lavada pendiente",thKind:"Tipo",thPlace:"Lugar",thWho:"Quién lavó",
+    thTask:"Tarea",thNextMi:"Próx. millaje",thNextDate:"Próx. fecha",thLast:"Última vez",thStatus:"Estado",
+    thOT:"OT #",thDate:"Fecha",thType:"Tipo",thDesc:"Descripción",thShop:"Taller",thCost:"Costo",thDocs:"Fotos / Factura",
+    thDriver:"Conductor",thMi:"Millaje",thFails:"Ítems con falla",thFit:"¿Apto?",thObs:"Observaciones",thPhotos:"Fotos",
+    total:"Total",cTotal:"Costo total",cYear:"Año actual",cPrev:"Preventivo",cCorr:"Correctivo",legPrev:"Preventivo",legCorr:"Correctivo",
+    stOK:"OK",stSoon:"PRÓXIMO",stDue:"VENCIDO",fitYes:"SÍ",fitNo:"NO",none:"Sin registros todavía.",
+    newOT:"➕ Nueva OT",markDone:"✔ Hecho",
+    plateOverall:{ok:"AL DÍA",warn:"ATENCIÓN",danger:"VENCIDO",na:"SIN PLAN"},
+    setupTitle:"Conectar con el Google Sheet",
+    setupSteps:["Comparte tu Google Sheet de flota como <b>Cualquier persona con el enlace: Lector</b> y copia su <b>ID</b> (entre <code>/d/</code> y <code>/edit</code> en la URL).","En el Sheet: <b>Extensiones → Apps Script</b> → pega el Code.gs → <b>Implementar → Aplicación web</b> (acceso: cualquiera) → copia la URL. Sin configurar nada más: el script encuentra el Sheet y crea las carpetas de fotos solo.","Pega los 2 valores abajo y <b>Conectar</b>. Para la versión definitiva, escríbelos en el bloque CONFIG del archivo y súbelo a GitHub Pages, igual que Warren."],
+    lblSheet:"ID del Google Sheet",lblScript:"URL del Apps Script (escrituras)",btnConnect:"Conectar",btnDemo:"Ver muestra (TYSA-01 real)",
+    errLoad:"No se pudo leer el Sheet. Casi siempre se arregla así: abre el Sheet → Archivo → Compartir → Publicar en la web → botón Publicar → Aceptar. Luego vuelve aquí y presiona Conectar (no cambies los campos: ya vienen con los valores correctos).",
+    loading:"Cargando flota...",demoNote:"Modo demo — los cambios no se guardan en el Sheet",
+    foot:"TYSA LLC · Fleet Maintenance · datos: Google Sheets · fotos y documentos: Google Drive"},
+  en:{sub:"Vehicle maintenance record",fleet:"TYSA Fleet",vehicles:"vehicles",updated:"Live data from Google Sheets",
+    kOverdue:"Overdue",kSoon:"Due soon",kOpenOT:"Open WOs",kActive:"Active",
+    resp:"Assigned to",mileage:"Mileage",plate:"Plate",back:"← Back",addVeh:"Add vehicle",
+    print:"Print record",report:"Report (EN) → PDF",
+    specVin:"VIN",specYear:"Year",specBrand:"Make / Model",specResp:"Assigned to",specMi:"Current mileage",specMiDate:"Last reading",specPlate:"Plate",
+    secDocs:"Documents",docTitle:"Vehicle title",docIns:"Insurance policy",docOpen:"Open",docMiss:"Not uploaded",docUpload:"📎 Upload document",
+    insExp:"Expires",insExpired:"INSURANCE EXPIRED",insSoon:"Insurance expiring",
+    secPlan:"Preventive plan",sysChassis:"Chassis",sysBoom:"Boom",secOT:"Work orders",secInsp:"Pre-trip inspections",secCost:"Costs",
+    secFuel:"Fuel",fYtd:"Fuel spend YTD",fGal:"Gallons YTD",fMpg:"Avg. fuel economy",fCpm:"Cost per mile",
+    thGal:"Gallons",thPpg:"$ / gallon",thStation:"Station",thReceipt:"Receipt",
+    btnTeam:"👷 Team",teamTitle:"Drivers & staff",teamAdd:"＋ Add person",thName:"Name",thRole:"Role",thPhone:"Phone",thAssigned:"Assigned vehicle",thLic:"License exp.",licExpired:"LICENSE EXPIRED",licSoon:"License expiring",frTitle:"Fuel report",frFrom:"From",frTo:"To",frVeh:"Vehicle",frAll:"All",frFills:"Fill-ups",frGal:"Gallons",frCost:"Total cost",frAvg:"Avg $/gal",frByWeek:"By week",frByVeh:"By vehicle",frWeek:"Week",btnFuel:"⛽ Fuel",prThisWeek:"This week",prLastWeek:"Last week",prThisMonth:"This month",prLastMonth:"Last month",pr30:"Last 30 days",prYear:"This year",
+    secWash:"Washes",wLast:"Last wash",wDaysAgo:"{d} days ago",wToday:"today",wYtd:"Wash spend YTD",wCount:"Total washes",wOverdue:"Wash overdue",thKind:"Type",thPlace:"Place",thWho:"Washed by",
+    thTask:"Task",thNextMi:"Next mileage",thNextDate:"Next date",thLast:"Last done",thStatus:"Status",
+    thOT:"WO #",thDate:"Date",thType:"Type",thDesc:"Description",thShop:"Shop",thCost:"Cost",thDocs:"Photos / Invoice",
+    thDriver:"Driver",thMi:"Mileage",thFails:"Failed items",thFit:"Fit?",thObs:"Notes",thPhotos:"Photos",
+    total:"Total",cTotal:"Total cost",cYear:"Current year",cPrev:"Preventive",cCorr:"Corrective",legPrev:"Preventive",legCorr:"Corrective",
+    stOK:"OK",stSoon:"DUE SOON",stDue:"OVERDUE",fitYes:"YES",fitNo:"NO",none:"No records yet.",
+    newOT:"➕ New WO",markDone:"✔ Done",
+    plateOverall:{ok:"UP TO DATE",warn:"ATTENTION",danger:"OVERDUE",na:"NO PLAN"},
+    setupTitle:"Connect to Google Sheet",
+    setupSteps:["Share your fleet Google Sheet as <b>Anyone with the link: Viewer</b> and copy its <b>ID</b>.","In the Sheet: <b>Extensions → Apps Script</b> → paste Code.gs → <b>Deploy → Web app</b> (access: anyone) → copy the URL. Zero config needed.","Paste both values below and <b>Connect</b>. For production, hardcode them in CONFIG and push to GitHub Pages, same as Warren."],
+    lblSheet:"Google Sheet ID",lblScript:"Apps Script URL (writes)",btnConnect:"Connect",btnDemo:"View sample (real TYSA-01)",
+    errLoad:"Could not read the Sheet. Usually fixed by: File → Share → Publish to web → Publish. Then press Connect again (leave the prefilled values as they are).",
+    loading:"Loading fleet...",demoNote:"Demo mode — changes are not saved to the Sheet",
+    foot:"TYSA LLC · Fleet Maintenance · data: Google Sheets · photos & documents: Google Drive"}
+};
+let lang="es";
+const t=k=>I18N[lang][k];
+
+/* ---------- estado ---------- */
+let DATA=null, DEMO=false, LOADING=false;
+let SRC={...CONFIG};
+let DRV={veh:null,name:"",mi:"",items:{},apto:null,obs:"",photos:[],gal:"",cost:"",station:"",washKind:"",washCost:"",washPlace:"",sending:false};
+let FORM={};   // estado de formularios admin
+
+const CHECK_ITEMS=[
+  {k:"Llantas",label:"Llantas (presión, desgaste, daños)"},
+  {k:"Frenos",label:"Frenos"},
+  {k:"Luces",label:"Luces y direccionales"},
+  {k:"Fluidos",label:"Fluidos y niveles"},
+  {k:"Fugas",label:"Fugas visibles"},
+  {k:"Boom/Hidráulico",label:"Boom / sistema hidráulico",bucketOnly:true},
+  {k:"Seguridad",label:"Equipo de seguridad (extintor, conos, arnés)"}
+];
+
+/* ---------- helpers ---------- */
+const norm=s=>(s??"").toString().trim();
+const money=v=>{const n=parseFloat(norm(v).replace(/[$,\s]/g,""));return isNaN(n)?0:n};
+const fmtMoney=n=>"$"+Math.round(n).toLocaleString("en-US");
+const fmtMi=v=>{const n=parseFloat(norm(v).toString().replace(/[,\s]/g,""));return isNaN(n)?norm(v):n.toLocaleString("en-US")};
+const parseDate=s=>{const d=new Date(norm(s));return isNaN(d)?null:d};
+const esc=s=>norm(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const todayUS=()=>{const n=new Date();return `${String(n.getMonth()+1).padStart(2,"0")}/${String(n.getDate()).padStart(2,"0")}/${n.getFullYear()}`};
+const isBucket=v=>/bucket/i.test(v?.type||"");
+function driveThumbs(cell){return[...norm(cell).matchAll(/(?:\/d\/|id=|\/file\/d\/)([\w-]{20,})/g)].map(m=>m[1])}
+function statusClass(s){s=norm(s).toUpperCase();
+  if(s==="VENCIDO"||s==="OVERDUE")return"danger";
+  if(s.startsWith("PRÓX")||s.startsWith("PROX")||s==="DUE SOON")return"warn";
+  if(s==="OK")return"ok";return"gray"}
+function statusLabel(s){const c=statusClass(s);return c==="danger"?t("stDue"):c==="warn"?t("stSoon"):c==="ok"?t("stOK"):(norm(s)||"—")}
+function licStatus(p){const d=parseDate(p.licExp);if(!d)return null;
+  const days=Math.floor((d-new Date())/864e5);
+  return days<0?"danger":days<=30?"warn":"ok"}
+function activeCrew(){return (DATA.crew||[]).filter(c=>!c.state||/activo|active/i.test(c.state))}
+function insStatus(v){const d=parseDate(v.insExp);if(!d)return null;
+  const days=Math.floor((d-new Date())/864e5);
+  return days<0?"danger":days<=30?"warn":"ok"}
+function toast(msg){const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),3200)}
+function go(h){if(location.hash===h){route()}else{location.hash=h}}
+function goBack(){history.length>1?history.back():go("#/")}
+
+/* ---------- lectura CSV ---------- */
+function csvUrl(name){return `https://docs.google.com/spreadsheets/d/${SRC.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`}
+function fetchCsv(name){return new Promise((res,rej)=>{Papa.parse(csvUrl(name),{download:true,complete:r=>res(r.data),error:rej})})}
+function rowsAfterHeader(rows,anchor){
+  const i=rows.findIndex(r=>norm(r[0]).toLowerCase().startsWith(anchor));
+  return i<0?[]:rows.slice(i+1).filter(r=>norm(r[0])!=="");
+}
+async function loadAll(){
+  const safe=n=>fetchCsv(n).catch(()=>[]);
+  const [rv,rp,ri,ro,rt,rl,rc,rcfg]=await Promise.all([
+    fetchCsv("Vehiculos"),fetchCsv("Plan_Preventivo"),
+    safe("Inspecciones"),safe("Ordenes_Trabajo"),
+    safe("Tanqueos"),safe("Lavadas"),safe("Conductores"),safe("Config")]);
+  // auto-configuración: el Apps Script registra su URL en la pestaña Config
+  if(!SRC.scriptUrl){
+    const row=(rcfg||[]).find(r=>norm(r[0]).toLowerCase()==="scripturl");
+    if(row&&/^https:\/\/script\.google\.com\//.test(norm(row[1])))SRC.scriptUrl=norm(row[1]);
+  }
+  const veh=rowsAfterHeader(rv,"id veh").map(r=>({id:norm(r[0]),plate:norm(r[1]),type:norm(r[2]),brand:norm(r[3]),model:norm(r[4]),year:norm(r[5]),vin:norm(r[6]),resp:norm(r[7]),mi:norm(r[8]),miDate:norm(r[9]),state:norm(r[10]),notes:norm(r[11]),titleLink:norm(r[12]),insLink:norm(r[13]),insExp:norm(r[14])}));
+  const plan=rowsAfterHeader(rp,"id veh").map(r=>({vid:norm(r[0]),task:norm(r[1]),lastDate:norm(r[4]),lastMi:norm(r[5]),nextMi:norm(r[6]),nextDate:norm(r[7]),status:norm(r[9]),sys:norm(r[10])}));
+  const insp=rowsAfterHeader(ri,"fecha").map(r=>({date:norm(r[0]),vid:norm(r[1]),driver:norm(r[2]),mi:norm(r[3]),items:{Llantas:norm(r[4]),Frenos:norm(r[5]),Luces:norm(r[6]),Fluidos:norm(r[7]),Fugas:norm(r[8]),"Boom/Hidráulico":norm(r[9]),Seguridad:norm(r[10])},fit:norm(r[11]),obs:norm(r[12]),photos:norm(r[13])}));
+  const ots=rowsAfterHeader(ro,"ot").map(r=>({ot:norm(r[0]),date:norm(r[1]),vid:norm(r[2]),type:norm(r[3]),origin:norm(r[4]),desc:norm(r[5]),shop:norm(r[6]),status:norm(r[7]),closed:norm(r[8]),parts:norm(r[9]),labor:norm(r[10]),total:norm(r[11]),docs:norm(r[12]),notes:norm(r[13])}));
+  const fuel=rowsAfterHeader(rt,"fecha").map(r=>({date:norm(r[0]),vid:norm(r[1]),driver:norm(r[2]),mi:norm(r[3]),gal:norm(r[4]),cost:norm(r[5]),ppg:norm(r[6]),station:norm(r[7]),receipt:norm(r[8])}));
+  const wash=rowsAfterHeader(rl,"fecha").map(r=>({date:norm(r[0]),vid:norm(r[1]),who:norm(r[2]),kind:norm(r[3]),cost:norm(r[4]),place:norm(r[5]),photos:norm(r[6]),notes:norm(r[7])}));
+  const crew=rowsAfterHeader(rc,"nombre").map(r=>({name:norm(r[0]),role:norm(r[1]),phone:norm(r[2]),veh:norm(r[3]),licExp:norm(r[4]),state:norm(r[5])}));
+  DATA={veh,plan,insp,ots,fuel,wash,crew};
+}
+async function refreshData(){
+  if(DEMO){toast(t("demoNote"));return}
+  if(!SRC.sheetId)return;
+  LOADING=true;render();
+  try{await loadAll()}catch(e){toast("⚠️ "+t("errLoad"))}
+  LOADING=false;render();
+}
+
+/* ---------- demo ---------- */
+function loadDemo(){
+  DEMO=true;
+  const planBucket=vid=>[
+    {vid,task:"Cambio de aceite y filtro (diésel)",lastDate:"",lastMi:"",nextMi:"",nextDate:"",status:"REGISTRAR",sys:"Chasis (Ford)"},
+    {vid,task:"Filtro de combustible / separador de agua",lastDate:"",lastMi:"",nextMi:"",nextDate:"",status:"REGISTRAR",sys:"Chasis (Ford)"},
+    {vid,task:"Inspección de frenos",lastDate:"",lastMi:"",nextMi:"",nextDate:"",status:"REGISTRAR",sys:"Chasis (Ford)"},
+    {vid,task:"Rotación y torque de llantas",lastDate:"",lastMi:"",nextMi:"",nextDate:"",status:"REGISTRAR",sys:"Chasis (Ford)"},
+    {vid,task:"Refrigerante y mangueras",lastDate:"",lastMi:"",nextMi:"",nextDate:"",status:"REGISTRAR",sys:"Chasis (Ford)"},
+    {vid,task:"Inspección dieléctrica anual del boom (ANSI A92.2)",lastDate:"",lastMi:"",nextMi:"",nextDate:"",status:"REGISTRAR",sys:"Boom"},
+    {vid,task:"Lubricación de boom, pedestal y rotación",lastDate:"",lastMi:"",nextMi:"",nextDate:"",status:"REGISTRAR",sys:"Boom"},
+    {vid,task:"Sistema hidráulico — nivel, mangueras y fugas",lastDate:"",lastMi:"",nextMi:"",nextDate:"",status:"REGISTRAR",sys:"Boom"},
+    {vid,task:"Servicio PTO",lastDate:"",lastMi:"",nextMi:"",nextDate:"",status:"REGISTRAR",sys:"Boom"},
+    {vid,task:"Prueba de controles y parada de emergencia",lastDate:"",lastMi:"",nextMi:"",nextDate:"",status:"REGISTRAR",sys:"Boom"}];
+  DATA={
+    veh:[
+      {id:"BUCKET-1",plate:"FJMB65",type:"Bucket Truck",brand:"Ford",model:"F-550 (chasis diésel)",year:"2015",
+       vin:"1FD0X5HT2FEA59243",resp:"",mi:"",miDate:"",state:"Activo",
+       notes:"Color blanco · GVW 7,987 lb · Registro/placa vence 12/31/2026 · Título FL #160101614 · ⚠️ No aparece en las ID cards de Progressive — verificar con el agente que esté schedulado en la póliza",
+       titleLink:"",insLink:"",insExp:"03/07/2027"},
+      {id:"RAM-2500",plate:"",type:"Camioneta",brand:"RAM",model:"2500",year:"2022",
+       vin:"3C6UR5CJ6NG398401",resp:"",mi:"61727",miDate:"08/05/2025",state:"Activo",
+       notes:"Título TN #19603607624 · Rebuilt vehicle (anti-theft inspection passed) · Odómetro del título: 61,727 mi · ✔ Seguro Progressive póliza #994224032 (ID card en vehículo) · ⚠️ Título en proceso de traspaso a TYSA",
+       titleLink:"",insLink:"",insExp:"03/07/2027"},
+      {id:"BUCKET-2",plate:"",type:"Bucket Truck",brand:"Ford",model:"F-550 (chasis diésel)",year:"2016",
+       vin:"1FDUF5HT6GEC33899",resp:"",mi:"164238",miDate:"12/05/2024",state:"Activo",
+       notes:"Color blanco · Título FL #157234056 (lien liberado) · Odómetro del título: 164,238 mi (dic 2024) · ⚠️ Título en proceso de traspaso · ⚠️ No aparece en las ID cards de Progressive — verificar con el agente",
+       titleLink:"",insLink:"",insExp:"03/07/2027"}],
+    plan:[
+      ...planBucket("BUCKET-1"),
+      {vid:"RAM-2500",task:"Cambio de aceite y filtro",lastDate:"",lastMi:"",nextMi:"",nextDate:"",status:"REGISTRAR",sys:""},
+      {vid:"RAM-2500",task:"Rotación de llantas",lastDate:"",lastMi:"",nextMi:"",nextDate:"",status:"REGISTRAR",sys:""},
+      {vid:"RAM-2500",task:"Inspección de frenos",lastDate:"",lastMi:"",nextMi:"",nextDate:"",status:"REGISTRAR",sys:""},
+      {vid:"RAM-2500",task:"Filtro de aire motor",lastDate:"",lastMi:"",nextMi:"",nextDate:"",status:"REGISTRAR",sys:""},
+      {vid:"RAM-2500",task:"Transmisión y diferenciales",lastDate:"",lastMi:"",nextMi:"",nextDate:"",status:"REGISTRAR",sys:""},
+      ...planBucket("BUCKET-2")],
+    insp:[],ots:[],wash:[],
+    crew:[{name:"Carlos M. (ejemplo)",role:"Conductor",phone:"305-555-0101",veh:"BUCKET-1",licExp:"04/12/2027",state:"Activo"},
+          {name:"Andrés R. (ejemplo)",role:"Conductor",phone:"305-555-0102",veh:"RAM-2500",licExp:"11/03/2026",state:"Activo"}],
+    fuel:[
+      {date:"06/24/2026",vid:"BUCKET-1",driver:"(ejemplo)",mi:"",gal:"27.2",cost:"103.40",ppg:"3.80",station:"Pilot (ejemplo)",receipt:""},
+      {date:"07/01/2026",vid:"BUCKET-1",driver:"(ejemplo)",mi:"",gal:"28.9",cost:"109.80",ppg:"3.80",station:"Pilot (ejemplo)",receipt:""},
+      {date:"07/08/2026",vid:"BUCKET-1",driver:"(ejemplo)",mi:"",gal:"26.4",cost:"100.30",ppg:"3.80",station:"Wawa (ejemplo)",receipt:""},
+      {date:"07/13/2026",vid:"BUCKET-1",driver:"(ejemplo)",mi:"",gal:"29.1",cost:"110.60",ppg:"3.80",station:"Pilot (ejemplo)",receipt:""},
+      {date:"07/17/2026",vid:"BUCKET-1",driver:"(ejemplo)",mi:"",gal:"25.7",cost:"97.70",ppg:"3.80",station:"Wawa (ejemplo)",receipt:""}]
+  };
+}
+/* ---------- escrituras (todas via Apps Script) ---------- */
+async function sendAction(payload){
+  if(DEMO||!SRC.scriptUrl){return {ok:true,demo:true}}
+  const r=await fetch(SRC.scriptUrl,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(payload)});
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok||j.ok===false)throw new Error(j.error||"error");
+  return j;
+}
+
+/* ---------- métricas ---------- */
+function vehStats(vid){
+  const plan=DATA.plan.filter(p=>p.vid===vid);
+  const ots=DATA.ots.filter(o=>o.vid===vid);
+  const insp=DATA.insp.filter(i=>i.vid===vid);
+  const overdue=plan.filter(p=>statusClass(p.status)==="danger").length;
+  const soon=plan.filter(p=>statusClass(p.status)==="warn").length;
+  const open=ots.filter(o=>/abierta|en taller|open/i.test(o.status)).length;
+  const cost=ots.reduce((s,o)=>s+(money(o.total)||money(o.parts)+money(o.labor)),0);
+  const yr=new Date().getFullYear();
+  const costYr=ots.filter(o=>{const d=parseDate(o.date);return d&&d.getFullYear()===yr}).reduce((s,o)=>s+(money(o.total)||money(o.parts)+money(o.labor)),0);
+  const costPrev=ots.filter(o=>/prev/i.test(o.type)).reduce((s,o)=>s+(money(o.total)||money(o.parts)+money(o.labor)),0);
+  const costCorr=ots.filter(o=>/corr/i.test(o.type)).reduce((s,o)=>s+(money(o.total)||money(o.parts)+money(o.labor)),0);
+  const overall=plan.length===0?"na":overdue>0?"danger":(soon>0||open>0)?"warn":"ok";
+  const fuel=(DATA.fuel||[]).filter(f=>f.vid===vid);
+  const fuelYrList=fuel.filter(f=>{const d=parseDate(f.date);return d&&d.getFullYear()===yr});
+  const fuelYr=fuelYrList.reduce((a,f)=>a+money(f.cost),0);
+  const galYr=fuelYrList.reduce((a,f)=>a+(parseFloat(f.gal)||0),0);
+  const byMi=[...fuel].map(f=>({mi:parseFloat(norm(f.mi).replace(/,/g,"")),gal:parseFloat(f.gal)||0}))
+    .filter(f=>!isNaN(f.mi)&&f.mi>0).sort((a,b)=>a.mi-b.mi);
+  let miles=0,gals=0;
+  for(let i=1;i<byMi.length;i++){const dm=byMi[i].mi-byMi[i-1].mi;
+    if(dm>0&&dm<2000&&byMi[i].gal>0){miles+=dm;gals+=byMi[i].gal}}
+  const mpg=gals>0?miles/gals:0;
+  const totGal=fuel.reduce((a,f)=>a+(parseFloat(f.gal)||0),0);
+  const totFuelCost=fuel.reduce((a,f)=>a+money(f.cost),0);
+  const avgPpg=totGal>0?totFuelCost/totGal:0;
+  const cpm=mpg>0&&avgPpg>0?avgPpg/mpg:0;
+  const wash=(DATA.wash||[]).filter(x=>x.vid===vid);
+  const washSorted=[...wash].sort((a,b)=>(parseDate(b.date)||0)-(parseDate(a.date)||0));
+  const lastWash=washSorted[0]||null;
+  const washDays=lastWash&&parseDate(lastWash.date)?Math.floor((new Date()-parseDate(lastWash.date))/864e5):null;
+  const washYr=wash.filter(x=>{const d=parseDate(x.date);return d&&d.getFullYear()===yr}).reduce((a,x)=>a+money(x.cost),0);
+  return{plan,ots,insp,overdue,soon,open,cost,costYr,costPrev,costCorr,overall,fuel,fuelYr,galYr,mpg,cpm,wash:washSorted,lastWash,washDays,washYr};
+}
+
+/* =====================================================================
+   ROUTER — el botón atrás del navegador funciona en toda la app
+===================================================================== */
+const app=document.getElementById("app");
+function route(){
+  let h=location.hash;
+  // rutas legadas
+  if(h==="#conductor")return go("#/conductor");
+  if(h==="#pretrip")return go("#/pretrip");
+  if(h==="#tanqueo")return go("#/tanqueo");
+  chrome();
+  if(LOADING){app.innerHTML=`<div class="loading"><div class="spinbig"></div>${t("loading")}</div>`;return}
+  const seg=h.replace(/^#\//,"").split("/");
+  const page=seg[0]||"";
+  const needsData=["","vehiculo","nuevo-vehiculo","doc","nueva-ot","conductor","pretrip","tanqueo"];
+  if(!DATA&&needsData.includes(page)&&page!==""){/* deep link sin datos */}
+  if(!DATA&&page===""){renderSetup();return}
+  if(!DATA){renderSetup();return}
+  switch(page){
+    case "": renderFleet();break;
+    case "vehiculo": renderVehicle(decodeURIComponent(seg[1]||""));break;
+    case "nuevo-vehiculo": renderNewVehicle();break;
+    case "doc": renderUploadDoc(decodeURIComponent(seg[1]||""));break;
+    case "nueva-ot": renderNewOT(decodeURIComponent(seg[1]||""));break;
+    case "conductor": renderDriverHome();break;
+    case "pretrip": renderPreTrip();break;
+    case "tanqueo": renderFuelForm();break;
+    case "lavada": renderWashForm();break;
+    case "combustible": renderFuelReport();break;
+    case "equipo": renderTeam();break;
+    case "ok": renderDone(seg[1]);break;
+    default: renderFleet();
+  }
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",route);
+function chrome(){
+  document.getElementById("subTitle")&& (document.getElementById("subTitle").textContent=t("sub"));
+  document.getElementById("foot").textContent=t("foot")+(DEMO?" · "+t("demoNote"):"");
+  document.getElementById("btnES").classList.toggle("active",lang==="es");
+  document.getElementById("btnEN").classList.toggle("active",lang==="en");
+  document.getElementById("btnRefresh").style.display=(SRC.sheetId&&!DEMO)?"":"none";
+}
+function render(){route()}
+window.setLang=l=>{lang=l;render()};
+
+/* ---------- setup ---------- */
+function renderSetup(msg){
+  const s=I18N[lang];
+  app.innerHTML=`<div class="setup frm">
+    <h2>${s.setupTitle}</h2>
+    <ol>${s.setupSteps.map(x=>`<li>${x}</li>`).join("")}</ol>
+    <label>${s.lblSheet}</label><input class="mono" id="inSheet" value="${esc(SRC.sheetId)}" placeholder="1AbC...xyz">
+    <label>${s.lblScript}</label><input class="mono" id="inScript" value="${esc(SRC.scriptUrl)}" placeholder="https://script.google.com/macros/s/.../exec">
+    <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap">
+      <button class="sendbtn" style="flex:1;min-width:160px;margin-top:0" id="btnConnect">${s.btnConnect}</button>
+      <button class="sendbtn" style="flex:1;min-width:160px;margin-top:0;background:#fff;color:#0F8A4F;border:2px solid var(--tysa-green)" id="btnDemo">${s.btnDemo}</button>
+    </div>
+    ${msg?`<div class="errbox">${esc(msg)}</div>`:""}
+  </div>`;
+  document.getElementById("btnConnect").onclick=async()=>{
+    const rawId=norm(document.getElementById("inSheet").value);
+    const m=rawId.match(/\/d\/([\w-]{20,})/);
+    SRC.sheetId=m?m[1]:rawId;
+    const rawScript=norm(document.getElementById("inScript").value);
+    SRC.scriptUrl=/script\.google\.com/.test(rawScript)?rawScript:SRC.scriptUrl||CONFIG.scriptUrl;
+    if(!SRC.sheetId){renderSetup(t("errLoad"));return}
+    DEMO=false;LOADING=true;render();
+    try{await loadAll();LOADING=false;go("#/")}
+    catch(e){LOADING=false;DATA=null;renderSetup(t("errLoad"))}
+  };
+  document.getElementById("btnDemo").onclick=()=>{loadDemo();go("#/")};
+}
+
+/* ---------- flota ---------- */
+function renderFleet(){
+  const tot={overdue:0,soon:0,open:0,active:0};
+  const cards=DATA.veh.map(v=>{
+    const s=vehStats(v.id);
+    tot.overdue+=s.overdue;tot.soon+=s.soon;tot.open+=s.open;
+    if(/activo|active/i.test(v.state))tot.active++;
+    const ins=insStatus(v);
+    return`<div class="vcard" onclick="go('#/vehiculo/${encodeURIComponent(v.id)}')">
+      <div class="strip ${ins==="danger"?"danger":s.overall}"></div>
+      <div class="in">
+        <div class="id">${esc(v.id)}</div>
+        <div class="model">${esc(v.brand)} ${esc(v.model)} · ${esc(v.year)} · ${esc(v.type)}</div>
+        <div class="row"><span class="k">${t("resp")}</span><span class="v">${esc(v.resp)||"—"}</span></div>
+        <div class="row"><span class="k">${t("mileage")}</span><span class="v">${fmtMi(v.mi)} mi</span></div>
+        <div class="row"><span class="k">${t("plate")}</span><span class="v">${esc(v.plate)||"—"}</span></div>
+        <div class="badges">
+          ${s.overdue?`<span class="badge red">${s.overdue} ${t("stDue")}</span>`:""}
+          ${s.soon?`<span class="badge amber">${s.soon} ${t("stSoon")}</span>`:""}
+          ${s.open?`<span class="badge amber">${s.open} ${t("kOpenOT")}</span>`:""}
+          ${insStatus(v)==="danger"?`<span class="badge red">${t("insExpired")}</span>`:insStatus(v)==="warn"?`<span class="badge amber">${t("insSoon")}</span>`:""}
+          ${s.washDays!==null&&s.washDays>30?`<span class="badge ${s.washDays>60?"red":"amber"}">🧽 ${t("wOverdue")} (${s.washDays}d)</span>`:""}
+          ${!s.overdue&&!s.soon&&!s.open&&insStatus(v)!=="danger"&&insStatus(v)!=="warn"?`<span class="badge green">${I18N[lang].plateOverall.ok}</span>`:""}
+        </div>
+      </div></div>`;
+  }).join("");
+  app.innerHTML=`
+    <div class="fleethead"><h1>${t("fleet")}</h1>
+      <span class="meta">${DATA.veh.length} ${t("vehicles")} · ${DEMO?t("demoNote"):t("updated")}</span>
+      <button class="donebtn" style="margin-left:auto;padding:8px 14px;font-size:13px" onclick="go('#/combustible')">${t("btnFuel")}</button>
+      <button class="donebtn" style="padding:8px 14px;font-size:13px" onclick="go('#/equipo')">${t("btnTeam")}</button></div>
+    <div class="kpirow">
+      <div class="kpi green"><div class="n">${tot.active}</div><div class="l">${t("kActive")}</div></div>
+      <div class="kpi red"><div class="n">${tot.overdue}</div><div class="l">${t("kOverdue")}</div></div>
+      <div class="kpi amber"><div class="n">${tot.soon}</div><div class="l">${t("kSoon")}</div></div>
+      <div class="kpi amber"><div class="n">${tot.open}</div><div class="l">${t("kOpenOT")}</div></div>
+    </div>
+    <div class="grid">${cards}
+      <div class="addcard" onclick="go('#/nuevo-vehiculo')"><div class="plus">＋</div>${t("addVeh")}</div>
+    </div>`;
+}
+
+/* ---------- hoja de vida ---------- */
+function planTable(rows){
+  return`<table><thead><tr><th>${t("thTask")}</th><th>${t("thNextMi")}</th><th>${t("thNextDate")}</th><th>${t("thLast")}</th><th>${t("thStatus")}</th><th></th></tr></thead><tbody>${
+    rows.map(p=>`<tr>
+      <td>${esc(p.task)}</td>
+      <td class="mono">${p.nextMi?fmtMi(p.nextMi)+" mi":"—"}</td>
+      <td class="mono">${esc(p.nextDate)||"—"}</td>
+      <td class="mono">${esc(p.lastDate)||"—"}${p.lastMi&&p.lastMi!=="0"?" · "+fmtMi(p.lastMi)+" mi":""}</td>
+      <td><span class="st ${statusClass(p.status)}">${statusLabel(p.status)}</span></td>
+      <td><button class="donebtn" onclick="openDone('${esc(p.vid)}','${esc(p.task).replace(/'/g,"\\'")}')">${t("markDone")}</button></td></tr>`).join("")}</tbody></table>`;
+}
+function renderVehicle(vid){
+  const v=DATA.veh.find(x=>x.id===vid);if(!v){go("#/");return}
+  const s=vehStats(vid);
+  const ov=I18N[lang].plateOverall[s.overall];
+  const ins=insStatus(v);
+  const chassis=s.plan.filter(p=>/chasis|chassis/i.test(p.sys));
+  const boom=s.plan.filter(p=>/boom|altec/i.test(p.sys));
+  const rest=s.plan.filter(p=>!chassis.includes(p)&&!boom.includes(p));
+  let planHtml="";
+  if(chassis.length||boom.length){
+    const boomTag=(boom[0]&&(boom[0].sys.match(/\(([^)]+)\)/)||[])[1])||"";
+    if(chassis.length)planHtml+=`<div class="subhead">🚚 ${t("sysChassis")} <span class="tag">${esc(v.brand)||"Ford"}</span></div>`+planTable(chassis);
+    if(boom.length)planHtml+=`<div class="subhead">🏗 ${t("sysBoom")}${boomTag?` <span class="tag">${esc(boomTag)}</span>`:""}</div>`+planTable(boom);
+    if(rest.length)planHtml+=`<div class="subhead">Otros</div>`+planTable(rest);
+  }else planHtml=s.plan.length?planTable(s.plan):`<div class="empty">${t("none")}</div>`;
+  const otRows=s.ots.map(o=>{
+    const c=money(o.total)||money(o.parts)+money(o.labor);
+    const th=driveThumbs(o.docs);
+    return`<tr>
+      <td class="mono">${esc(o.ot)}</td><td class="mono">${esc(o.date)}</td>
+      <td><span class="st ${/corr/i.test(o.type)?"danger":"ok"}">${esc(o.type)}</span></td>
+      <td>${esc(o.desc)}${o.origin?`<div style="font-size:11px;color:var(--ink-soft)">${esc(o.origin)}</div>`:""}</td>
+      <td>${esc(o.shop)}</td>
+      <td><span class="st ${/cerrada|closed/i.test(o.status)?"ok":/abierta|open/i.test(o.status)?"danger":"warn"}">${esc(o.status)}</span></td>
+      <td class="money">${fmtMoney(c)}</td>
+      <td class="photolinks">${norm(o.docs)?`<a href="${esc(o.docs.split(/[\s,]+/)[0])}" target="_blank">📎 Drive</a>`:"—"}
+        ${th.length?`<div class="thumbs">${th.map(id=>`<img src="https://drive.google.com/thumbnail?id=${id}&sz=w200" loading="lazy" onerror="this.remove()">`).join("")}</div>`:""}</td></tr>`;
+  }).join("");
+  const inspSorted=[...s.insp].sort((a,b)=>(parseDate(b.date)||0)-(parseDate(a.date)||0)).slice(0,15);
+  const inspRows=inspSorted.map(i=>{
+    const fails=Object.entries(i.items).filter(([,x])=>norm(x).toUpperCase()==="FALLA").map(([k])=>k);
+    const th=driveThumbs(i.photos);
+    return`<tr>
+      <td class="mono">${esc(i.date)}</td><td>${esc(i.driver)}</td><td class="mono">${fmtMi(i.mi)}</td>
+      <td>${fails.length?fails.map(f=>`<span class="st danger">${esc(f)}</span>`).join(" "):`<span class="st ok">OK</span>`}</td>
+      <td><span class="st ${/^s|^y/i.test(i.fit)?"ok":"danger"}">${/^s|^y/i.test(i.fit)?t("fitYes"):t("fitNo")}</span></td>
+      <td>${esc(i.obs)||"—"}</td>
+      <td class="photolinks">${norm(i.photos)?norm(i.photos).split(/[\s,]+/).slice(0,3).map((u,ix)=>`<a href="${esc(u)}" target="_blank">📎 ${ix+1}</a>`).join(""):"—"}
+        ${th.length?`<div class="thumbs">${th.map(id=>`<img src="https://drive.google.com/thumbnail?id=${id}&sz=w200" loading="lazy" onerror="this.remove()">`).join("")}</div>`:""}</td></tr>`;
+  }).join("");
+  const totalCost=s.cost, prevPct=totalCost?Math.round(s.costPrev/totalCost*100):0;
+  const docCard=(icon,name,link,extra,docKind)=>`
+    <div class="doccard"><div class="ic">${icon}</div>
+      <div><div class="tt">${name}</div><div class="ss">${extra||""}</div></div>
+      ${link&&!/DEMO/.test(link)?`<a class="open" href="${esc(link)}" target="_blank">${t("docOpen")} →</a>`
+        :link?`<a class="open" href="#" onclick="return false">${t("docOpen")} →</a>`
+        :`<div class="miss">${t("docMiss")}</div>`}
+      <a class="open" style="background:#fff;color:#0F8A4F;border:1.5px solid var(--tysa-green)" href="#/doc/${encodeURIComponent(v.id)}?tipo=${docKind}" onclick="FORM={docTipo:'${docKind}'}">📎</a>
+    </div>`;
+  app.innerHTML=`
+    <button class="backbtn" onclick="goBack()">${t("back")}</button>
+    <div class="detailactions">
+      <button onclick="window.print()">🖨 ${t("print")}</button>
+      <button onclick="printEN()">${t("report")}</button>
+      <button onclick="FORM={};go('#/nueva-ot/${encodeURIComponent(v.id)}')">${t("newOT")}</button>
+      <button onclick="FORM={};go('#/doc/${encodeURIComponent(v.id)}')">${t("docUpload")}</button>
+    </div>
+    <div class="plate"><div class="r1"></div>
+      <div class="toprow">
+        <div><div class="vid">${esc(v.id)}</div><div class="vtype">${esc(v.type)} · ${esc(v.state)}</div></div>
+        <div class="statusbig"><span class="chip ${s.overall}">${ov}</span></div>
+      </div>
+      <div class="specs">
+        <div class="spec"><div class="k">${t("specBrand")}</div><div class="v">${esc(v.brand)} ${esc(v.model)}</div></div>
+        <div class="spec"><div class="k">${t("specYear")}</div><div class="v">${esc(v.year)}</div></div>
+        <div class="spec"><div class="k">${t("specPlate")}</div><div class="v">${esc(v.plate)||"—"}</div></div>
+        <div class="spec"><div class="k">${t("specVin")}</div><div class="v">${esc(v.vin)||"—"}</div></div>
+        <div class="spec"><div class="k">${t("specResp")}</div><div class="v">${esc(v.resp)||"—"}</div></div>
+        <div class="spec"><div class="k">${t("specMi")}</div><div class="v">${fmtMi(v.mi)} mi</div></div>
+        <div class="spec"><div class="k">${t("specMiDate")}</div><div class="v">${esc(v.miDate)||"—"}</div></div>
+      </div>
+      ${v.notes?`<div style="margin-top:10px;font-size:12.5px;color:#A8C8B8">${esc(v.notes)}</div>`:""}
+    </div>
+
+    <div class="section"><h3>${t("secDocs")}
+      ${ins==="danger"?`<span class="count" style="background:#FBEDEC;color:var(--danger)">${t("insExpired")}</span>`:
+        ins==="warn"?`<span class="count" style="background:#FCF3DC;color:#8A6400">${t("insSoon")}</span>`:""}
+      <button class="act" onclick="FORM={};go('#/doc/${encodeURIComponent(v.id)}')">${t("docUpload")}</button></h3>
+      <div class="docsgrid">
+        ${docCard("📄",t("docTitle"),v.titleLink,"","titulo")}
+        ${docCard("🛡️",t("docIns"),v.insLink,v.insExp?`${t("insExp")}: ${esc(v.insExp)}`:"","seguro")}
+      </div>
+    </div>
+
+    <div class="section"><h3>${t("secCost")}</h3>
+      <div class="coststrip">
+        <div class="costbox"><div class="n">${fmtMoney(s.cost)}</div><div class="l">${t("cTotal")}</div></div>
+        <div class="costbox"><div class="n">${fmtMoney(s.costYr)}</div><div class="l">${t("cYear")}</div></div>
+        <div class="costbox"><div class="n" style="color:var(--ok)">${fmtMoney(s.costPrev)}</div><div class="l">${t("cPrev")}</div></div>
+        <div class="costbox"><div class="n" style="color:var(--danger)">${fmtMoney(s.costCorr)}</div><div class="l">${t("cCorr")}</div></div>
+      </div>
+      ${totalCost?`<div class="pbar"><div class="prev" style="width:${prevPct}%"></div><div class="corr" style="width:${100-prevPct}%"></div></div>
+      <div class="pbarleg"><span><span class="dot" style="background:var(--ok)"></span>${t("legPrev")} ${prevPct}%</span><span><span class="dot" style="background:var(--danger)"></span>${t("legCorr")} ${100-prevPct}%</span></div>`:""}
+    </div>
+
+    <div class="section"><h3>${t("secFuel")}<span class="count">${s.fuel.length}</span></h3>
+      <div class="coststrip">
+        <div class="costbox"><div class="n">${fmtMoney(s.fuelYr)}</div><div class="l">${t("fYtd")}</div></div>
+        <div class="costbox"><div class="n">${s.galYr?s.galYr.toFixed(1):"—"}</div><div class="l">${t("fGal")}</div></div>
+        <div class="costbox"><div class="n" style="color:var(--ok)">${s.mpg?s.mpg.toFixed(1)+" mpg":"—"}</div><div class="l">${t("fMpg")}</div></div>
+        <div class="costbox"><div class="n">${s.cpm?"$"+s.cpm.toFixed(2):"—"}</div><div class="l">${t("fCpm")}</div></div>
+      </div>
+      <div class="body">${s.fuel.length?`<table><thead><tr><th>${t("thDate")}</th><th>${t("thDriver")}</th><th>${t("thMi")}</th><th>${t("thGal")}</th><th style="text-align:right">${t("thCost")}</th><th style="text-align:right">${t("thPpg")}</th><th>${t("thStation")}</th><th>${t("thReceipt")}</th></tr></thead><tbody>${
+        [...s.fuel].sort((a,b)=>(parseDate(b.date)||0)-(parseDate(a.date)||0)).slice(0,12).map(f=>`<tr>
+          <td class="mono">${esc(f.date)}</td><td>${esc(f.driver)}</td><td class="mono">${fmtMi(f.mi)}</td>
+          <td class="mono">${esc(f.gal)}</td><td class="money">${fmtMoney(money(f.cost))}</td>
+          <td class="money">${f.ppg?"$"+parseFloat(f.ppg).toFixed(2):(parseFloat(f.gal)>0?"$"+(money(f.cost)/parseFloat(f.gal)).toFixed(2):"—")}</td>
+          <td>${esc(f.station)||"—"}</td>
+          <td class="photolinks">${norm(f.receipt)?`<a href="${esc(f.receipt.split(/[\s,]+/)[0])}" target="_blank">📎</a>`:"—"}</td></tr>`).join("")
+      }</tbody></table>`:`<div class="empty">${t("none")}</div>`}</div>
+    </div>
+
+    <div class="section"><h3>${t("secWash")}<span class="count">${s.wash.length}</span></h3>
+      <div class="coststrip">
+        <div class="costbox"><div class="n" style="color:${s.washDays===null?"inherit":s.washDays>60?"var(--danger)":s.washDays>30?"var(--warn)":"var(--ok)"}">${s.washDays===null?"—":s.washDays===0?t("wToday"):s.washDays+"d"}</div><div class="l">${t("wLast")}${s.lastWash?" · "+esc(s.lastWash.date):""}</div></div>
+        <div class="costbox"><div class="n">${fmtMoney(s.washYr)}</div><div class="l">${t("wYtd")}</div></div>
+        <div class="costbox"><div class="n">${s.wash.length}</div><div class="l">${t("wCount")}</div></div>
+      </div>
+      <div class="body">${s.wash.length?`<table><thead><tr><th>${t("thDate")}</th><th>${t("thWho")}</th><th>${t("thKind")}</th><th style="text-align:right">${t("thCost")}</th><th>${t("thPlace")}</th><th>${t("thPhotos")}</th></tr></thead><tbody>${
+        s.wash.slice(0,10).map(x=>{const th=driveThumbs(x.photos);return`<tr>
+          <td class="mono">${esc(x.date)}</td><td>${esc(x.who)}</td>
+          <td><span class="st ${/detall/i.test(x.kind)?"ok":/complet/i.test(x.kind)?"warn":"gray"}" style="background:#EDF2EE;color:var(--tysa-mid)">${esc(x.kind)||"—"}</span></td>
+          <td class="money">${money(x.cost)?fmtMoney(money(x.cost)):"$0"}</td>
+          <td>${esc(x.place)||"—"}</td>
+          <td class="photolinks">${norm(x.photos)?`<a href="${esc(x.photos.split(/[\s,]+/)[0])}" target="_blank">📎</a>`:"—"}
+            ${th.length?`<div class="thumbs">${th.map(id=>`<img src="https://drive.google.com/thumbnail?id=${id}&sz=w200" loading="lazy" onerror="this.remove()">`).join("")}</div>`:""}</td></tr>`}).join("")
+      }</tbody></table>`:`<div class="empty">${t("none")}</div>`}</div>
+    </div>
+
+    <div class="section"><h3>${t("secPlan")}
+        ${s.overdue?`<span class="count" style="background:#FBEDEC;color:var(--danger)">${s.overdue} ${t("stDue")}</span>`:""}
+        ${s.soon?`<span class="count" style="background:#FCF3DC;color:#8A6400">${s.soon} ${t("stSoon")}</span>`:""}</h3>
+      <div class="body">${planHtml}</div>
+    </div>
+
+    <div class="section"><h3>${t("secOT")}<span class="count">${s.ots.length}</span>
+      <button class="act" onclick="FORM={};go('#/nueva-ot/${encodeURIComponent(v.id)}')">${t("newOT")}</button></h3>
+      <div class="body">${s.ots.length?`<table><thead><tr><th>${t("thOT")}</th><th>${t("thDate")}</th><th>${t("thType")}</th><th>${t("thDesc")}</th><th>${t("thShop")}</th><th>${t("thStatus")}</th><th style="text-align:right">${t("thCost")}</th><th>${t("thDocs")}</th></tr></thead>
+        <tbody>${otRows}</tbody>
+        <tfoot><tr><td colspan="6">${t("total")}</td><td class="money">${fmtMoney(s.cost)}</td><td></td></tr></tfoot></table>`:`<div class="empty">${t("none")}</div>`}</div>
+    </div>
+
+    <div class="section"><h3>${t("secInsp")}<span class="count">${s.insp.length}</span></h3>
+      <div class="body">${inspSorted.length?`<table><thead><tr><th>${t("thDate")}</th><th>${t("thDriver")}</th><th>${t("thMi")}</th><th>${t("thFails")}</th><th>${t("thFit")}</th><th>${t("thObs")}</th><th>${t("thPhotos")}</th></tr></thead><tbody>${inspRows}</tbody></table>`:`<div class="empty">${t("none")}</div>`}</div>
+    </div>`;
+}
+window.printEN=()=>{const prev=lang;lang="en";render();setTimeout(()=>{window.print();lang=prev;render()},150)};
+
+/* ---------- marcar tarea preventiva como hecha ---------- */
+window.openDone=(vid,task)=>{
+  const root=document.getElementById("modalRoot");
+  root.innerHTML=`<div class="overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal frm">
+      <h3>✔ Marcar como hecha</h3>
+      <div class="msub">${esc(task)}<br><b>${esc(vid)}</b></div>
+      <label>Fecha en que se hizo</label>
+      <input class="mono" id="mdDate" value="${todayUS()}">
+      <label>Millaje en ese momento</label>
+      <input class="mono" id="mdMi" inputmode="numeric" placeholder="Ej: 61850">
+      <div class="mact">
+        <button onclick="closeModal()">Cancelar</button>
+        <button class="go" id="mdGo">Guardar</button>
+      </div>
+    </div></div>`;
+  document.getElementById("mdGo").onclick=async()=>{
+    const fecha=norm(document.getElementById("mdDate").value);
+    const mi=norm(document.getElementById("mdMi").value);
+    if(!fecha||!mi){toast("⚠️ Fecha y millaje son obligatorios");return}
+    try{
+      await sendAction({tipo:"closeTask",vehiculo:vid,tarea:task,fecha,millaje:mi});
+      const p=DATA.plan.find(x=>x.vid===vid&&x.task===task);
+      if(p){p.lastDate=fecha;p.lastMi=mi;p.status="OK"}
+      closeModal();toast(DEMO?"✔ Guardado (demo)":"✔ Tarea actualizada");render();
+    }catch(e){toast("❌ No se pudo guardar")}
+  };
+};
+window.closeModal=()=>{document.getElementById("modalRoot").innerHTML=""};
+
+/* ---------- agregar vehículo ---------- */
+function nextVehId(){
+  // sugiere siguiendo el patrón del último vehículo (BUCKET-1 → BUCKET-3, TYSA-01 → TYSA-02...)
+  const pats={};
+  DATA.veh.forEach(v=>{const m=v.id.match(/^(.*?)(\d+)$/);if(m)pats[m[1]]=Math.max(pats[m[1]]||0,parseInt(m[2],10))});
+  const keys=Object.keys(pats);
+  if(!keys.length)return "";
+  const pre=keys.sort((a,b)=>pats[b]-pats[a] && 0)[0];
+  const bucketPre=keys.find(k=>/bucket/i.test(k));
+  const usePre=bucketPre||keys[0];
+  return usePre+(pats[usePre]+1);
+}
+function renderNewVehicle(){
+  const f=FORM;
+  app.innerHTML=`<button class="backbtn" onclick="goBack()">${t("back")}</button>
+  <div class="formcard frm">
+    <h1>＋ Nuevo vehículo</h1>
+    <div class="lead">Se guarda directo en el Sheet — no tienes que abrirlo.</div>
+    <div class="two">
+      <div><label>ID</label><input class="mono" id="fId" value="${esc(f.id??nextVehId())}" placeholder="Ej: BUCKET-3, RAM-2500..."></div>
+      <div><label>Placa</label><input class="mono" id="fPlate" value="${esc(f.plate||"")}" placeholder="ABC-1234"></div>
+    </div>
+    <label>Tipo</label>
+    <select id="fType"><option>Camioneta</option><option>Bucket Truck</option><option>Trailer</option><option>Otro</option></select>
+    <div class="two">
+      <div><label>Marca</label><input id="fBrand" value="${esc(f.brand||"")}" placeholder="Ford"></div>
+      <div><label>Modelo</label><input id="fModel" value="${esc(f.model||"")}" placeholder="F-550 / Altec AT40G"></div>
+    </div>
+    <div class="two">
+      <div><label>Año</label><input class="mono" id="fYear" inputmode="numeric" value="${esc(f.year||"")}" placeholder="2021"></div>
+      <div><label>Millaje actual</label><input class="mono" id="fMi" inputmode="numeric" value="${esc(f.mi||"")}" placeholder="48250"></div>
+    </div>
+    <label>VIN</label><input class="mono" id="fVin" value="${esc(f.vin||"")}" placeholder="1FT...">
+    <label>Responsable</label><input id="fResp" value="${esc(f.resp||"")}" placeholder="Nombre del responsable">
+    <button class="sendbtn" id="fGo">Guardar vehículo</button>
+    <div class="dmsg" id="fMsg"></div>
+  </div>`;
+  if(f.type)document.getElementById("fType").value=f.type;
+  document.getElementById("fGo").onclick=async()=>{
+    const v={id:norm(fv("fId")),plate:norm(fv("fPlate")),type:fv("fType"),brand:norm(fv("fBrand")),
+      model:norm(fv("fModel")),year:norm(fv("fYear")),vin:norm(fv("fVin")),resp:norm(fv("fResp")),
+      mi:norm(fv("fMi")),miDate:todayUS(),state:"Activo",notes:"",titleLink:"",insLink:"",insExp:""};
+    const msg=document.getElementById("fMsg");
+    if(!v.id){msg.textContent="⚠️ El ID es obligatorio";return}
+    if(DATA.veh.some(x=>x.id===v.id)){msg.textContent="⚠️ Ya existe un vehículo con ese ID";return}
+    if(!v.mi){msg.textContent="⚠️ Escribe el millaje actual";return}
+    const btn=document.getElementById("fGo");btn.disabled=true;btn.innerHTML='<span class="spin"></span>Guardando...';
+    try{
+      await sendAction({tipo:"addVehicle",vehiculo:v});
+      DATA.veh.push(v);
+      toast(DEMO?"✔ Vehículo agregado (demo)":"✔ Vehículo guardado en el Sheet");
+      FORM={};go("#/vehiculo/"+encodeURIComponent(v.id));
+    }catch(e){btn.disabled=false;btn.textContent="Guardar vehículo";msg.textContent="❌ No se pudo guardar. Intenta de nuevo."}
+  };
+}
+const fv=id=>document.getElementById(id).value;
+
+/* ---------- subir documentos (título / seguro) ---------- */
+function renderUploadDoc(vid){
+  const v=DATA.veh.find(x=>x.id===vid);if(!v){go("#/");return}
+  const f=FORM;
+  f.docTipo=f.docTipo||"titulo";
+  app.innerHTML=`<button class="backbtn" onclick="goBack()">${t("back")}</button>
+  <div class="formcard frm">
+    <h1>📎 Documentos — ${esc(vid)}</h1>
+    <div class="lead">Toma foto o sube el PDF; se guarda en Drive y queda enlazado al vehículo automáticamente.</div>
+    <label>¿Qué documento?</label>
+    <div class="aptobtns">
+      <button class="aptobtn ${f.docTipo==="titulo"?"yes sel":""}" onclick="FORM.docTipo='titulo';FORM.file=null;render()">📄 Título</button>
+      <button class="aptobtn ${f.docTipo==="seguro"?"yes sel":""}" onclick="FORM.docTipo='seguro';FORM.file=null;render()">🛡️ Seguro</button>
+    </div>
+    ${f.docTipo==="seguro"?`<label>Fecha de vencimiento de la póliza</label>
+      <input class="mono" id="fExp" value="${esc(f.exp||v.insExp||"")}" placeholder="MM/DD/AAAA" oninput="FORM.exp=this.value">`:""}
+    <label>Archivo (foto o PDF)</label>
+    <label class="photozone">📷 Tomar foto o elegir archivo
+      <input type="file" accept="image/*,application/pdf" onchange="pickDoc(this)">
+    </label>
+    <div class="pgrid">${f.file?(f.file.isPdf?`<div class="pv"><div class="pdfchip">📄 PDF listo</div><button class="rm" onclick="FORM.file=null;render()">✕</button></div>`:`<div class="pv"><img src="${f.file.data}"><button class="rm" onclick="FORM.file=null;render()">✕</button></div>`):""}</div>
+    <button class="sendbtn" id="fGo">Subir documento</button>
+    <div class="dmsg" id="fMsg"></div>
+  </div>`;
+  document.getElementById("fGo").onclick=async()=>{
+    const msg=document.getElementById("fMsg");
+    if(!FORM.file){msg.textContent="⚠️ Toma la foto o elige el archivo";return}
+    if(FORM.docTipo==="seguro"&&!norm(FORM.exp||v.insExp)){msg.textContent="⚠️ Escribe la fecha de vencimiento";return}
+    const btn=document.getElementById("fGo");btn.disabled=true;btn.innerHTML='<span class="spin"></span>Subiendo...';
+    try{
+      const r=await sendAction({tipo:"uploadDoc",vehiculo:vid,doc:FORM.docTipo,
+        vencimiento:FORM.docTipo==="seguro"?norm(FORM.exp||v.insExp):"",
+        archivo:FORM.file.data,esPdf:!!FORM.file.isPdf,nombre:FORM.file.name||""});
+      if(FORM.docTipo==="titulo")v.titleLink=r.link||v.titleLink||"pendiente";
+      else{v.insLink=r.link||v.insLink||"pendiente";v.insExp=norm(FORM.exp||v.insExp)}
+      toast(DEMO?"✔ Documento subido (demo)":"✔ Documento en Drive y enlazado");
+      FORM={};go("#/vehiculo/"+encodeURIComponent(vid));
+    }catch(e){btn.disabled=false;btn.textContent="Subir documento";msg.textContent="❌ No se pudo subir. Intenta de nuevo."}
+  };
+}
+window.pickDoc=async inp=>{
+  const file=inp.files[0];if(!file)return;
+  if(file.size>10*1024*1024){toast("⚠️ Archivo muy grande (máx 10 MB)");return}
+  if(file.type==="application/pdf"){
+    const data=await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(file)});
+    FORM.file={data,isPdf:true,name:file.name};
+  }else{
+    const data=await compressImage(file,1600,.8);
+    FORM.file={data,isPdf:false,name:file.name};
+  }
+  render();
+};
+
+/* ---------- nueva orden de trabajo ---------- */
+function renderNewOT(vid){
+  const v=DATA.veh.find(x=>x.id===vid);
+  const f=FORM;
+  const nextOT="OT-"+String(DATA.ots.length+1).padStart(4,"0");
+  app.innerHTML=`<button class="backbtn" onclick="goBack()">${t("back")}</button>
+  <div class="formcard frm">
+    <h1>🧾 Nueva orden de trabajo</h1>
+    <div class="lead">${v?esc(v.id)+" · "+esc(v.brand)+" "+esc(v.model):""}</div>
+    <div class="two">
+      <div><label>OT #</label><input class="mono" id="oNum" value="${esc(f.num||nextOT)}"></div>
+      <div><label>Fecha</label><input class="mono" id="oDate" value="${esc(f.date||todayUS())}"></div>
+    </div>
+    <div class="two">
+      <div><label>Tipo</label><select id="oType"><option>Correctivo</option><option>Preventivo</option></select></div>
+      <div><label>Origen</label><select id="oOrigin"><option>Inspección Pre-Trip</option><option>Plan Preventivo</option><option>Falla en Ruta</option><option>Otro</option></select></div>
+    </div>
+    <label>Descripción del trabajo</label>
+    <textarea id="oDesc" rows="2" placeholder="Qué hay que hacer">${esc(f.desc||"")}</textarea>
+    <label>Taller</label><input id="oShop" value="${esc(f.shop||"")}" placeholder="Nombre del taller">
+    <div class="two">
+      <div><label>Costo repuestos ($)</label><input class="mono" id="oParts" inputmode="decimal" value="${esc(f.parts||"")}" placeholder="0"></div>
+      <div><label>Costo mano de obra ($)</label><input class="mono" id="oLabor" inputmode="decimal" value="${esc(f.labor||"")}" placeholder="0"></div>
+    </div>
+    <label>Fotos (opcional)</label>
+    <label class="photozone">📷 Agregar fotos
+      <input type="file" accept="image/*" capture="environment" multiple onchange="addFormPhotos(this)">
+    </label>
+    <div class="pgrid">${(f.photos||[]).map((p,i)=>`<div class="pv"><img src="${p}"><button class="rm" onclick="FORM.photos.splice(${i},1);render()">✕</button></div>`).join("")}</div>
+    <button class="sendbtn" id="oGo">Crear orden de trabajo</button>
+    <div class="dmsg" id="oMsg"></div>
+  </div>`;
+  if(f.type)document.getElementById("oType").value=f.type;
+  document.getElementById("oGo").onclick=async()=>{
+    const o={ot:norm(fv("oNum")),date:norm(fv("oDate")),vid:vid,type:fv("oType"),origin:fv("oOrigin"),
+      desc:norm(fv("oDesc")),shop:norm(fv("oShop")),status:"Abierta",closed:"",
+      parts:norm(fv("oParts")),labor:norm(fv("oLabor")),total:"",docs:"",notes:""};
+    const msg=document.getElementById("oMsg");
+    if(!o.desc){msg.textContent="⚠️ Describe el trabajo";return}
+    const btn=document.getElementById("oGo");btn.disabled=true;btn.innerHTML='<span class="spin"></span>Creando...';
+    try{
+      const r=await sendAction({tipo:"addOT",ot:o,fotos:(FORM.photos||[])});
+      if(r.docs)o.docs=r.docs;
+      o.total=String((parseFloat(o.parts)||0)+(parseFloat(o.labor)||0));
+      DATA.ots.push(o);
+      toast(DEMO?"✔ OT creada (demo)":"✔ OT creada en el Sheet");
+      FORM={};go("#/vehiculo/"+encodeURIComponent(vid));
+    }catch(e){btn.disabled=false;btn.textContent="Crear orden de trabajo";msg.textContent="❌ No se pudo crear. Intenta de nuevo."}
+  };
+}
+window.addFormPhotos=async inp=>{
+  FORM.photos=FORM.photos||[];
+  for(const f of inp.files){const c=await compressImage(f,1280,.72);if(c)FORM.photos.push(c)}
+  render();
+};
+
+/* ---------- equipo: conductores y responsables ---------- */
+function renderTeam(){
+  const crew=DATA.crew||[];
+  const f=FORM;
+  app.innerHTML=`
+    <button class="backbtn" onclick="goBack()">${t("back")}</button>
+    <div class="fleethead"><h1>${t("teamTitle")}</h1></div>
+    <div class="section"><h3>${t("teamTitle")}<span class="count">${crew.length}</span></h3>
+      <div class="body">${crew.length?`<table><thead><tr><th>${t("thName")}</th><th>${t("thRole")}</th><th>${t("thPhone")}</th><th>${t("thAssigned")}</th><th>${t("thLic")}</th></tr></thead><tbody>${
+        crew.map(c=>{const ls=licStatus(c);return`<tr>
+          <td><b>${esc(c.name)}</b>${/inactivo|inactive/i.test(c.state)?' <span class="st gray">Inactivo</span>':""}</td>
+          <td>${esc(c.role)||"—"}</td><td class="mono">${esc(c.phone)||"—"}</td>
+          <td class="mono">${c.veh?`<a href="#/vehiculo/${encodeURIComponent(c.veh)}">${esc(c.veh)}</a>`:"—"}</td>
+          <td>${c.licExp?`<span class="st ${ls==="danger"?"danger":ls==="warn"?"warn":"ok"}">${esc(c.licExp)}${ls==="danger"?" · "+t("licExpired"):ls==="warn"?" · "+t("licSoon"):""}</span>`:"—"}</td></tr>`}).join("")
+      }</tbody></table>`:`<div class="empty">${t("none")}</div>`}</div>
+    </div>
+    <div class="formcard frm" style="margin:0">
+      <h1 style="font-size:18px">${t("teamAdd")}</h1>
+      <div class="two">
+        <div><label>Nombre</label><input id="cName" value="${esc(f.cName||"")}" placeholder="Nombre y apellido"></div>
+        <div><label>Rol</label><select id="cRole"><option>Conductor</option><option>Supervisor</option><option>Admin</option></select></div>
+      </div>
+      <div class="two">
+        <div><label>Teléfono</label><input class="mono" id="cPhone" inputmode="tel" value="${esc(f.cPhone||"")}" placeholder="305-555-0100"></div>
+        <div><label>Vehículo asignado (opcional)</label><select id="cVeh"><option value="">—</option>${DATA.veh.map(v=>`<option>${esc(v.id)}</option>`).join("")}</select></div>
+      </div>
+      <label>Vencimiento de licencia (opcional, MM/DD/AAAA)</label>
+      <input class="mono" id="cLic" value="${esc(f.cLic||"")}" placeholder="04/12/2027">
+      <button class="sendbtn" id="cGo">Guardar persona</button>
+      <div class="dmsg" id="cMsg"></div>
+    </div>`;
+  document.getElementById("cGo").onclick=async()=>{
+    const pers={name:norm(fv("cName")),role:fv("cRole"),phone:norm(fv("cPhone")),veh:fv("cVeh"),licExp:norm(fv("cLic")),state:"Activo"};
+    const msg=document.getElementById("cMsg");
+    if(!pers.name){msg.textContent="⚠️ El nombre es obligatorio";return}
+    if((DATA.crew||[]).some(c=>c.name.toLowerCase()===pers.name.toLowerCase())){msg.textContent="⚠️ Ya existe alguien con ese nombre";return}
+    const btn=document.getElementById("cGo");btn.disabled=true;btn.innerHTML='<span class="spin"></span>Guardando...';
+    try{
+      await sendAction({tipo:"addDriver",persona:pers});
+      DATA.crew=DATA.crew||[];DATA.crew.push(pers);
+      toast(DEMO?"✔ Persona agregada (demo)":"✔ Guardado en el Sheet");
+      FORM={};render();
+    }catch(e){btn.disabled=false;btn.textContent="Guardar persona";msg.textContent="❌ No se pudo guardar."}
+  };
+}
+
+/* ---------- reporte de combustible por fechas / semanal ---------- */
+const toISO=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+function weekStart(d){const x=new Date(d);const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);x.setHours(0,0,0,0);return x}
+function frPreset(kind){
+  const now=new Date();let from,to=new Date(now);
+  if(kind==="thisWeek"){from=weekStart(now)}
+  else if(kind==="lastWeek"){to=new Date(weekStart(now).getTime()-864e5);from=weekStart(to)}
+  else if(kind==="thisMonth"){from=new Date(now.getFullYear(),now.getMonth(),1)}
+  else if(kind==="lastMonth"){from=new Date(now.getFullYear(),now.getMonth()-1,1);to=new Date(now.getFullYear(),now.getMonth(),0)}
+  else if(kind==="d30"){from=new Date(now.getTime()-30*864e5)}
+  else{from=new Date(now.getFullYear(),0,1)}
+  FORM.frFrom=toISO(from);FORM.frTo=toISO(to);FORM.frPreset=kind;render();
+}
+function renderFuelReport(){
+  if(!FORM.frFrom)frPreset.call(null,"thisMonth")||0;
+  if(!FORM.frFrom){const now=new Date();FORM.frFrom=toISO(new Date(now.getFullYear(),now.getMonth(),1));FORM.frTo=toISO(now)}
+  const from=new Date(FORM.frFrom+"T00:00:00"), to=new Date(FORM.frTo+"T23:59:59");
+  const vehFilter=FORM.frVeh||"";
+  const rows=(DATA.fuel||[]).filter(f=>{
+    const d=parseDate(f.date);
+    return d&&d>=from&&d<=to&&(!vehFilter||f.vid===vehFilter);
+  });
+  const totCost=rows.reduce((a,f)=>a+money(f.cost),0);
+  const totGal=rows.reduce((a,f)=>a+(parseFloat(f.gal)||0),0);
+  const avg=totGal>0?totCost/totGal:0;
+  // agrupar por semana (lunes a domingo)
+  const weeks={};
+  rows.forEach(f=>{const d=parseDate(f.date);const ws=weekStart(d);const k=toISO(ws);
+    weeks[k]=weeks[k]||{start:ws,cost:0,gal:0,n:0};
+    weeks[k].cost+=money(f.cost);weeks[k].gal+=parseFloat(f.gal)||0;weeks[k].n++});
+  const weekRows=Object.values(weeks).sort((a,b)=>b.start-a.start);
+  const wkLabel=ws=>{const we=new Date(ws.getTime()+6*864e5);
+    const f=d=>d.toLocaleDateString(lang==="es"?"es-CO":"en-US",{month:"short",day:"numeric"});
+    return f(ws)+" – "+f(we)};
+  // por vehículo
+  const byVeh={};
+  rows.forEach(f=>{byVeh[f.vid]=byVeh[f.vid]||{cost:0,gal:0,n:0};
+    byVeh[f.vid].cost+=money(f.cost);byVeh[f.vid].gal+=parseFloat(f.gal)||0;byVeh[f.vid].n++});
+  const presets=[["thisWeek",t("prThisWeek")],["lastWeek",t("prLastWeek")],["thisMonth",t("prThisMonth")],["lastMonth",t("prLastMonth")],["d30",t("pr30")],["year",t("prYear")]];
+  app.innerHTML=`
+    <button class="backbtn" onclick="goBack()">${t("back")}</button>
+    <div class="fleethead"><h1>${t("frTitle")}</h1></div>
+    <div class="section"><div class="body frm" style="padding-top:12px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+        ${presets.map(([k,l])=>`<button class="donebtn" style="${FORM.frPreset===k?"background:var(--tysa-pale);border-color:var(--tysa-green)":""}" onclick="frPreset('${k}')">${l}</button>`).join("")}
+      </div>
+      <div class="two" style="max-width:520px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 12px">
+        <div><label>${t("frFrom")}</label><input type="date" class="mono" value="${FORM.frFrom}" onchange="FORM.frFrom=this.value;FORM.frPreset='';render()"></div>
+        <div><label>${t("frTo")}</label><input type="date" class="mono" value="${FORM.frTo}" onchange="FORM.frTo=this.value;FORM.frPreset='';render()"></div>
+        <div><label>${t("frVeh")}</label><select onchange="FORM.frVeh=this.value;render()">
+          <option value="">${t("frAll")}</option>
+          ${DATA.veh.map(v=>`<option value="${esc(v.id)}" ${vehFilter===v.id?"selected":""}>${esc(v.id)}</option>`).join("")}
+        </select></div>
+      </div>
+    </div></div>
+    <div class="kpirow">
+      <div class="kpi"><div class="n">${fmtMoney(totCost)}</div><div class="l">${t("frCost")}</div></div>
+      <div class="kpi"><div class="n">${totGal?totGal.toFixed(1):"0"}</div><div class="l">${t("frGal")}</div></div>
+      <div class="kpi"><div class="n">${avg?"$"+avg.toFixed(2):"—"}</div><div class="l">${t("frAvg")}</div></div>
+      <div class="kpi"><div class="n">${rows.length}</div><div class="l">${t("frFills")}</div></div>
+    </div>
+    <div class="section"><h3>${t("frByWeek")}</h3>
+      <div class="body">${weekRows.length?`<table><thead><tr><th>${t("frWeek")}</th><th>${t("frFills")}</th><th>${t("frGal")}</th><th style="text-align:right">${t("frCost")}</th></tr></thead><tbody>${
+        weekRows.map(w=>`<tr><td>${wkLabel(w.start)}</td><td class="mono">${w.n}</td><td class="mono">${w.gal.toFixed(1)}</td><td class="money">${fmtMoney(w.cost)}</td></tr>`).join("")
+      }</tbody><tfoot><tr><td colspan="3">${t("total")}</td><td class="money">${fmtMoney(totCost)}</td></tr></tfoot></table>`:`<div class="empty">${t("none")}</div>`}</div>
+    </div>
+    <div class="section"><h3>${t("frByVeh")}</h3>
+      <div class="body">${Object.keys(byVeh).length?`<table><thead><tr><th>${t("frVeh")}</th><th>${t("frFills")}</th><th>${t("frGal")}</th><th style="text-align:right">${t("frCost")}</th></tr></thead><tbody>${
+        Object.entries(byVeh).sort((a,b)=>b[1].cost-a[1].cost).map(([vid,x])=>`<tr><td class="mono"><a href="#/vehiculo/${encodeURIComponent(vid)}">${esc(vid)}</a></td><td class="mono">${x.n}</td><td class="mono">${x.gal.toFixed(1)}</td><td class="money">${fmtMoney(x.cost)}</td></tr>`).join("")
+      }</tbody></table>`:`<div class="empty">${t("none")}</div>`}</div>
+    </div>
+    <div class="section"><h3>${t("secFuel")}<span class="count">${rows.length}</span></h3>
+      <div class="body">${rows.length?`<table><thead><tr><th>${t("thDate")}</th><th>${t("frVeh")}</th><th>${t("thDriver")}</th><th>${t("thGal")}</th><th style="text-align:right">${t("thCost")}</th><th style="text-align:right">${t("thPpg")}</th><th>${t("thStation")}</th></tr></thead><tbody>${
+        [...rows].sort((a,b)=>(parseDate(b.date)||0)-(parseDate(a.date)||0)).map(f=>`<tr>
+          <td class="mono">${esc(f.date)}</td><td class="mono">${esc(f.vid)}</td><td>${esc(f.driver)}</td>
+          <td class="mono">${esc(f.gal)}</td><td class="money">${fmtMoney(money(f.cost))}</td>
+          <td class="money">${f.ppg?"$"+parseFloat(f.ppg).toFixed(2):(parseFloat(f.gal)>0?"$"+(money(f.cost)/parseFloat(f.gal)).toFixed(2):"—")}</td>
+          <td>${esc(f.station)||"—"}</td></tr>`).join("")
+      }</tbody></table>`:`<div class="empty">${t("none")}</div>`}</div>
+    </div>`;
+}
+window.frPreset=frPreset;
+
+/* ==================== MODO CONDUCTOR ==================== */
+function renderDriverHome(){
+  app.innerHTML=`<div class="driver">
+    <h1>Hola 👋</h1>
+    <div class="lead">¿Qué vas a registrar?</div>
+    <div class="menu-opt" onclick="go('#/pretrip')">
+      <div class="mi">📋</div><div><div class="mt">Inspección Pre-Trip</div>
+      <div class="ms">Antes de salir, todos los días</div></div></div>
+    <div class="menu-opt" onclick="go('#/tanqueo')">
+      <div class="mi">⛽</div><div><div class="mt">Tanqueo</div>
+      <div class="ms">Cada vez que eches combustible — con foto del recibo</div></div></div>
+    <div class="menu-opt" onclick="go('#/lavada')">
+      <div class="mi">🧽</div><div><div class="mt">Lavada</div>
+      <div class="ms">Cuando laves el carro — con foto de cómo quedó</div></div></div>
+  </div>`;
+}
+function renderPreTrip(){
+  const vehs=DATA?.veh||[];
+  const v=vehs.find(x=>x.id===DRV.veh);
+  const bucket=isBucket(v);
+  const items=CHECK_ITEMS.filter(it=>!it.bucketOnly||bucket);
+  items.forEach(it=>{if(!DRV.items[it.k])DRV.items[it.k]="OK"});
+  const seg=k=>`<div class="seg">
+    ${["OK","FALLA","N/A"].map(o=>`<button class="${o==="OK"?"ok":o==="FALLA"?"falla":"na"} ${DRV.items[k]===o?"on":""}" onclick="setItem('${k.replace(/'/g,"\\'")}','${o}')">${o}</button>`).join("")}</div>`;
+  app.innerHTML=`<div class="driver">
+    <button class="backbtn" onclick="goBack()">← Volver</button>
+    <h1>Inspección Pre-Trip</h1>
+    <div class="lead">Llénala antes de salir. Te toma 2 minutos.</div>
+    <div class="dstep"><div class="dl"><span class="num">1</span> ¿Qué vehículo llevas hoy?</div>
+      <div class="vehbtns">${vehs.map(x=>`<button class="vehbtn ${DRV.veh===x.id?"sel":""}" onclick="setVeh('${esc(x.id)}')">${esc(x.id)}<small>${esc(x.type)}</small></button>`).join("")}</div>
+    </div>
+    ${nameStep(2)}
+    <div class="dstep"><div class="dl"><span class="num">3</span> Millaje del odómetro</div>
+      <input class="dinput mono" inputmode="numeric" value="${esc(DRV.mi)}" placeholder="Ej: 61850" oninput="DRV.mi=this.value.replace(/[^0-9]/g,'')">
+    </div>
+    <div class="dstep"><div class="dl"><span class="num">4</span> Revisa y marca</div>
+      ${items.map(it=>`<div class="checkitem"><div class="cn">${it.label}</div>${seg(it.k)}</div>`).join("")}
+    </div>
+    <div class="dstep"><div class="dl"><span class="num">5</span> Fotos del vehículo</div>
+      <label class="photozone">📷 Tomar o agregar fotos
+        <input type="file" accept="image/*" capture="environment" multiple onchange="addPhotos(this)">
+      </label>
+      <div class="pgrid">${DRV.photos.map((p,i)=>`<div class="pv"><img src="${p}"><button class="rm" onclick="rmPhoto(${i})">✕</button></div>`).join("")}</div>
+    </div>
+    <div class="dstep"><div class="dl"><span class="num">6</span> ¿El vehículo está apto para operar?</div>
+      <div class="aptobtns">
+        <button class="aptobtn yes ${DRV.apto==="SÍ"?"sel":""}" onclick="DRV.apto='SÍ';render()">✅ SÍ</button>
+        <button class="aptobtn no ${DRV.apto==="NO"?"sel":""}" onclick="DRV.apto='NO';render()">⛔ NO</button>
+      </div>
+    </div>
+    <div class="dstep"><div class="dl"><span class="num">7</span> Observaciones (opcional)</div>
+      <textarea class="dinput" rows="2" placeholder="Describe cualquier daño o novedad" oninput="DRV.obs=this.value">${esc(DRV.obs)}</textarea>
+    </div>
+    <button class="sendbtn" onclick="sendPreTrip()" ${DRV.sending?"disabled":""}>
+      ${DRV.sending?'<span class="spin"></span>Enviando...':"Enviar inspección"}</button>
+    <div class="dmsg" id="dmsg"></div>
+  </div>`;
+}
+window.setVeh=id=>{DRV.veh=id;render()};
+window.pickName=n=>{DRV.name=n;DRV.otherName=false;
+  const c=activeCrew().find(x=>x.name===n);
+  if(c&&c.veh&&!DRV.veh&&(DATA.veh||[]).some(v=>v.id===c.veh))DRV.veh=c.veh;
+  render()};
+window.otherName=()=>{DRV.name="";DRV.otherName=true;render()};
+function nameStep(num){
+  const crew=activeCrew();
+  if(!crew.length||DRV.otherName){
+    return `<div class="dstep"><div class="dl"><span class="num">${num}</span> Tu nombre</div>
+      <input class="dinput" value="${esc(DRV.name)}" placeholder="Nombre y apellido" oninput="DRV.name=this.value">
+      ${crew.length?`<button class="donebtn" style="margin-top:8px" onclick="DRV.otherName=false;render()">← Elegir de la lista</button>`:""}</div>`;
+  }
+  return `<div class="dstep"><div class="dl"><span class="num">${num}</span> ¿Quién eres?</div>
+    <div class="vehbtns">${crew.map(c=>`<button class="vehbtn ${DRV.name===c.name?"sel":""}" style="font-size:14px" onclick="pickName('${esc(c.name).replace(/'/g,"\\'")}')">${esc(c.name)}${c.veh?`<small>${esc(c.veh)}</small>`:""}</button>`).join("")}
+      <button class="vehbtn" style="font-size:14px;color:var(--ink-soft)" onclick="otherName()">✏️ Otro<small>escribir nombre</small></button>
+    </div></div>`;
+}
+window.setItem=(k,v)=>{DRV.items[k]=v;render()};
+window.rmPhoto=i=>{DRV.photos.splice(i,1);render()};
+window.addPhotos=async inp=>{
+  for(const f of inp.files){const c=await compressImage(f,1280,.72);if(c)DRV.photos.push(c)}
+  render();
+};
+function compressImage(file,maxW,q){return new Promise(res=>{
+  const img=new Image();
+  img.onload=()=>{
+    const sc=Math.min(1,maxW/img.width);
+    const cv=document.createElement("canvas");
+    cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
+    cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+    res(cv.toDataURL("image/jpeg",q));
+    URL.revokeObjectURL(img.src);
+  };
+  img.onerror=()=>res(null);
+  img.src=URL.createObjectURL(file);
+})}
+window.sendPreTrip=async()=>{
+  const msg=document.getElementById("dmsg");
+  if(!DRV.veh){msg.textContent="⚠️ Elige el vehículo (paso 1)";return}
+  if(!norm(DRV.name)){msg.textContent="⚠️ Escribe tu nombre (paso 2)";return}
+  if(!norm(DRV.mi)){msg.textContent="⚠️ Escribe el millaje (paso 3)";return}
+  if(!DRV.apto){msg.textContent="⚠️ Marca si el vehículo está apto (paso 6)";return}
+  DRV.sending=true;render();
+  try{
+    await sendAction({tipo:"pretrip",fecha:todayUS(),vehiculo:DRV.veh,conductor:norm(DRV.name),
+      millaje:norm(DRV.mi),items:{...DRV.items},apto:DRV.apto,obs:norm(DRV.obs),fotos:DRV.photos.filter(Boolean)});
+    DRV.sending=false;go("#/ok/pretrip");
+  }catch(e){DRV.sending=false;render();
+    document.getElementById("dmsg").textContent="❌ No se pudo enviar. Revisa tu señal e intenta de nuevo."}
+};
+function renderFuelForm(){
+  const vehs=DATA?.veh||[];
+  app.innerHTML=`<div class="driver">
+    <button class="backbtn" onclick="goBack()">← Volver</button>
+    <h1>⛽ Tanqueo</h1>
+    <div class="lead">Regístralo antes de salir de la estación.</div>
+    <div class="dstep"><div class="dl"><span class="num">1</span> ¿Qué vehículo tanqueaste?</div>
+      <div class="vehbtns">${vehs.map(x=>`<button class="vehbtn ${DRV.veh===x.id?"sel":""}" onclick="setVeh('${esc(x.id)}')">${esc(x.id)}<small>${esc(x.type)}</small></button>`).join("")}</div>
+    </div>
+    ${nameStep(2)}
+    <div class="dstep"><div class="dl"><span class="num">3</span> Millaje del odómetro</div>
+      <input class="dinput mono" inputmode="numeric" value="${esc(DRV.mi)}" placeholder="Ej: 61850" oninput="DRV.mi=this.value.replace(/[^0-9]/g,'')">
+    </div>
+    <div class="dstep"><div class="dl"><span class="num">4</span> Galones</div>
+      <input class="dinput mono" inputmode="decimal" value="${esc(DRV.gal)}" placeholder="Ej: 28.5" oninput="DRV.gal=this.value.replace(/[^0-9.]/g,'')">
+    </div>
+    <div class="dstep"><div class="dl"><span class="num">5</span> Costo total ($)</div>
+      <input class="dinput mono" inputmode="decimal" value="${esc(DRV.cost)}" placeholder="Ej: 108.30" oninput="DRV.cost=this.value.replace(/[^0-9.]/g,'')">
+    </div>
+    <div class="dstep"><div class="dl"><span class="num">6</span> Estación (opcional)</div>
+      <input class="dinput" value="${esc(DRV.station)}" placeholder="Ej: Pilot, Wawa..." oninput="DRV.station=this.value">
+    </div>
+    <div class="dstep"><div class="dl"><span class="num">7</span> Foto del recibo</div>
+      <label class="photozone">📷 Tomar foto del recibo
+        <input type="file" accept="image/*" capture="environment" multiple onchange="addPhotos(this)">
+      </label>
+      <div class="pgrid">${DRV.photos.map((ph,i)=>`<div class="pv"><img src="${ph}"><button class="rm" onclick="rmPhoto(${i})">✕</button></div>`).join("")}</div>
+    </div>
+    <button class="sendbtn" onclick="sendFuel()" ${DRV.sending?"disabled":""}>
+      ${DRV.sending?'<span class="spin"></span>Enviando...':"Enviar tanqueo"}</button>
+    <div class="dmsg" id="dmsg"></div>
+  </div>`;
+}
+window.sendFuel=async()=>{
+  const msg=document.getElementById("dmsg");
+  if(!DRV.veh){msg.textContent="⚠️ Elige el vehículo (paso 1)";return}
+  if(!norm(DRV.name)){msg.textContent="⚠️ Escribe tu nombre (paso 2)";return}
+  if(!norm(DRV.mi)){msg.textContent="⚠️ Escribe el millaje (paso 3)";return}
+  if(!parseFloat(DRV.gal)){msg.textContent="⚠️ Escribe los galones (paso 4)";return}
+  if(!parseFloat(DRV.cost)){msg.textContent="⚠️ Escribe el costo (paso 5)";return}
+  DRV.sending=true;render();
+  try{
+    await sendAction({tipo:"tanqueo",fecha:todayUS(),vehiculo:DRV.veh,conductor:norm(DRV.name),
+      millaje:norm(DRV.mi),galones:norm(DRV.gal),costo:norm(DRV.cost),estacion:norm(DRV.station),
+      fotos:DRV.photos.filter(Boolean)});
+    DRV.sending=false;go("#/ok/tanqueo");
+  }catch(e){DRV.sending=false;render();
+    document.getElementById("dmsg").textContent="❌ No se pudo enviar. Revisa tu señal e intenta de nuevo."}
+};
+function renderWashForm(){
+  const vehs=DATA?.veh||[];
+  const kinds=["Básica","Completa","Detallado"];
+  app.innerHTML=`<div class="driver">
+    <button class="backbtn" onclick="goBack()">← Volver</button>
+    <h1>🧽 Lavada</h1>
+    <div class="lead">Regístrala cuando laves el vehículo.</div>
+    <div class="dstep"><div class="dl"><span class="num">1</span> ¿Qué vehículo lavaste?</div>
+      <div class="vehbtns">${vehs.map(x=>`<button class="vehbtn ${DRV.veh===x.id?"sel":""}" onclick="setVeh('${esc(x.id)}')">${esc(x.id)}<small>${esc(x.type)}</small></button>`).join("")}</div>
+    </div>
+    ${nameStep(2)}
+    <div class="dstep"><div class="dl"><span class="num">3</span> Tipo de lavada</div>
+      <div class="vehbtns" style="grid-template-columns:repeat(3,1fr)">${kinds.map(k=>`<button class="vehbtn ${DRV.washKind===k?"sel":""}" style="font-size:14px" onclick="DRV.washKind='${k}';render()">${k}</button>`).join("")}</div>
+    </div>
+    <div class="dstep"><div class="dl"><span class="num">4</span> Costo ($) — pon 0 si la lavaste tú</div>
+      <input class="dinput mono" inputmode="decimal" value="${esc(DRV.washCost)}" placeholder="Ej: 45 (o 0)" oninput="DRV.washCost=this.value.replace(/[^0-9.]/g,'')">
+    </div>
+    <div class="dstep"><div class="dl"><span class="num">5</span> Lugar (opcional)</div>
+      <input class="dinput" value="${esc(DRV.washPlace)}" placeholder="Ej: Truck Wash I-95, patio TYSA..." oninput="DRV.washPlace=this.value">
+    </div>
+    <div class="dstep"><div class="dl"><span class="num">6</span> Foto de cómo quedó</div>
+      <label class="photozone">📷 Tomar foto
+        <input type="file" accept="image/*" capture="environment" multiple onchange="addPhotos(this)">
+      </label>
+      <div class="pgrid">${DRV.photos.map((ph,i)=>`<div class="pv"><img src="${ph}"><button class="rm" onclick="rmPhoto(${i})">✕</button></div>`).join("")}</div>
+    </div>
+    <button class="sendbtn" onclick="sendWash()" ${DRV.sending?"disabled":""}>
+      ${DRV.sending?'<span class="spin"></span>Enviando...':"Registrar lavada"}</button>
+    <div class="dmsg" id="dmsg"></div>
+  </div>`;
+}
+window.sendWash=async()=>{
+  const msg=document.getElementById("dmsg");
+  if(!DRV.veh){msg.textContent="⚠️ Elige el vehículo (paso 1)";return}
+  if(!norm(DRV.name)){msg.textContent="⚠️ Escribe tu nombre (paso 2)";return}
+  if(!DRV.washKind){msg.textContent="⚠️ Marca el tipo de lavada (paso 3)";return}
+  DRV.sending=true;render();
+  try{
+    await sendAction({tipo:"lavada",fecha:todayUS(),vehiculo:DRV.veh,conductor:norm(DRV.name),
+      clase:DRV.washKind,costo:norm(DRV.washCost)||"0",lugar:norm(DRV.washPlace),
+      fotos:DRV.photos.filter(Boolean)});
+    if(DEMO&&DATA.wash)DATA.wash.push({date:todayUS(),vid:DRV.veh,who:norm(DRV.name),kind:DRV.washKind,cost:norm(DRV.washCost)||"0",place:norm(DRV.washPlace),photos:"",notes:""});
+    DRV.sending=false;go("#/ok/lavada");
+  }catch(e){DRV.sending=false;render();
+    document.getElementById("dmsg").textContent="❌ No se pudo enviar. Revisa tu señal e intenta de nuevo."}
+};
+function renderDone(kind){
+  const hadFail=Object.values(DRV.items).includes("FALLA")||DRV.apto==="NO";
+  if(kind==="lavada"){
+    app.innerHTML=`<div class="dsuccess">
+      <div class="big">🧽</div><h2>Lavada registrada</h2>
+      <p>${esc(DRV.veh||"")} · ${esc(DRV.name)} · ${esc(DRV.washKind)}</p>
+      <button class="sendbtn" style="max-width:340px" onclick="resetDriver()">Registrar otra</button>
+    </div>`;return}
+  if(kind==="tanqueo"){
+    app.innerHTML=`<div class="dsuccess">
+      <div class="big">⛽</div><h2>Tanqueo registrado</h2>
+      <p>${esc(DRV.veh||"")} · ${esc(DRV.name)} · ${esc(DRV.gal)} gal · $${esc(DRV.cost)}</p>
+      <button class="sendbtn" style="max-width:340px" onclick="resetDriver()">Registrar otro</button>
+    </div>`;
+  }else{
+    app.innerHTML=`<div class="dsuccess">
+      <div class="big">✅</div><h2>Inspección enviada</h2>
+      <p>${esc(DRV.veh||"")} · ${esc(DRV.name)} · ${new Date().toLocaleDateString("es-CO")}</p>
+      ${hadFail?`<div class="warnmsg">⚠️ Reportaste una falla o el vehículo NO está apto.<br>Avísale a tu supervisor de inmediato.</div>`:""}
+      <button class="sendbtn" style="max-width:340px" onclick="resetDriver()">Enviar otra inspección</button>
+    </div>`;
+  }
+}
+window.resetDriver=()=>{DRV={veh:null,name:DRV.name,mi:"",items:{},apto:null,obs:"",photos:[],gal:"",cost:"",station:"",washKind:"",washCost:"",washPlace:"",sending:false};go("#/conductor")};
+
+/* ---------- arranque ---------- */
+(async()=>{
+  if(CONFIG.sheetId){SRC={...CONFIG};
+    LOADING=true;route();
+    try{await loadAll()}catch(e){DATA=null;SRC={...CONFIG}}
+    LOADING=false;}
+  if(!location.hash)location.hash="#/";
+  route();
+})();
+</script>
+</body>
+</html>
