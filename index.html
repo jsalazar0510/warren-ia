@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#051A11">
-<title>TYSA · Warren Pole Transfer · Operations Intelligence</title>
+<title>TYSA · Lambert's Pole Transfer · Operations Intelligence</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -70,7 +70,7 @@
 
   /* ============ HEADER ============ */
   header.brand {
-    background: #14332B; /* matchea exacto el fondo del logo TYSA para blend invisible */
+    background: var(--tysa-darkest);
     color: var(--bg);
     border-bottom: 2px solid var(--ink);
     position: sticky; top: 0; z-index: 50;
@@ -78,13 +78,18 @@
     display: flex; align-items: center; gap: 22px;
   }
   .logo-block {
-    display: flex; align-items: center;
+    display: flex; align-items: center; gap: 10px;
   }
-  .logo-img {
-    height: 64px;
-    width: auto;
-    display: block;
+  .logo-mark {
+    width: 44px; height: 44px;
+    background: transparent;
+    color: var(--tysa-lime);
+    display: grid; place-items: center;
+    padding: 2px;
   }
+  .logo-mark svg { width: 100%; height: 100%; }
+  .logo-name { font-family: 'Anton', sans-serif; font-size: 30px; letter-spacing: 0.06em; font-weight: 400; }
+  .logo-sub { font-size: 8px; letter-spacing: 0.18em; color: var(--tysa-lime); margin-top: 0; font-family: 'JetBrains Mono', monospace; }
 
   .brand-divider { width: 1px; height: 36px; background: rgba(255,255,255,0.15); }
 
@@ -967,14 +972,30 @@
 <!-- ============ HEADER ============ -->
 <header class="brand">
   <div class="logo-block">
-    <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCACyAl4DASIAAhEBAxEB/8QAHQABAQEBAQEBAQEBAAAAAAAAAAgHBgUEAwIJAf/EAFYQAAEDAwEDBwQKDQsDAwUAAAEAAgMEBREGBxIhCBMxQVFhcSKBgpEUFRcjMjdCVZTSFhgzNlJWcnR1oaKxsiRDYpKTs7TBwtHTY3PDJTTwOFN2g5X/xAAaAQEAAwEBAQAAAAAAAAAAAAAAAQUGBAMC/8QAOBEAAgEDAQMJBgUEAwAAAAAAAAECAwQRBSExQRITIlFhkbHR8BQVcYGh4TI0UnLBBjM18SVCYv/aAAwDAQACEQMRAD8AnRERfRThERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBF3OxjQkmuNUCCcPZaqQCStkbwJHVGD2uwfAAnqVW0OkdLUNIykpdO2qOFgwG+xWH1kjJPeeKqr3VadrPkYywQyitLV9Fs+03ZZrvfbFY4qaPh5VBE50juprRu8XHs/yUs7RNW0WpK4ttOm7RY7ex3vbKWjjZK/ve9rQfMMDx6V9WWoO7fRg0usHJoi+i30NbcatlJb6SerqH/BihjL3u8AOKsm0trB86LUNObC9cXVrZayGktMR4/yqXL8fksyc9xwu4t3Jxo2tBuGqZ5HdYgpQwDzlxz6lwVNUtabw5923wBO6Ledb8n40NmmrdM3SoramFpeaWoY3elA6QxzceV2Ajj2rB3AtcWuBBBwQepe9td0rmLdN5wD/iIi6QEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAQcTgIuz2J2JuoNploo5Wb9PFL7JmBHDdjG9g9xIA8686tRUoOb3JZBTmxrSjNI6EoqGSMNrp2+yKw44844DyT+SMN83euycQ1pc4gADJJ6kWb8orVB07s9npqeTcrbo72JFg8WsI98d/V4eLgsFFTu6+OMmQYFtt1xNrPV0roJnG00TjFRMB4OA6ZPFxGfDAXBotT2D7M3avuPtxd43NsdK/Bb0GqePkD+iOs+YdZG2lKlZUNuyK9d5J+WyHZJcdZbl0ub5LfZAeEgHvlRjpEYPQP6R4dgPHFN6V0xYdL0Ao7HbYKSPAD3NGXyd7nHi4+JXqwRRQQsggjZFFG0NYxjcNaBwAAHQF816uttstvkuF2rYKKlj+FLK/dHgO09w4lZC7v615PHDgl62kH2IsR1XyhrPSvfDpy0z3Fw4CeodzMfiG8XEeO6s2ve2/X9xc4QV9NbYz8ikp2/xP3j6ivWjo11U2tY+IwVupv5Smzr2vq36ys0GKSof/AOoRMHCKQn7oO5x6e/x4ZnJr/XD5eddq6+B3Y2ukA9QOF7Vs2v62pqaSiuFdDeaGZhjlpq+EPa9pGCC4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ueThY5LLswpJJ2FktxldWkEcQ1wDWetrWnzqWNMMtDr5TOv00sVtjdv1AiYXSSNHHcaO13RkkAZytQ1jt5vlZF7A0tRRWSja3cZIQHzbo4DHyWcOoA46irLVKNa5iqNNbN7fAMobV2qbHpW2Pr71XxU7WtJZGXDnJSPksb0uP/w4UTajucl61BcLvM3dfW1Mk5bnO7vOJx5s4X4XGurblWPrLhVz1dTIcvlmkL3O8SeK+dfen6dGzTectkhERWYCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAIiIAiIgCIiAL+4OaEzOfDzFvDfDCA7HXjPWv4RQDdNlmhtkep+b5u83OqrsZfb6uVsDu/AaMuHe1x8y3nTmnbHpyj9iWO101DEfhc0zDn97ndLj3klQnG98b2vjc5j2nLXNOCD2haroLbjqawNZSXlvt5RNGBzz92dg7pMHe9IE94VBqOm3FXbCbkup+sEFVritqO0ay6Gt5597aq6SNzT0THeUexz/wAFvf19WVkesuUHc62jNLpq1i2PeMOqZ3iWRv5LcYB7znwWK11XVV9ZLWVtRLU1Mrt6SWV5c557ST0rlstEnJ8qvsXUMH36s1DddUXye8XioM1TKfBsbepjR1NHZ/mvKRFqIxUUoxWwkIiL6AREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAEREAREQBERAf/9k=" alt="TYSA" class="logo-img" />
+    <div class="logo-mark" aria-label="TYSA">
+      <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+        <g transform="translate(50,50)" fill="currentColor">
+          <path d="M 0,-32 C -8,-30 -14,-22 -14,-10 C -14,-4 -10,-2 -6,-4 C -2,-8 2,-18 0,-32 Z" transform="rotate(0)"/>
+          <path d="M 0,-32 C -8,-30 -14,-22 -14,-10 C -14,-4 -10,-2 -6,-4 C -2,-8 2,-18 0,-32 Z" transform="rotate(51.43)"/>
+          <path d="M 0,-32 C -8,-30 -14,-22 -14,-10 C -14,-4 -10,-2 -6,-4 C -2,-8 2,-18 0,-32 Z" transform="rotate(102.86)"/>
+          <path d="M 0,-32 C -8,-30 -14,-22 -14,-10 C -14,-4 -10,-2 -6,-4 C -2,-8 2,-18 0,-32 Z" transform="rotate(154.29)"/>
+          <path d="M 0,-32 C -8,-30 -14,-22 -14,-10 C -14,-4 -10,-2 -6,-4 C -2,-8 2,-18 0,-32 Z" transform="rotate(205.71)"/>
+          <path d="M 0,-32 C -8,-30 -14,-22 -14,-10 C -14,-4 -10,-2 -6,-4 C -2,-8 2,-18 0,-32 Z" transform="rotate(257.14)"/>
+          <path d="M 0,-32 C -8,-30 -14,-22 -14,-10 C -14,-4 -10,-2 -6,-4 C -2,-8 2,-18 0,-32 Z" transform="rotate(308.57)"/>
+        </g>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-name">TYSA</div>
+      <div class="logo-sub">TECNOLOGÍA Y SERVICIOS ASOCIADOS</div>
+    </div>
   </div>
 
   <div class="brand-divider"></div>
 
   <div>
     <div class="project-tag">PROJECT · VERIZON / LAMBERTS</div>
-    <div class="project-name">Warren Pole Transfer</div>
+    <div class="project-name">Lambert's Pole Transfer</div>
   </div>
 
   <div class="header-spacer"></div>
@@ -988,33 +1009,19 @@
 
 <!-- ============ DATA SOURCE BAR ============ -->
 <div class="data-bar">
-  <span class="label">Datos:</span>
+  <span class="label">Proyectos:</span>
   <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm,.csv,.tsv,.txt" style="display:none">
+  <div id="projChips" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;"></div>
 
-  <button class="btn-pill" onclick="loadWarrenLive()" title="Carga directa del Google Drive · 1 click" style="background: var(--tysa-lime); color: var(--tysa-darkest); font-weight: 800; padding: 8px 18px; box-shadow: 0 0 0 1px var(--tysa-lime), 0 0 12px rgba(178,230,123,0.5);">
-    ⚡ WARREN LIVE
-  </button>
-
-  <button class="btn-pill" onclick="document.getElementById('fileInput').click()" style="background: var(--tysa-green); color: white; font-weight: 700; padding: 8px 18px;">
-    📂 SUBIR ARCHIVO
-  </button>
-  
   <span class="label" style="color: rgba(255,255,255,0.3); margin: 0 4px;">·</span>
-  
+
+  <button class="btn-pill ghost" onclick="openCloudModal()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">☁ Nube</button>
+  <button class="btn-pill ghost" onclick="loadAllCloud()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">🔄 Cargar Nube</button>
   <button class="btn-pill ghost" onclick="openPasteModal()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">📋 Pegar</button>
-  <button class="btn-pill ghost" onclick="triggerFileInput()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">📂 Subir</button>
-
-  <span class="label" style="margin-left: 8px;">Link Sheets:</span>
-  <input type="text" id="urlInput" placeholder="https://docs.google.com/spreadsheets/d/..." style="min-width: 300px;" />
-  <button class="btn-pill ghost" onclick="loadFromUrl()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">↗ Cargar</button>
-
-  <button class="btn-pill ghost" onclick="loadDemoData()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">⟲ Demo</button>
+  <button class="btn-pill ghost" onclick="clearAllProjects()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">🗑 Limpiar</button>
 
   <div class="data-status">
-    <span class="stat-pip" id="syncStatus" title="Estado de sincronización con Google Sheets" style="cursor: pointer;" onclick="loadWarrenLive()">
-      <span id="syncDot" style="display:inline-block; width:8px; height:8px; border-radius:50%; background: var(--ink-faint); margin-right:6px; vertical-align:middle;"></span><span id="syncText">Cargando...</span>
-    </span>
-    <span class="stat-pip" id="dataSourceLabel">WARREN POLE TRANSFER · 517 registros</span>
+    <span class="stat-pip" id="dataSourceLabel">SIN PROYECTOS ACTIVOS · CARGÁ UNO</span>
   </div>
 </div>
 
@@ -1041,7 +1048,7 @@ function triggerFileInput() {
 
   <!-- Print summary header -->
   <div id="printFilterSummary">
-    <h2>TYSA · WARREN POLE TRANSFER · REPORTE OPERATIVO</h2>
+    <h2>TYSA · LAMBERT'S POLE TRANSFER · REPORTE OPERATIVO</h2>
     <div class="meta-line">Período: <span id="prtRange">—</span></div>
     <div class="meta-line">Filtros aplicados: <span id="prtFilters">—</span></div>
     <div class="meta-line">Generado: <span id="prtGen">—</span></div>
@@ -1064,6 +1071,14 @@ function triggerFileInput() {
       <div class="filter-cell">
         <label class="filter-label">Hasta</label>
         <input type="date" id="dateTo" />
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Proyecto</label>
+        <select id="filterProj"><option value="">TODOS LOS PROYECTOS</option></select>
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Cuadrilla</label>
+        <select id="filterCrew"><option value="">TODAS LAS CUADRILLAS</option></select>
       </div>
       <div class="filter-cell">
         <label class="filter-label">Estado FC</label>
@@ -1135,63 +1150,80 @@ function triggerFileInput() {
       <div class="kpi">
         <div class="kpi-label">Postes Intervenidos</div>
         <div class="kpi-value"><span id="kpiPolesIntervened">0</span><span class="kpi-unit">POSTES</span></div>
-        <div style="margin-top: 10px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
-          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: var(--tysa-green); font-weight: 700;">PROM ·</span>
-          <span id="kpiAvgPole" style="font-family: 'Anton', sans-serif; font-size: 32px; color: var(--tysa-green); font-weight: 400; letter-spacing: 0.02em; line-height: 1;">$0</span>
-          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: var(--ink-muted); font-weight: 500;">/ POSTE</span>
-        </div>
         <div class="kpi-foot">
           <span>JOBS · <strong id="kpiJobs">0</strong></span>
-          <span>CÓDIGOS · <strong id="kpiCodes">0</strong></span>
-        </div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Postes Solo V185</div>
-        <div class="kpi-value"><span id="kpiOnlyV185">0</span><span class="kpi-unit">PURO REMOVE</span></div>
-        <div style="margin-top: 10px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
-          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: var(--tysa-green); font-weight: 700;">$ ·</span>
-          <span id="kpiOnlyV185Revenue" style="font-family: 'Anton', sans-serif; font-size: 32px; color: var(--tysa-green); font-weight: 400; letter-spacing: 0.02em; line-height: 1;">$0</span>
-          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; color: var(--ink-muted); font-weight: 500;">FACTURADO</span>
-        </div>
-        <div class="kpi-foot">
-          <span>% DEL TOTAL · <strong id="kpiOnlyV185Pct">0%</strong></span>
-          <span>TARIFA · <strong>$195.25</strong></span>
+          <span>$ PROM/POSTE · <strong id="kpiAvgPole">$0</strong></span>
         </div>
       </div>
     </div>
+
+    <!-- COMPARATIVO POR PROYECTO Y CUADRILLA -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;" class="compare-grid">
+      <div class="stats-card" style="padding: 16px;">
+        <div class="stats-card-title">POR PROYECTO</div>
+        <table style="width:100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--line, rgba(0,0,0,0.15)); text-align: left;">
+              <th style="padding: 6px 4px;">PROYECTO</th>
+              <th style="padding: 6px 4px; text-align: right;">POSTES</th>
+              <th style="padding: 6px 4px; text-align: right;">TOTAL</th>
+              <th style="padding: 6px 4px; text-align: right;">$/POSTE</th>
+            </tr>
+          </thead>
+          <tbody id="tblByProject"></tbody>
+        </table>
+      </div>
+      <div class="stats-card" style="padding: 16px;">
+        <div class="stats-card-title">POR CUADRILLA</div>
+        <table style="width:100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--line, rgba(0,0,0,0.15)); text-align: left;">
+              <th style="padding: 6px 4px;">CUADRILLA</th>
+              <th style="padding: 6px 4px; text-align: right;">POSTES</th>
+              <th style="padding: 6px 4px; text-align: right;">TOTAL</th>
+              <th style="padding: 6px 4px; text-align: right;">$/POSTE</th>
+            </tr>
+          </thead>
+          <tbody id="tblByCrew"></tbody>
+        </table>
+      </div>
+    </div>
+    <style>@media (max-width: 800px) { .compare-grid { grid-template-columns: 1fr !important; } }</style>
 
     <!-- PROJECT STATS - Postes -->
     <div class="project-stats-section">
       <div class="project-stats-header">
         <div class="stats-title">ESTADÍSTICAS DEL PROYECTO</div>
-        <div class="stats-subtitle">Warren Pole Transfer & Removal</div>
+        <div class="stats-subtitle" id="statsSubtitle">Pole Transfer & Removal</div>
       </div>
       <div class="project-stats-grid">
         <!-- Left: Postes Overview -->
         <div class="stats-card main">
-          <div class="stats-card-title">INVENTARIO DE POSTES</div>
+          <div class="stats-card-title">INVENTARIO DE POSTES <button class="btn-pill ghost" onclick="openInvEditor()" style="font-size: 10px; padding: 3px 10px; margin-left: 8px; cursor: pointer;">✎ EDITAR</button></div>
           <div class="stats-metrics">
             <div class="stat-row">
               <span class="stat-label">Postes Asignados</span>
-              <span class="stat-value total">1,450</span>
+              <span class="stat-value total" id="invAsignados">—</span>
             </div>
             <div class="stat-row separator">
               <span class="stat-label">No Ejecutables</span>
-              <span class="stat-value negative">761</span>
+              <span class="stat-value negative" id="invNoEjec">—</span>
             </div>
             <div class="stat-row minor">
               <span class="stat-label">Requieren Revisión</span>
-              <span class="stat-value warn">29</span>
+              <span class="stat-value warn" id="invRevision">—</span>
             </div>
             <div class="stat-row">
               <span class="stat-label">Por Ejecutar (neto)</span>
-              <span class="stat-value highlighted" id="polesNet">660</span>
+              <span class="stat-value highlighted" id="polesNet">—</span>
             </div>
             <div class="stat-row minor">
               <span class="stat-label">Listo para Ejecutar</span>
-              <span class="stat-value">660</span>
+              <span class="stat-value" id="invListo">—</span>
             </div>
           </div>
+          <!-- Desglose de planos por fecha de asignación -->
+          <div id="invPlanList" style="margin-top: 12px; border-top: 1px dashed rgba(0,0,0,0.15); padding-top: 10px;"></div>
         </div>
         
         <!-- Right: Progress & Projection -->
@@ -1408,6 +1440,8 @@ function triggerFileInput() {
             <th>NO</th>
             <th>D. Inst.</th>
             <th>D. Fact.</th>
+            <th>Proy.</th>
+            <th>Cuad.</th>
             <th>Job</th>
             <th>Pole</th>
             <th>Cód.</th>
@@ -1495,6 +1529,53 @@ function triggerFileInput() {
 </div>
 
 <!-- ============ MODAL: PASTE DATA ============ -->
+<div class="modal-overlay" id="cloudModal">
+  <div class="modal" style="max-width: 640px;">
+    <div class="modal-head">
+      <h3 style="margin: 0;">☁ DATOS EN LA NUBE · GOOGLE SHEETS</h3>
+      <button class="modal-close" onclick="closeModal('cloudModal')">×</button>
+    </div>
+    <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+      <div style="font-size: 12px; color: var(--ink-muted); line-height: 1.6; background: rgba(0,0,0,0.04); padding: 10px 12px; border-radius: 8px;">
+        <strong>Pegá el link del Google Sheet de cada proyecto</strong> (el mismo de la barra del navegador, con la hoja abierta).<br>
+        Requisito: el Sheet debe estar compartido como <strong>"Cualquier persona con el enlace → Lector"</strong>.<br>
+        Si Google bloquea la lectura directa, usá <strong>Archivo → Compartir → Publicar en la web → CSV</strong> y pegá ese link — la app acepta los dos.
+      </div>
+      <div id="cloudRows" style="display: flex; flex-direction: column; gap: 10px;"></div>
+      <button class="btn-pill" onclick="saveCloudModal()" style="background: var(--tysa-green); color: white; font-weight: 700; padding: 10px;">GUARDAR URLS</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="invModal">
+  <div class="modal" style="max-width: 560px;">
+    <div class="modal-head">
+      <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">PLANOS ·
+        <select id="invModalProjSel" onchange="switchInvProject(this.value)" style="padding: 6px 10px; font-weight: 700;">
+          <option value="WARREN">WARREN</option>
+          <option value="SPRING RUN">SPRING RUN</option>
+          <option value="BALTIMORE">BALTIMORE</option>
+          <option value="PITTSBURGH">PITTSBURGH</option>
+        </select>
+      </h3>
+      <button class="modal-close" onclick="closeModal('invModal')">×</button>
+    </div>
+    <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+      <p style="margin: 0; font-size: 12px; color: var(--ink-muted);">La asignación llega por planos. Agregá cada plano que te entreguen para <strong id="invModalProj2">este proyecto</strong> — el inventario total se suma solo.</p>
+      <div style="display: grid; grid-template-columns: 1.3fr 1.1fr 0.9fr 0.9fr 0.9fr 32px; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--ink-muted);">
+        <span>PLANO / ID</span><span>FECHA ASIG.</span><span style="text-align:right;">ASIGNADOS</span><span style="text-align:right;">NO EJEC.</span><span style="text-align:right;">REVISIÓN</span><span></span>
+      </div>
+      <div id="invPlanRows" style="display: flex; flex-direction: column; gap: 6px; max-height: 40vh; overflow-y: auto;"></div>
+      <button class="btn-pill ghost" onclick="addPlanRow()" style="padding: 8px; border-style: dashed;">+ AGREGAR PLANO</button>
+      <div style="display: flex; justify-content: space-between; font-size: 13px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 10px;">
+        <strong>TOTAL · Por Ejecutar (neto)</strong>
+        <strong id="invInNet" style="color: var(--tysa-green);">—</strong>
+      </div>
+      <button class="btn-pill" onclick="saveInvModal()" style="background: var(--tysa-green); color: white; font-weight: 700; padding: 10px;">GUARDAR</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="pasteModal">
   <div class="modal" style="max-width: 720px;">
     <div class="modal-head">
@@ -1522,6 +1603,15 @@ function triggerFileInput() {
         <strong>Asegurate</strong> de que en la primera línea estén los encabezados: <code style="background: var(--bg); padding: 1px 4px; border: 1px solid var(--line-faint);">NO · DIA INS · DIA FACT · Job · Pol No · cod · PR · Q · TOTAL · DESCRIPTION · FC</code>
       </div>
 
+      <div style="margin-bottom: 10px;">
+        <label style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: var(--ink-muted);">PROYECTO DESTINO:</label>
+        <select id="pasteProject" style="margin-left: 8px; padding: 6px 10px;">
+          <option value="WARREN">WARREN</option>
+          <option value="SPRING RUN">SPRING RUN</option>
+          <option value="BALTIMORE">BALTIMORE</option>
+          <option value="PITTSBURGH">PITTSBURGH</option>
+        </select>
+      </div>
       <textarea id="pasteArea" placeholder="Tocá aquí y pegá los datos copiados de Google Sheets..." style="
         width: 100%;
         min-height: 240px;
@@ -1550,7 +1640,7 @@ function triggerFileInput() {
 <div class="toast" id="toast">—</div>
 
 <!-- ============ EMBEDDED DATA ============ -->
-<script id="embeddedData" type="application/json">{"rows":[[1,"2026-03-26","2026-04-02","PV073159","SITE SURVEY","V199",150.0,25.0,3750.0,"SI"],[2,"2026-03-27","2026-04-03","PV073159","SITE SURVEY","V199",150.0,58.0,8700.0,"SI"],[3,"2026-03-28","2026-04-04","PV073159","SITE SURVEY","V199",150.0,19.0,2850.0,"SI"],[4,"2026-04-07","2026-04-07","PV073159","SITE SURVEY","V199",150.0,13.0,1950.0,"SI"],[5,"2026-04-08","2026-04-08","PV073159","SITE SURVEY","V199",150.0,41.0,6150.0,"SI"],[6,"2026-04-09","2026-04-09","PV073159","SITE SURVEY","V199",150.0,40.0,6000.0,"SI"],[7,"2026-04-10","2026-04-10","PV073159","SITE SURVEY","V199",150.0,75.0,11250.0,"SI"],[8,"2026-04-11","2026-04-11","PV073159","SITE SURVEY","V199",150.0,66.0,9900.0,"SI"],[9,"2026-04-14","2026-04-14","PV073159","SITE SURVEY","V199",150.0,42.0,6300.0,"SI"],[10,"2026-04-15","2026-04-15","PV073159","SITE SURVEY","V199",150.0,35.0,5250.0,"SI"],[11,"2026-04-17","2026-04-17","PV073159","SITE SURVEY","V199",150.0,80.0,12000.0,"SI"],[12,"2026-04-18","2026-04-18","PV073159","SITE SURVEY","V199",150.0,165.0,24750.0,"SI"],[13,"2026-04-19","2026-04-19","PV073159","SITE SURVEY","V199",150.0,97.0,14550.0,"SI"],[14,"2026-04-15","2026-04-15","PV073159","26608","V162",56.75,1.0,56.75,"SI"],[15,"2026-04-15","2026-04-15","PV073159","26608","V168",17.97,1.0,17.97,"SI"],[16,"2026-04-15","2026-04-15","PV073159","26608","V185",195.25,1.0,195.25,"SI"],[17,"2026-04-15","2026-04-15","PV073159","25585","V162",56.75,1.0,56.75,"SI"],[18,"2026-04-15","2026-04-15","PV073159","25585","V163",19.99,1.0,19.99,"SI"],[19,"2026-04-15","2026-04-15","PV073159","25585","V168",17.97,1.0,17.97,"SI"],[20,"2026-04-15","2026-04-15","PV073159","25585","V185",195.25,1.0,195.25,"SI"],[21,"2026-04-15","2026-04-15","PV073159","26616","V162",56.75,1.0,56.75,"SI"],[22,"2026-04-15","2026-04-15","PV073159","26616","V163",19.99,1.0,19.99,"SI"],[23,"2026-04-15","2026-04-15","PV073159","26616","V185",195.25,1.0,195.25,"SI"],[24,"2026-04-16","2026-04-16","PV073159","25877","V162",56.75,3.0,170.25,"SI"],[25,"2026-04-16","2026-04-16","PV073159","25877","V165",73.63,1.0,73.63,"SI"],[26,"2026-04-16","2026-04-16","PV073159","25877","V163",19.99,2.0,39.98,"SI"],[27,"2026-04-17","2026-04-17","PV073159","26612","V162",56.75,2.0,113.5,"SI"],[28,"2026-04-17","2026-04-17","PV073159","26612","V163",19.99,2.0,39.98,"SI"],[29,"2026-04-17","2026-04-17","PV073159","26612","V185",195.25,1.0,195.25,"SI"],[30,"2026-04-17","2026-04-17","PV073159","26613","V162",56.75,1.0,56.75,"SI"],[31,"2026-04-17","2026-04-17","PV073159","26613","V163",19.99,1.0,19.99,"SI"],[32,"2026-04-17","2026-04-17","PV073159","26613","V168",17.97,1.0,17.97,"SI"],[33,"2026-04-17","2026-04-17","PV073159","26613","V185",195.25,1.0,195.25,"SI"],[34,"2026-04-22","2026-04-22","PV073378","17495","V162",56.75,1.0,56.75,"SI"],[35,"2026-04-22","2026-04-22","PV073378","17495","V163",19.99,1.0,19.99,"SI"],[36,"2026-04-22","2026-04-22","PV073378","17495","V185",195.25,1.0,195.25,"SI"],[37,"2026-04-22","2026-04-22","PV073378","20607","V115",227.5,1.0,227.5,"SI"],[38,"2026-04-22","2026-04-22","PV073378","20607","V162",56.75,1.0,56.75,"SI"],[39,"2026-04-22","2026-04-22","PV073378","20607","V163",19.99,1.0,19.99,"SI"],[40,"2026-04-22","2026-04-22","PV073378","20607","V185",195.25,1.0,195.25,"SI"],[41,"2026-04-22","2026-04-22","PV073378","24473","V163",19.99,1.0,19.99,"SI"],[42,"2026-04-22","2026-04-22","PV073378","24473","V185",195.25,1.0,195.25,"SI"],[43,"2026-04-22","2026-04-22","PV073378","25526","V162",56.75,2.0,113.5,"SI"],[44,"2026-04-22","2026-04-22","PV073378","25526","V185",195.25,1.0,195.25,"SI"],[45,"2026-04-22","2026-04-22","PV073378","25708","V162",56.75,1.0,56.75,"SI"],[46,"2026-04-22","2026-04-22","PV073378","25708","V163",19.99,1.0,19.99,"SI"],[47,"2026-04-22","2026-04-22","PV073378","25708","V185",195.25,1.0,195.25,"SI"],[48,"2026-04-22","2026-04-22","PV073378","25939","V185",195.25,1.0,195.25,"SI"],[49,"2026-04-22","2026-04-22","PV073378","26149","V162",56.75,1.0,56.75,"SI"],[50,"2026-04-22","2026-04-22","PV073378","26149","V163",19.99,1.0,19.99,"SI"],[51,"2026-04-22","2026-04-22","PV073378","26149","V185",195.25,1.0,195.25,"SI"],[52,"2026-04-22","2026-04-22","PV073378","26152","V162",56.75,1.0,56.75,"SI"],[53,"2026-04-22","2026-04-22","PV073378","26152","V163",19.99,1.0,19.99,"SI"],[54,"2026-04-22","2026-04-22","PV073378","26152","V168",17.97,1.0,17.97,"SI"],[55,"2026-04-22","2026-04-22","PV073378","26152","V185",195.25,1.0,195.25,"SI"],[56,"2026-04-22","2026-04-22","PV073378","26441","V162",56.75,1.0,56.75,"SI"],[57,"2026-04-22","2026-04-22","PV073378","26441","V185",195.25,1.0,195.25,"SI"],[58,"2026-04-22","2026-04-22","PV073378","26606","V162",56.75,1.0,56.75,"SI"],[59,"2026-04-22","2026-04-22","PV073378","26606","V163",19.99,1.0,19.99,"SI"],[60,"2026-04-22","2026-04-22","PV073378","26606","V168",17.97,1.0,17.97,"SI"],[61,"2026-04-22","2026-04-22","PV073378","26606","V185",195.25,1.0,195.25,"SI"],[62,"2026-04-22","2026-04-22","PV073378","26607","V162",56.75,1.0,56.75,"SI"],[63,"2026-04-22","2026-04-22","PV073378","26607","V185",195.25,1.0,195.25,"SI"],[64,"2026-04-22","2026-04-22","PV073378","26617","V162",56.75,1.0,56.75,"SI"],[65,"2026-04-22","2026-04-22","PV073378","26617","V185",195.25,1.0,195.25,"SI"],[66,"2026-04-22","2026-04-22","PV073378","26724","V163",19.99,2.0,39.98,"SI"],[67,"2026-04-22","2026-04-22","PV073378","26724","V168",17.97,1.0,17.97,"SI"],[68,"2026-04-22","2026-04-22","PV073378","26724","V185",195.25,1.0,195.25,"SI"],[69,"2026-04-23","2026-04-23","PV073378","20418","V185",195.25,1.0,195.25,"SI"],[70,"2026-04-23","2026-04-23","PV073378","22155","V185",195.25,1.0,195.25,"SI"],[71,"2026-04-23","2026-04-23","PV073378","22493","V162",56.75,1.0,56.75,"SI"],[72,"2026-04-23","2026-04-23","PV073378","22493","V163",19.99,2.0,39.98,"SI"],[73,"2026-04-23","2026-04-23","PV073378","22497","V162",56.75,1.0,56.75,"SI"],[74,"2026-04-23","2026-04-23","PV073378","22497","V163",19.99,1.0,19.99,"SI"],[75,"2026-04-23","2026-04-23","PV073378","22497","V164",48.75,1.0,48.75,"SI"],[76,"2026-04-23","2026-04-23","PV073378","22497","V185",195.25,1.0,195.25,"SI"],[77,"2026-04-23","2026-04-23","PV073378","22789","V185",195.25,1.0,195.25,"SI"],[78,"2026-04-23","2026-04-23","PV073378","23806","V185",195.25,1.0,195.25,"SI"],[79,"2026-04-23","2026-04-23","PV073378","24214","V162",56.75,1.0,56.75,"SI"],[80,"2026-04-23","2026-04-23","PV073378","24214","V163",19.99,1.0,19.99,"SI"],[81,"2026-04-23","2026-04-23","PV073378","24214","V168",17.97,1.0,17.97,"SI"],[82,"2026-04-23","2026-04-23","PV073378","24214","V185",195.25,1.0,195.25,"SI"],[83,"2026-04-23","2026-04-23","PV073378","24215","V162",56.75,1.0,56.75,"SI"],[84,"2026-04-23","2026-04-23","PV073378","24215","V163",19.99,1.0,19.99,"SI"],[85,"2026-04-23","2026-04-23","PV073378","24215","V168",17.97,1.0,17.97,"SI"],[86,"2026-04-23","2026-04-23","PV073378","24215","V185",195.25,1.0,195.25,"SI"],[87,"2026-04-23","2026-04-23","PV073378","24290","V185",195.25,1.0,195.25,"SI"],[88,"2026-04-23","2026-04-23","PV073378","25376","V185",195.25,1.0,195.25,"SI"],[89,"2026-04-23","2026-04-23","PV073378","25953","V185",195.25,1.0,195.25,"SI"],[90,"2026-04-23","2026-04-23","PV073378","26364","V162",56.75,2.0,113.5,"SI"],[91,"2026-04-23","2026-04-23","PV073378","26364","V163",19.99,1.0,19.99,"SI"],[92,"2026-04-23","2026-04-23","PV073378","26364","V185",195.25,1.0,195.25,"SI"],[93,"2026-04-23","2026-04-23","PV073378","26367","V162",56.75,1.0,56.75,"SI"],[94,"2026-04-23","2026-04-23","PV073378","26367","V163",19.99,1.0,19.99,"SI"],[95,"2026-04-23","2026-04-23","PV073378","26367","V164",48.75,1.0,48.75,"SI"],[96,"2026-04-23","2026-04-23","PV073378","26367","V185",195.25,1.0,195.25,"SI"],[97,"2026-04-23","2026-04-23","PV073378","26369","V162",56.75,1.0,56.75,"SI"],[98,"2026-04-23","2026-04-23","PV073378","26369","V163",19.99,1.0,19.99,"SI"],[99,"2026-04-23","2026-04-23","PV073378","26369","V168",17.97,1.0,17.97,"SI"],[100,"2026-04-23","2026-04-23","PV073378","26369","V185",195.25,1.0,195.25,"SI"],[101,"2026-04-23","2026-04-23","PV073378","26436","V162",56.75,1.0,56.75,"SI"],[102,"2026-04-23","2026-04-23","PV073378","26436","V163",19.99,1.0,19.99,"SI"],[103,"2026-04-23","2026-04-23","PV073378","26436","V168",17.97,2.0,35.94,"SI"],[104,"2026-04-23","2026-04-23","PV073378","26436","V185",195.25,1.0,195.25,"SI"],[105,"2026-04-23","2026-04-23","PV073378","26690","V185",195.25,1.0,195.25,"SI"],[106,"2026-04-23","2026-04-23","PV073378","26865","V185",195.25,1.0,195.25,"SI"],[107,"2026-04-23","2026-04-23","PV073378","26866","V185",195.25,1.0,195.25,"SI"],[108,"2026-04-23","2026-04-23","PV073378","27823","V162",56.75,2.0,113.5,"SI"],[109,"2026-04-23","2026-04-23","PV073378","27823","V163",19.99,2.0,39.98,"SI"],[110,"2026-04-23","2026-04-23","PV073378","27823","V185",195.25,1.0,195.25,"SI"],[111,"2026-04-23","2026-04-23","PV073378","23827","V199",150.0,1.0,150.0,"SI"],[112,"2026-04-24","2026-04-24","PV073378","14642","V185",195.25,1.0,195.25,"SI"],[113,"2026-04-24","2026-04-24","PV073378","20260","V162",56.75,1.0,56.75,"SI"],[114,"2026-04-24","2026-04-24","PV073378","20260","V163",19.99,1.0,19.99,"SI"],[115,"2026-04-24","2026-04-24","PV073378","20260","V185",195.25,1.0,195.25,"SI"],[116,"2026-04-24","2026-04-24","PV073378","21842","V185",195.25,1.0,195.25,"SI"],[117,"2026-04-24","2026-04-24","PV073378","22661","V163",19.99,1.0,19.99,"SI"],[118,"2026-04-24","2026-04-24","PV073378","22661","V168",17.97,1.0,17.97,"SI"],[119,"2026-04-24","2026-04-24","PV073378","22661","V185",195.25,1.0,195.25,"SI"],[120,"2026-04-24","2026-04-24","PV073378","22937","V185",195.25,1.0,195.25,"SI"],[121,"2026-04-24","2026-04-24","PV073378","23458","V162",56.75,1.0,56.75,"SI"],[122,"2026-04-24","2026-04-24","PV073378","23458","V163",19.99,2.0,39.98,"SI"],[123,"2026-04-24","2026-04-24","PV073378","23458","V168",17.97,1.0,17.97,"SI"],[124,"2026-04-24","2026-04-24","PV073378","23458","V185",195.25,1.0,195.25,"SI"],[125,"2026-04-24","2026-04-24","PV073378","23862","V163",19.99,1.0,19.99,"SI"],[126,"2026-04-24","2026-04-24","PV073378","23862","V185",195.25,1.0,195.25,"SI"],[127,"2026-04-24","2026-04-24","PV073378","24490","V162",56.75,1.0,56.75,"SI"],[128,"2026-04-24","2026-04-24","PV073378","24490","V163",19.99,1.0,19.99,"SI"],[129,"2026-04-24","2026-04-24","PV073378","24490","V185",195.25,1.0,195.25,"SI"],[130,"2026-04-24","2026-04-24","PV073378","24631","V162",56.75,1.0,56.75,"SI"],[131,"2026-04-24","2026-04-24","PV073378","24631","V185",195.25,1.0,195.25,"SI"],[132,"2026-04-24","2026-04-24","PV073378","25375","V162",56.75,1.0,56.75,"SI"],[133,"2026-04-24","2026-04-24","PV073378","25375","V163",19.99,1.0,19.99,"SI"],[134,"2026-04-24","2026-04-24","PV073378","25375","V185",195.25,1.0,195.25,"SI"],[135,"2026-04-24","2026-04-24","PV073378","25697","V185",195.25,1.0,195.25,"SI"],[136,"2026-04-24","2026-04-24","PV073378","26365","V162",56.75,1.0,56.75,"SI"],[137,"2026-04-24","2026-04-24","PV073378","26365","V163",19.99,1.0,19.99,"SI"],[138,"2026-04-24","2026-04-24","PV073378","26365","V185",195.25,1.0,195.25,"SI"],[139,"2026-04-24","2026-04-24","PV073378","26726","V162",56.75,1.0,56.75,"SI"],[140,"2026-04-24","2026-04-24","PV073378","26726","V163",19.99,1.0,19.99,"SI"],[141,"2026-04-24","2026-04-24","PV073378","26726","V185",195.25,1.0,195.25,"SI"],[142,"2026-04-24","2026-04-24","PV073378","26884","V162",56.75,1.0,56.75,"SI"],[143,"2026-04-24","2026-04-24","PV073378","26884","V163",19.99,1.0,19.99,"SI"],[144,"2026-04-24","2026-04-24","PV073378","26884","V185",195.25,1.0,195.25,"SI"],[145,"2026-04-24","2026-04-24","PV073378","27822","V162",56.75,1.0,56.75,"SI"],[146,"2026-04-24","2026-04-24","PV073378","27822","V185",195.25,1.0,195.25,"SI"],[147,"2026-04-25","2026-04-25","PV073378","24493","V162",56.75,1.0,56.75,"SI"],[148,"2026-04-25","2026-04-25","PV073378","24493","V163",19.99,4.0,79.96,"SI"],[149,"2026-04-25","2026-04-25","PV073378","24493","V164",48.75,1.0,48.75,"SI"],[150,"2026-04-25","2026-04-25","PV073378","24493","V165",73.63,2.0,147.26,"SI"],[151,"2026-04-25","2026-04-25","PV073378","24493","V185",195.25,1.0,195.25,"SI"],[152,"2026-04-25","2026-04-25","PV073378","25793","V162",56.75,3.0,170.25,"SI"],[153,"2026-04-25","2026-04-25","PV073378","25793","V185",195.25,1.0,195.25,"SI"],[154,"2026-04-25","2026-04-25","PV073378","25881","V162",56.75,1.0,56.75,"SI"],[155,"2026-04-25","2026-04-25","PV073378","25881","V164",48.75,1.0,48.75,"SI"],[156,"2026-04-25","2026-04-25","PV073378","25881","V185",195.25,1.0,195.25,"SI"],[157,"2026-04-25","2026-04-25","PV073378","26368","V162",56.75,1.0,56.75,"SI"],[158,"2026-04-25","2026-04-25","PV073378","26368","V163",19.99,3.0,59.97,"SI"],[159,"2026-04-25","2026-04-25","PV073378","26368","V185",195.25,1.0,195.25,"SI"],[160,"2026-04-25","2026-04-25","PV073378","26370","V162",56.75,1.0,56.75,"SI"],[161,"2026-04-25","2026-04-25","PV073378","26370","V185",195.25,1.0,195.25,"SI"],[162,"2026-04-25","2026-04-25","PV073378","26578","V162",56.75,1.0,56.75,"SI"],[163,"2026-04-25","2026-04-25","PV073378","26578","V163",19.99,1.0,19.99,"SI"],[164,"2026-04-25","2026-04-25","PV073378","26578","V164",48.75,1.0,48.75,"SI"],[165,"2026-04-25","2026-04-25","PV073378","26578","V165",73.63,1.0,73.63,"SI"],[166,"2026-04-25","2026-04-25","PV073378","26578","V185",195.25,1.0,195.25,"SI"],[167,"2026-04-25","2026-04-25","PV073378","27390","V162",56.75,1.0,56.75,"SI"],[168,"2026-04-25","2026-04-25","PV073378","27390","V185",195.25,1.0,195.25,"SI"],[169,"2026-04-26","2026-04-26","PV073378","20459","V185",195.25,1.0,195.25,"SI"],[170,"2026-04-26","2026-04-26","PV073378","20740","V185",195.25,1.0,195.25,"SI"],[171,"2026-04-26","2026-04-26","PV073378","23394","V162",56.75,1.0,56.75,"SI"],[172,"2026-04-26","2026-04-26","PV073378","23394","V185",195.25,1.0,195.25,"SI"],[173,"2026-04-26","2026-04-26","PV073378","23567","V185",195.25,1.0,195.25,"SI"],[174,"2026-04-26","2026-04-26","PV073378","23857","V163",19.99,1.0,19.99,"SI"],[175,"2026-04-26","2026-04-26","PV073378","23857","V168",17.97,2.0,35.94,"SI"],[176,"2026-04-26","2026-04-26","PV073378","23857","V185",195.25,1.0,195.25,"SI"],[177,"2026-04-26","2026-04-26","PV073378","24775","V163",19.99,2.0,39.98,"SI"],[178,"2026-04-26","2026-04-26","PV073378","24775","V168",17.97,1.0,17.97,"SI"],[179,"2026-04-26","2026-04-26","PV073378","24775","V185",195.25,1.0,195.25,"SI"],[180,"2026-04-26","2026-04-26","PV073378","25735","V185",195.25,1.0,195.25,"SI"],[181,"2026-04-26","2026-04-26","PV073378","26390","V185",195.25,1.0,195.25,"SI"],[182,"2026-04-26","2026-04-26","PV073378","26431","V163",19.99,2.0,39.98,"SI"],[183,"2026-04-26","2026-04-26","PV073378","26431","V168",17.97,2.0,35.94,"SI"],[184,"2026-04-26","2026-04-26","PV073378","26431","V185",195.25,1.0,195.25,"SI"],[185,"2026-04-26","2026-04-26","PV073378","26780","V163",19.99,3.0,59.97,"SI"],[186,"2026-04-26","2026-04-26","PV073378","26780","V185",195.25,1.0,195.25,"SI"],[187,"2026-04-26","2026-04-26","PV073378","27391","V162",56.75,1.0,56.75,"SI"],[188,"2026-04-26","2026-04-26","PV073378","27391","V164",48.75,2.0,97.5,"SI"],[189,"2026-04-26","2026-04-26","PV073378","27391","V185",195.25,1.0,195.25,"SI"],[190,"2026-04-26","2026-04-26","PV073378","27410","V185",195.25,1.0,195.25,"SI"],[191,"2026-04-26","2026-04-26","PV073378","27854","V185",195.25,1.0,195.25,"SI"],[192,"2026-04-26","2026-04-26","PV073378","24328","V199",150.0,1.0,150.0,"SI"],[193,"2026-04-27","2026-04-27","PV073533","22140","V162",56.75,1.0,56.75,"SI"],[194,"2026-04-27","2026-04-27","PV073533","22140","V164",48.75,1.0,48.75,"SI"],[195,"2026-04-27","2026-04-27","PV073533","22140","V163",19.99,2.0,39.98,"SI"],[196,"2026-04-27","2026-04-27","PV073533","22140","V168",17.97,1.0,17.97,"SI"],[197,"2026-04-27","2026-04-27","PV073533","22140","V185",195.25,1.0,195.25,"SI"],[198,"2026-04-27","2026-04-27","PV073533","22140","V165",73.63,1.0,73.63,"SI"],[199,"2026-04-27","2026-04-27","PV073533","21254","V185",195.25,1.0,195.25,"SI"],[200,"2026-04-27","2026-04-27","PV073533","22662","V185",195.25,1.0,195.25,"SI"],[201,"2026-04-27","2026-04-27","PV073533","25662","V185",195.25,1.0,195.25,"SI"],[202,"2026-04-27","2026-04-27","PV073533","25661","V185",195.25,1.0,195.25,"SI"],[203,"2026-04-27","2026-04-27","PV073533","22681","V162",56.75,1.0,56.75,"SI"],[204,"2026-04-27","2026-04-27","PV073533","22681","V164",48.75,1.0,48.75,"SI"],[205,"2026-04-27","2026-04-27","PV073533","22681","V185",195.25,1.0,195.25,"SI"],[206,"2026-04-27","2026-04-27","PV073533","27377","V162",56.75,1.0,56.75,"SI"],[207,"2026-04-27","2026-04-27","PV073533","27377","V163",19.99,1.0,19.99,"SI"],[208,"2026-04-27","2026-04-27","PV073533","27377","V185",195.25,1.0,195.25,"SI"],[209,"2026-04-27","2026-04-27","PV073533","26196","V185",195.25,1.0,195.25,"SI"],[210,"2026-04-27","2026-04-27","PV073533","25469","V185",195.25,1.0,195.25,"SI"],[211,"2026-04-27","2026-04-27","PV073533","21846","V185",195.25,1.0,195.25,"SI"],[212,"2026-04-27","2026-04-27","PV073533","26409","V164",48.75,2.0,97.5,"SI"],[213,"2026-04-27","2026-04-27","PV073533","26409","V163",19.99,1.0,19.99,"SI"],[214,"2026-04-27","2026-04-27","PV073533","26409","V168",17.97,1.0,17.97,"SI"],[215,"2026-04-27","2026-04-27","PV073533","26409","V185",195.25,1.0,195.25,"SI"],[216,"2026-04-27","2026-04-27","PV073533","25879","V162",56.75,1.0,56.75,"SI"],[217,"2026-04-27","2026-04-27","PV073533","25879","V164",48.75,1.0,48.75,"SI"],[218,"2026-04-27","2026-04-27","PV073533","25879","V163",19.99,2.0,39.98,"SI"],[219,"2026-04-27","2026-04-27","PV073533","25879","V185",195.25,1.0,195.25,"SI"],[220,"2026-04-28","2026-04-28","PV073533","26128","V162",56.75,3.0,170.25,"SI"],[221,"2026-04-28","2026-04-28","PV073533","26128","V164",48.75,1.0,48.75,"SI"],[222,"2026-04-28","2026-04-28","PV073533","26128","V185",195.25,1.0,195.25,"SI"],[223,"2026-04-28","2026-04-28","PV073533","26872","V162",56.75,3.0,170.25,"SI"],[224,"2026-04-28","2026-04-28","PV073533","26872","V164",48.75,1.0,48.75,"SI"],[225,"2026-04-28","2026-04-28","PV073533","26872","V185",195.25,1.0,195.25,"SI"],[226,"2026-04-28","2026-04-28","PV073533","17492","V185",195.25,1.0,195.25,"SI"],[227,"2026-04-28","2026-04-28","PV073533","26923","V185",195.25,1.0,195.25,"SI"],[228,"2026-04-28","2026-04-28","PV073533","24437","V185",195.25,1.0,195.25,"SI"],[229,"2026-04-28","2026-04-28","PV073533","21454","V185",195.25,1.0,195.25,"SI"],[230,"2026-04-28","2026-04-28","PV073533","26504","V185",195.25,1.0,195.25,"SI"],[231,"2026-04-28","2026-04-28","PV073533","26589","V185",195.25,1.0,195.25,"SI"],[232,"2026-04-28","2026-04-28","PV073533","26589","V162",56.75,2.0,113.5,"SI"],[233,"2026-04-28","2026-04-28","PV073533","26589","V164",48.75,1.0,48.75,"SI"],[234,"2026-04-28","2026-04-28","PV073533","26589","V165",73.63,1.0,73.63,"SI"],[235,"2026-04-28","2026-04-28","PV073533","26405","V163",19.99,3.0,59.97,"SI"],[236,"2026-04-28","2026-04-28","PV073533","26405","V168",17.97,1.0,17.97,"SI"],[237,"2026-04-28","2026-04-28","PV073533","26405","V185",195.25,1.0,195.25,"SI"],[238,"2026-04-28","2026-04-28","PV073533","26535","V163",19.99,2.0,39.98,"SI"],[239,"2026-04-28","2026-04-28","PV073533","26535","V185",195.25,1.0,195.25,"SI"],[240,"2026-04-28","2026-04-28","PV073533","26389","V162",56.75,1.0,56.75,"SI"],[241,"2026-04-28","2026-04-28","PV073533","26389","V185",195.25,1.0,195.25,"SI"],[242,"2026-04-28","2026-04-28","PV073533","26363","V162",56.75,1.0,56.75,"SI"],[243,"2026-04-28","2026-04-28","PV073533","26363","V163",19.99,1.0,19.99,"SI"],[244,"2026-04-28","2026-04-28","PV073533","26363","V165",73.63,2.0,147.26,"SI"],[245,"2026-04-28","2026-04-28","PV073533","26363","V164",48.75,1.0,48.75,"SI"],[246,"2026-04-28","2026-04-28","PV073533","26363","V185",195.25,1.0,195.25,"SI"],[247,"2026-04-28","2026-04-28","PV073533","26366","V162",56.75,1.0,56.75,"SI"],[248,"2026-04-28","2026-04-28","PV073533","26366","V163",19.99,1.0,19.99,"SI"],[249,"2026-04-28","2026-04-28","PV073533","26366","V185",195.25,1.0,195.25,"SI"],[250,"2026-04-28","2026-04-28","PV073533","25702","V185",195.25,1.0,195.25,"SI"],[251,"2026-04-29","2026-04-29","PV073533","26414","V185",195.25,1.0,195.25,"SI"],[252,"2026-04-29","2026-04-29","PV073533","26414","V168",17.97,1.0,17.97,"SI"],[253,"2026-04-29","2026-04-29","PV073533","26414","V163",19.99,1.0,19.99,"SI"],[254,"2026-04-29","2026-04-29","PV073533","26429","V162",56.75,3.0,170.25,"SI"],[255,"2026-04-29","2026-04-29","PV073533","26429","V185",195.25,1.0,195.25,"SI"],[256,"2026-04-29","2026-04-29","PV073533","27725","V185",195.25,1.0,195.25,"SI"],[257,"2026-04-29","2026-04-29","PV073533","27697","V185",195.25,1.0,195.25,"SI"],[258,"2026-04-29","2026-04-29","PV073533","27697","V162",56.75,1.0,56.75,"SI"],[259,"2026-04-29","2026-04-29","PV073533","23912","V185",195.25,1.0,195.25,"SI"],[260,"2026-04-29","2026-04-29","PV073533","23912","V162",56.75,1.0,56.75,"SI"],[261,"2026-04-29","2026-04-29","PV073533","25695","V185",195.25,1.0,195.25,"SI"],[262,"2026-04-29","2026-04-29","PV073533","25695","V163",19.99,2.0,39.98,"SI"],[263,"2026-04-29","2026-04-29","PV073533","25185","V185",195.25,1.0,195.25,"SI"],[264,"2026-04-29","2026-04-29","PV073533","24423","V185",195.25,1.0,195.25,"SI"],[265,"2026-04-29","2026-04-29","PV073533","24423","V163",19.99,2.0,39.98,"SI"],[266,"2026-04-29","2026-04-29","PV073533","26341","V185",195.25,1.0,195.25,"SI"],[267,"2026-04-29","2026-04-29","PV073533","24314","V185",195.25,1.0,195.25,"SI"],[268,"2026-04-29","2026-04-29","PV073533","25041","V185",195.25,1.0,195.25,"SI"],[269,"2026-04-29","2026-04-29","PV073533","26437","V162",56.75,1.0,56.75,"SI"],[270,"2026-04-29","2026-04-29","PV073533","26437","V163",19.99,3.0,59.97,"SI"],[271,"2026-04-29","2026-04-29","PV073533","26437","V165",73.63,2.0,147.26,"SI"],[272,"2026-04-29","2026-04-29","PV073533","26437","V185",195.25,1.0,195.25,"SI"],[273,"2026-04-29","2026-04-29","PV073533","27813","V162",56.75,1.0,56.75,"SI"],[274,"2026-04-29","2026-04-29","PV073533","27813","V164",48.75,1.0,48.75,"SI"],[275,"2026-04-29","2026-04-29","PV073533","27813","V185",195.25,1.0,195.25,"SI"],[276,"2026-04-29","2026-04-29","PV073533","22781","V162",56.75,1.0,56.75,"SI"],[277,"2026-04-29","2026-04-29","PV073533","22781","V163",19.99,1.0,19.99,"SI"],[278,"2026-04-29","2026-04-29","PV073533","22781","V164",48.75,1.0,48.75,"SI"],[279,"2026-04-29","2026-04-29","PV073533","22781","V185",195.25,1.0,195.25,"SI"],[280,"2026-04-29","2026-04-29","PV073533","23232","V185",195.25,1.0,195.25,"SI"],[281,"2026-04-29","2026-04-29","PV073533","27239","V162",56.75,1.0,56.75,"SI"],[282,"2026-04-29","2026-04-29","PV073533","27239","V185",195.25,1.0,195.25,"SI"],[283,"2026-04-29","2026-04-29","PV073533","24476","V162",56.75,2.0,113.5,"SI"],[284,"2026-04-29","2026-04-29","PV073533","24476","V163",19.99,2.0,39.98,"SI"],[285,"2026-04-29","2026-04-29","PV073533","24476","V185",195.25,1.0,195.25,"SI"],[286,"2026-04-30","2026-04-30","PV073533","23286","V162",56.75,1.0,56.75,"SI"],[287,"2026-04-30","2026-04-30","PV073533","23286","V163",19.99,3.0,59.97,"SI"],[288,"2026-04-30","2026-04-30","PV073533","23286","V185",195.25,1.0,195.25,"SI"],[289,"2026-04-30","2026-04-30","PV073533","25392","V162",56.75,1.0,56.75,"SI"],[290,"2026-04-30","2026-04-30","PV073533","25392","V185",195.25,1.0,195.25,"SI"],[291,"2026-04-30","2026-04-30","PV073533","26688","V162",56.75,1.0,56.75,"SI"],[292,"2026-04-30","2026-04-30","PV073533","26688","V163",19.99,1.0,19.99,"SI"],[293,"2026-04-30","2026-04-30","PV073533","26688","V185",195.25,1.0,195.25,"SI"],[294,"2026-04-30","2026-04-30","PV073533","26847","V163",19.99,2.0,39.98,"SI"],[295,"2026-04-30","2026-04-30","PV073533","26847","V185",195.25,1.0,195.25,"SI"],[296,"2026-04-30","2026-04-30","PV073533","26848","V163",19.99,2.0,39.98,"SI"],[297,"2026-04-30","2026-04-30","PV073533","26848","V185",195.25,1.0,195.25,"SI"],[298,"2026-04-30","2026-04-30","PV073533","26691","V163",19.99,2.0,39.98,"SI"],[299,"2026-04-30","2026-04-30","PV073533","26691","V165",73.63,1.0,73.63,"SI"],[300,"2026-04-30","2026-04-30","PV073533","26691","V185",195.25,1.0,195.25,"SI"],[301,"2026-04-30","2026-04-30","PV073533","26157","V162",56.75,1.0,56.75,"SI"],[302,"2026-04-30","2026-04-30","PV073533","26157","V185",195.25,1.0,195.25,"SI"],[303,"2026-04-30","2026-04-30","PV073533","26164","V162",56.75,1.0,56.75,"SI"],[304,"2026-04-30","2026-04-30","PV073533","26164","V185",195.25,1.0,195.25,"SI"],[305,"2026-04-30","2026-04-30","PV073533","25298","V185",195.25,1.0,195.25,"SI"],[306,"2026-04-30","2026-04-30","PV073533","27329","V185",195.25,1.0,195.25,"SI"],[307,"2026-04-30","2026-04-30","PV073533","26161","V162",56.75,1.0,56.75,"SI"],[308,"2026-04-30","2026-04-30","PV073533","26161","V163",19.99,1.0,19.99,"SI"],[309,"2026-04-30","2026-04-30","PV073533","26161","V185",195.25,1.0,195.25,"SI"],[310,"2026-04-30","2026-04-30","PV073533","26160","V162",56.75,1.0,56.75,"SI"],[311,"2026-04-30","2026-04-30","PV073533","26160","V163",19.99,1.0,19.99,"SI"],[312,"2026-04-30","2026-04-30","PV073533","26160","V185",195.25,1.0,195.25,"SI"],[313,"2026-04-30","2026-04-30","PV073533","26155","V162",56.75,1.0,56.75,"SI"],[314,"2026-04-30","2026-04-30","PV073533","26155","V185",195.25,1.0,195.25,"SI"],[315,"2026-04-30","2026-04-30","PV073533","26159","V162",56.75,1.0,56.75,"SI"],[316,"2026-04-30","2026-04-30","PV073533","26159","V185",195.25,1.0,195.25,"SI"],[317,"2026-04-30","2026-04-30","PV073533","26555","V185",195.25,1.0,195.25,"SI"],[318,"2026-04-30","2026-04-30","PV073533","27313","V185",195.25,1.0,195.25,"SI"],[319,"2026-04-30","2026-04-30","PV073533","25508","V185",195.25,1.0,195.25,"SI"],[320,"2026-04-30","2026-04-30","PV073533","27212","V185",195.25,1.0,195.25,"SI"],[321,"2026-04-30","2026-04-30","PV073533","27214","V185",195.25,1.0,195.25,"SI"],[322,"2026-04-30","2026-04-30","PV073533","27211","V185",195.25,1.0,195.25,"SI"],[323,"2026-04-30","2026-04-30","PV073533","27215","V185",195.25,1.0,195.25,"SI"],[324,"2026-04-30","2026-04-30","PV073533","27210","V185",195.25,1.0,195.25,"SI"],[325,"2026-04-30","2026-04-30","PV073533","27369","V185",195.25,1.0,195.25,"SI"],[326,"2026-04-30","2026-04-30","PV073533","26554","V185",195.25,1.0,195.25,"SI"],[327,"2026-05-01","2026-05-01","PV073533","25393","V162",56.75,1.0,56.75,"SI"],[328,"2026-05-01","2026-05-01","PV073533","25393","V185",195.25,1.0,195.25,"SI"],[329,"2026-05-01","2026-05-01","PV073533","25394","V162",56.75,1.0,56.75,"SI"],[330,"2026-05-01","2026-05-01","PV073533","25394","V185",195.25,1.0,195.25,"SI"],[331,"2026-05-01","2026-05-01","PV073533","26686","V162",56.75,1.0,56.75,"SI"],[332,"2026-05-01","2026-05-01","PV073533","26686","V185",195.25,1.0,195.25,"SI"],[333,"2026-05-01","2026-05-01","PV073533","26154","V162",56.75,1.0,56.75,"SI"],[334,"2026-05-01","2026-05-01","PV073533","26154","V185",195.25,1.0,195.25,"SI"],[335,"2026-05-01","2026-05-01","PV073533","23564","V162",56.75,1.0,56.75,"SI"],[336,"2026-05-01","2026-05-01","PV073533","23564","V185",195.25,1.0,195.25,"SI"],[337,"2026-05-01","2026-05-01","PV073533","26153","V162",56.75,1.0,56.75,"SI"],[338,"2026-05-01","2026-05-01","PV073533","26153","V185",195.25,1.0,195.25,"SI"],[339,"2026-05-01","2026-05-01","PV073533","26037","V163",19.99,5.0,99.95,"SI"],[340,"2026-05-01","2026-05-01","PV073533","26037","V185",195.25,1.0,195.25,"SI"],[341,"2026-05-01","2026-05-01","PV073533","21881","V163",19.99,2.0,39.98,"SI"],[342,"2026-05-01","2026-05-01","PV073533","21881","V185",195.25,1.0,195.25,"SI"],[343,"2026-05-01","2026-05-01","PV073533","23892","V199",150.0,1.0,150.0,"SI"],[344,"2026-05-02","2026-05-02","PV073533","22238","V163",19.99,1.0,19.99,"SI"],[345,"2026-05-02","2026-05-02","PV073533","22238","V185",195.25,1.0,195.25,"SI"],[346,"2026-05-02","2026-05-02","PV073533","24444","V168",17.97,1.0,17.97,"SI"],[347,"2026-05-02","2026-05-02","PV073533","24444","V163",19.99,1.0,19.99,"SI"],[348,"2026-05-02","2026-05-02","PV073533","24444","V185",195.25,1.0,195.25,"SI"],[349,"2026-05-02","2026-05-02","PV073533","24615","V162",56.75,2.0,113.5,"SI"],[350,"2026-05-02","2026-05-02","PV073533","24615","V164",48.75,2.0,97.5,"SI"],[351,"2026-05-02","2026-05-02","PV073533","24615","V163",19.99,1.0,19.99,"SI"],[352,"2026-05-02","2026-05-02","PV073533","24615","V185",195.25,1.0,195.25,"SI"],[353,"2026-05-02","2026-05-02","PV073533","25055","V162",56.75,1.0,56.75,"SI"],[354,"2026-05-02","2026-05-02","PV073533","25055","V163",19.99,9.0,179.91,"SI"],[355,"2026-05-02","2026-05-02","PV073533","25055","V185",195.25,1.0,195.25,"SI"],[356,"2026-05-02","2026-05-02","PV073533","25055","V164",48.75,1.0,48.75,"SI"],[357,"2026-05-02","2026-05-02","PV073533","25055","V168",17.97,1.0,17.97,"SI"],[358,"2026-05-04","2026-05-04","PV073710","24856","V185",195.25,1.0,195.25,"NO"],[359,"2026-05-04","2026-05-04","PV073710","24856","V163",19.99,1.0,19.99,"NO"],[360,"2026-05-04","2026-05-04","PV073710","25833","V163",19.99,13.0,259.87,"NO"],[361,"2026-05-04","2026-05-04","PV073710","25833","V162",56.75,2.0,113.5,"NO"],[362,"2026-05-04","2026-05-04","PV073710","25833","V168",17.97,1.0,17.97,"NO"],[363,"2026-05-04","2026-05-04","PV073710","25833","V185",195.25,1.0,195.25,"NO"],[364,"2026-05-04","2026-05-04","PV073710","24847","V163",19.99,2.0,39.98,"NO"],[365,"2026-05-04","2026-05-04","PV073710","24847","V162",56.75,1.0,56.75,"NO"],[366,"2026-05-04","2026-05-04","PV073710","24847","V168",17.97,1.0,17.97,"NO"],[367,"2026-05-04","2026-05-04","PV073710","24847","V185",195.25,1.0,195.25,"NO"],[368,"2026-05-04","2026-05-04","PV073710","27666","V185",195.25,1.0,195.25,"NO"],[369,"2026-05-04","2026-05-04","PV073710","27666","V163",19.99,3.0,59.97,"NO"],[370,"2026-05-04","2026-05-04","PV073710","27666","V168",17.97,2.0,35.94,"NO"],[371,"2026-05-04","2026-05-04","PV073710","24846","V163",19.99,3.0,59.97,"NO"],[372,"2026-05-04","2026-05-04","PV073710","24846","V165",73.63,2.0,147.26,"NO"],[373,"2026-05-04","2026-05-04","PV073710","24846","V164",48.75,1.0,48.75,"NO"],[374,"2026-05-04","2026-05-04","PV073710","24846","V162",56.75,1.0,56.75,"NO"],[375,"2026-05-04","2026-05-04","PV073710","24846","V185",195.25,1.0,195.25,"NO"],[376,"2026-05-04","2026-05-04","PV073710","20466","V163",19.99,1.0,19.99,"NO"],[377,"2026-05-04","2026-05-04","PV073710","20466","V185",195.25,1.0,195.25,"NO"],[378,"2026-05-04","2026-05-04","PV073710","26800","V163",19.99,2.0,39.98,"NO"],[379,"2026-05-04","2026-05-04","PV073710","26800","V185",195.25,1.0,195.25,"NO"],[380,"2026-05-04","2026-05-04","PV073710","26701","V163",19.99,1.0,19.99,"NO"],[381,"2026-05-04","2026-05-04","PV073710","26701","V185",195.25,1.0,195.25,"NO"],[382,"2026-05-04","2026-05-04","PV073710","24816","V163",19.99,1.0,19.99,"NO"],[383,"2026-05-04","2026-05-04","PV073710","24816","V185",195.25,1.0,195.25,"NO"],[384,"2026-05-04","2026-05-04","PV073710","24501","V163",19.99,2.0,39.98,"NO"],[385,"2026-05-04","2026-05-04","PV073710","24501","V162",56.75,2.0,113.5,"NO"],[386,"2026-05-04","2026-05-04","PV073710","24501","V185",195.25,1.0,195.25,"NO"],[387,"2026-05-05","2026-05-05","PV073710","27386","V163",19.99,2.0,39.98,"NO"],[388,"2026-05-05","2026-05-05","PV073710","27386","V168",17.97,1.0,17.97,"NO"],[389,"2026-05-05","2026-05-05","PV073710","27386","V185",195.25,1.0,195.25,"NO"],[390,"2026-05-05","2026-05-05","PV073710","24608","V163",19.99,1.0,19.99,"NO"],[391,"2026-05-05","2026-05-05","PV073710","24608","V185",195.25,1.0,195.25,"NO"],[392,"2026-05-05","2026-05-05","PV073710","27673","V163",19.99,5.0,99.95,"NO"],[393,"2026-05-05","2026-05-05","PV073710","27673","V168",17.97,1.0,17.97,"NO"],[394,"2026-05-05","2026-05-05","PV073710","27673","V185",195.25,1.0,195.25,"NO"],[395,"2026-05-05","2026-05-05","PV073710","22674","V162",56.75,1.0,56.75,"NO"],[396,"2026-05-05","2026-05-05","PV073710","22674","V164",48.75,1.0,48.75,"NO"],[397,"2026-05-05","2026-05-05","PV073710","22674","V185",195.25,1.0,195.25,"NO"],[398,"2026-05-05","2026-05-05","PV073710","27675","V164",48.75,1.0,48.75,"NO"],[399,"2026-05-05","2026-05-05","PV073710","27675","V162",56.75,1.0,56.75,"NO"],[400,"2026-05-05","2026-05-05","PV073710","27675","V185",195.25,1.0,195.25,"NO"],[401,"2026-05-05","2026-05-05","PV073710","27028","V162",56.75,2.0,113.5,"NO"],[402,"2026-05-05","2026-05-05","PV073710","27028","V163",19.99,2.0,39.98,"NO"],[403,"2026-05-05","2026-05-05","PV073710","27028","V185",195.25,1.0,195.25,"NO"],[404,"2026-05-05","2026-05-05","PV073710","24635","V163",19.99,3.0,59.97,"NO"],[405,"2026-05-05","2026-05-05","PV073710","24635","V168",17.97,1.0,17.97,"NO"],[406,"2026-05-05","2026-05-05","PV073710","24635","V185",195.25,1.0,195.25,"NO"],[407,"2026-05-05","2026-05-05","PV073710","24661","V162",56.75,1.0,56.75,"NO"],[408,"2026-05-05","2026-05-05","PV073710","24661","V164",48.75,1.0,48.75,"NO"],[409,"2026-05-05","2026-05-05","PV073710","24661","V185",195.25,1.0,195.25,"NO"],[410,"2026-05-05","2026-05-05","PV073710","25595","V163",19.99,2.0,39.98,"NO"],[411,"2026-05-05","2026-05-05","PV073710","25595","V168",17.97,1.0,17.97,"NO"],[412,"2026-05-05","2026-05-05","PV073710","25595","V185",195.25,1.0,195.25,"NO"],[413,"2026-05-05","2026-05-05","PV073710","24596","V162",56.75,1.0,56.75,"NO"],[414,"2026-05-05","2026-05-05","PV073710","24596","V163",19.99,3.0,59.97,"NO"],[415,"2026-05-05","2026-05-05","PV073710","24596","V165",73.63,2.0,147.26,"NO"],[416,"2026-05-05","2026-05-05","PV073710","24596","V168",17.97,1.0,17.97,"NO"],[417,"2026-05-05","2026-05-05","PV073710","24596","V185",195.25,1.0,195.25,"NO"],[418,"2026-05-06","2026-05-06","PV073710","20290","V163",19.99,1.0,19.99,"NO"],[419,"2026-05-06","2026-05-06","PV073710","20290","V185",195.25,1.0,195.25,"NO"],[420,"2026-05-06","2026-05-06","PV073710","25363","V163",19.99,4.0,79.96,"NO"],[421,"2026-05-06","2026-05-06","PV073710","25363","V185",195.25,1.0,195.25,"NO"],[422,"2026-05-06","2026-05-06","PV073710","25268","V163",19.99,3.0,59.97,"NO"],[423,"2026-05-06","2026-05-06","PV073710","25268","V168",17.97,1.0,17.97,"NO"],[424,"2026-05-06","2026-05-06","PV073710","25268","V162",56.75,1.0,56.75,"NO"],[425,"2026-05-06","2026-05-06","PV073710","25268","V185",195.25,1.0,195.25,"NO"],[426,"2026-05-06","2026-05-06","PV073710","25268","V165",73.63,1.0,73.63,"NO"],[427,"2026-05-06","2026-05-06","PV073710","26447","V162",56.75,1.0,56.75,"NO"],[428,"2026-05-06","2026-05-06","PV073710","26447","V163",19.99,3.0,59.97,"NO"],[429,"2026-05-06","2026-05-06","PV073710","26447","V185",195.25,1.0,195.25,"NO"],[430,"2026-05-06","2026-05-06","PV073710","25269","V162",56.75,2.0,113.5,"NO"],[431,"2026-05-06","2026-05-06","PV073710","25269","V185",195.25,1.0,195.25,"NO"],[432,"2026-05-06","2026-05-06","PV073710","26824","V163",19.99,3.0,59.97,"NO"],[433,"2026-05-06","2026-05-06","PV073710","26824","V185",195.25,1.0,195.25,"NO"],[434,"2026-05-06","2026-05-06","PV073710","27127","V162",56.75,1.0,56.75,"NO"],[435,"2026-05-06","2026-05-06","PV073710","27127","V163",19.99,3.0,59.97,"NO"],[436,"2026-05-06","2026-05-06","PV073710","27127","V185",195.25,1.0,195.25,"NO"],[437,"2026-05-06","2026-05-06","PV073710","27047","V163",19.99,2.0,39.98,"NO"],[438,"2026-05-06","2026-05-06","PV073710","27047","V168",17.97,1.0,17.97,"NO"],[439,"2026-05-06","2026-05-06","PV073710","27047","V185",195.25,1.0,195.25,"NO"],[440,"2026-05-06","2026-05-06","PV073710","24482","V165",73.63,1.0,73.63,"NO"],[441,"2026-05-06","2026-05-06","PV073710","24482","V185",195.25,1.0,195.25,"NO"],[442,"2026-05-06","2026-05-06","PV073710","24482","V163",19.99,4.0,79.96,"NO"],[443,"2026-05-07","2026-05-07","PV073710","24821","V163",19.99,1.0,19.99,"NO"],[444,"2026-05-07","2026-05-07","PV073710","24821","V162",56.75,1.0,56.75,"NO"],[445,"2026-05-07","2026-05-07","PV073710","24821","V164",48.75,1.0,48.75,"NO"],[446,"2026-05-07","2026-05-07","PV073710","24821","V168",17.97,1.0,17.97,"NO"],[447,"2026-05-07","2026-05-07","PV073710","24821","V185",195.25,1.0,195.25,"NO"],[448,"2026-05-07","2026-05-07","PV073710","17498","V162",56.75,1.0,56.75,"NO"],[449,"2026-05-07","2026-05-07","PV073710","17498","V163",19.99,1.0,19.99,"NO"],[450,"2026-05-07","2026-05-07","PV073710","17498","V185",195.25,1.0,195.25,"NO"],[451,"2026-05-07","2026-05-07","PV073710","24823","V185",195.25,1.0,195.25,"NO"],[452,"2026-05-07","2026-05-07","PV073710","23975","V163",19.99,1.0,19.99,"NO"],[453,"2026-05-07","2026-05-07","PV073710","23975","V185",195.25,1.0,195.25,"NO"],[454,"2026-05-07","2026-05-07","PV073710","27450","V185",195.25,1.0,195.25,"NO"],[455,"2026-05-07","2026-05-07","PV073710","25000","V185",195.25,1.0,195.25,"NO"],[456,"2026-05-07","2026-05-07","PV073710","23045","V163",19.99,1.0,19.99,"NO"],[457,"2026-05-07","2026-05-07","PV073710","23045","V185",195.25,1.0,195.25,"NO"],[458,"2026-05-07","2026-05-07","PV073710","24961","V185",195.25,1.0,195.25,"NO"],[459,"2026-05-07","2026-05-07","PV073710","24547","V164",48.75,1.0,48.75,"NO"],[460,"2026-05-07","2026-05-07","PV073710","24547","V162",56.75,1.0,56.75,"NO"],[461,"2026-05-07","2026-05-07","PV073710","24547","V163",19.99,1.0,19.99,"NO"],[462,"2026-05-07","2026-05-07","PV073710","24547","V185",195.25,1.0,195.25,"NO"],[463,"2026-05-07","2026-05-07","PV073710","24727","V185",195.25,1.0,195.25,"NO"],[464,"2026-05-07","2026-05-07","PV073710","25685","V162",56.75,1.0,56.75,"NO"],[465,"2026-05-07","2026-05-07","PV073710","25685","V185",195.25,1.0,195.25,"NO"],[466,"2026-05-07","2026-05-07","PV073710","24889","V185",195.25,1.0,195.25,"NO"],[467,"2026-05-07","2026-05-07","PV073710","24844","V199",150.0,1.0,150.0,"NO"],[468,"2026-05-07","2026-05-07","PV073710","25629","V185",195.25,1.0,195.25,"NO"],[469,"2026-05-07","2026-05-07","PV073710","24826","V163",19.99,2.0,39.98,"NO"],[470,"2026-05-07","2026-05-07","PV073710","24826","V168",17.97,1.0,17.97,"NO"],[471,"2026-05-07","2026-05-07","PV073710","24826","V185",195.25,1.0,195.25,"NO"],[472,"2026-05-07","2026-05-07","PV073710","27665","V185",195.25,1.0,195.25,"NO"],[473,"2026-05-07","2026-05-07","PV073710","24849","V185",195.25,1.0,195.25,"NO"],[474,"2026-05-07","2026-05-07","PV073710","26176","V163",19.99,2.0,39.98,"NO"],[475,"2026-05-07","2026-05-07","PV073710","26176","V162",56.75,1.0,56.75,"NO"],[476,"2026-05-07","2026-05-07","PV073710","26176","V185",195.25,1.0,195.25,"NO"],[477,"2026-05-07","2026-05-07","PV073710","27301","V185",195.25,1.0,195.25,"NO"],[478,"2026-05-07","2026-05-07","PV073710","22720","V163",19.99,4.0,79.96,"NO"],[479,"2026-05-07","2026-05-07","PV073710","22720","V185",195.25,1.0,195.25,"NO"],[480,"2026-05-07","2026-05-07","PV073710","23367","V168",17.97,1.0,17.97,"NO"],[481,"2026-05-07","2026-05-07","PV073710","23367","V185",195.25,1.0,195.25,"NO"],[482,"2026-05-07","2026-05-07","PV073710","23367","V163",19.99,2.0,39.98,"NO"],[483,"2026-05-07","2026-05-07","PV073710","24944","V162",56.75,1.0,56.75,"NO"],[484,"2026-05-07","2026-05-07","PV073710","24944","V185",195.25,1.0,195.25,"NO"],[485,"2026-05-08","2026-05-08","PV073710","24754","V162",56.75,2.0,113.5,"NO"],[486,"2026-05-08","2026-05-08","PV073710","24754","V163",19.99,1.0,19.99,"NO"],[487,"2026-05-08","2026-05-08","PV073710","24754","V185",195.25,1.0,195.25,"NO"],[488,"2026-05-08","2026-05-08","PV073710","24753","V162",56.75,2.0,113.5,"NO"],[489,"2026-05-08","2026-05-08","PV073710","24753","V163",19.99,6.0,119.94,"NO"],[490,"2026-05-08","2026-05-08","PV073710","24753","V164",48.75,1.0,48.75,"NO"],[491,"2026-05-08","2026-05-08","PV073710","24753","V165",73.63,2.0,147.26,"NO"],[492,"2026-05-08","2026-05-08","PV073710","24753","V185",195.25,1.0,195.25,"NO"],[493,"2026-05-08","2026-05-08","PV073710","25580","V162",56.75,1.0,56.75,"NO"],[494,"2026-05-08","2026-05-08","PV073710","25580","V164",48.75,1.0,48.75,"NO"],[495,"2026-05-08","2026-05-08","PV073710","25580","V165",73.63,1.0,73.63,"NO"],[496,"2026-05-08","2026-05-08","PV073710","25580","V185",195.25,1.0,195.25,"NO"],[497,"2026-05-08","2026-05-08","PV073710","24842","V163",19.99,2.0,39.98,"NO"],[498,"2026-05-08","2026-05-08","PV073710","24842","V185",195.25,1.0,195.25,"NO"],[499,"2026-05-08","2026-05-08","PV073710","27160","V163",19.99,1.0,19.99,"NO"],[500,"2026-05-08","2026-05-08","PV073710","27160","V185",195.25,1.0,195.25,"NO"],[501,"2026-05-08","2026-05-08","PV073710","25932","V162",56.75,1.0,56.75,"NO"],[502,"2026-05-08","2026-05-08","PV073710","25932","V165",73.63,1.0,73.63,"NO"],[503,"2026-05-08","2026-05-08","PV073710","25932","V185",195.25,1.0,195.25,"NO"],[504,"2026-05-08","2026-05-08","PV073710","23401","V163",19.99,1.0,19.99,"NO"],[505,"2026-05-08","2026-05-08","PV073710","23401","V185",195.25,1.0,195.25,"NO"],[506,"2026-05-08","2026-05-08","PV073710","25398","V163",19.99,1.0,19.99,"NO"],[507,"2026-05-08","2026-05-08","PV073710","25398","V185",195.25,1.0,195.25,"NO"],[508,"2026-05-08","2026-05-08","PV073710","26456","V163",19.99,2.0,39.98,"NO"],[509,"2026-05-08","2026-05-08","PV073710","26456","V168",17.97,1.0,17.97,"NO"],[510,"2026-05-08","2026-05-08","PV073710","26456","V185",195.25,1.0,195.25,"NO"],[511,"2026-05-08","2026-05-08","PV073710","24638","V162",56.75,1.0,56.75,"NO"],[512,"2026-05-08","2026-05-08","PV073710","24638","V164",48.75,1.0,48.75,"NO"],[513,"2026-05-08","2026-05-08","PV073710","24638","V185",195.25,1.0,195.25,"NO"],[514,"2026-05-08","2026-05-08","PV073710","27341","V163",19.99,1.0,19.99,"NO"],[515,"2026-05-08","2026-05-08","PV073710","27341","V185",195.25,1.0,195.25,"NO"],[516,"2026-05-08","2026-05-08","PV073710","26618","V163",19.99,1.0,19.99,"NO"],[517,"2026-05-08","2026-05-08","PV073710","26618","V185",195.25,1.0,195.25,"NO"]],"codeDesc":{"V199":"Move charge - Aerial - For any poles found that cannot be completed","V162":"Transfer Aerial - Strand attachment and hardware","V168":"Transfer Aerial - pole mounted wire terminal","V185":"Remove Aerial - Poles - all types and sizes","V163":"Transfer Aerial - Service wire attachment","V165":"Transfer Aerial - Apparatus - pole or strand mount","V115":"Place Aerial - Anchor - bust type - hand","V164":"Transfer Aerial - Guy attachment - pole or anchor mount"}}</script>
+<script id="embeddedData" type="application/json">{"rows":[[1,"2026-03-26","2026-04-02","PV073159","SITE SURVEY","V199",150.0,25.0,3750.0,"SI"],[2,"2026-03-27","2026-04-03","PV073159","SITE SURVEY","V199",150.0,58.0,8700.0,"SI"],[3,"2026-03-28","2026-04-04","PV073159","SITE SURVEY","V199",150.0,19.0,2850.0,"SI"],[4,"2026-04-07","2026-04-07","PV073159","SITE SURVEY","V199",150.0,13.0,1950.0,"SI"],[5,"2026-04-08","2026-04-08","PV073159","SITE SURVEY","V199",150.0,41.0,6150.0,"SI"],[6,"2026-04-09","2026-04-09","PV073159","SITE SURVEY","V199",150.0,40.0,6000.0,"SI"],[7,"2026-04-10","2026-04-10","PV073159","SITE SURVEY","V199",150.0,75.0,11250.0,"SI"],[8,"2026-04-11","2026-04-11","PV073159","SITE SURVEY","V199",150.0,66.0,9900.0,"SI"],[9,"2026-04-14","2026-04-14","PV073159","SITE SURVEY","V199",150.0,42.0,6300.0,"SI"],[10,"2026-04-15","2026-04-15","PV073159","SITE SURVEY","V199",150.0,35.0,5250.0,"SI"],[11,"2026-04-17","2026-04-17","PV073159","SITE SURVEY","V199",150.0,80.0,12000.0,"SI"],[12,"2026-04-18","2026-04-18","PV073159","SITE SURVEY","V199",150.0,165.0,24750.0,"SI"],[13,"2026-04-19","2026-04-19","PV073159","SITE SURVEY","V199",150.0,97.0,14550.0,"SI"],[14,"2026-04-15","2026-04-15","PV073159","26608","V162",56.75,1.0,56.75,"SI"],[15,"2026-04-15","2026-04-15","PV073159","26608","V168",17.97,1.0,17.97,"SI"],[16,"2026-04-15","2026-04-15","PV073159","26608","V185",195.25,1.0,195.25,"SI"],[17,"2026-04-15","2026-04-15","PV073159","25585","V162",56.75,1.0,56.75,"SI"],[18,"2026-04-15","2026-04-15","PV073159","25585","V163",19.99,1.0,19.99,"SI"],[19,"2026-04-15","2026-04-15","PV073159","25585","V168",17.97,1.0,17.97,"SI"],[20,"2026-04-15","2026-04-15","PV073159","25585","V185",195.25,1.0,195.25,"SI"],[21,"2026-04-15","2026-04-15","PV073159","26616","V162",56.75,1.0,56.75,"SI"],[22,"2026-04-15","2026-04-15","PV073159","26616","V163",19.99,1.0,19.99,"SI"],[23,"2026-04-15","2026-04-15","PV073159","26616","V185",195.25,1.0,195.25,"SI"],[21,"2026-04-16","2026-04-16","PV073159","25877","V162",56.75,3.0,170.25,"SI"],[22,"2026-04-16","2026-04-16","PV073159","25877","V165",73.63,1.0,73.63,"SI"],[23,"2026-04-16","2026-04-16","PV073159","25877","V163",19.99,2.0,39.98,"SI"],[24,"2026-04-17","2026-04-17","PV073159","26612","V162",56.75,2.0,113.5,"SI"],[25,"2026-04-17","2026-04-17","PV073159","26612","V163",19.99,2.0,39.98,"SI"],[26,"2026-04-17","2026-04-17","PV073159","26612","V185",195.25,1.0,195.25,"SI"],[27,"2026-04-17","2026-04-17","PV073159","26613","V162",56.75,1.0,56.75,"SI"],[28,"2026-04-17","2026-04-17","PV073159","26613","V163",19.99,1.0,19.99,"SI"],[29,"2026-04-17","2026-04-17","PV073159","26613","V168",17.97,1.0,17.97,"SI"],[30,"2026-04-17","2026-04-17","PV073159","26613","V185",195.25,1.0,195.25,"SI"],[31,"2026-04-22","2026-04-22","PV073378","17495","V162",56.75,1.0,56.75,"SI"],[32,"2026-04-22","2026-04-22","PV073378","17495","V163",19.99,1.0,19.99,"SI"],[33,"2026-04-22","2026-04-22","PV073378","17495","V185",195.25,1.0,195.25,"SI"],[34,"2026-04-22","2026-04-22","PV073378","20607","V115",227.5,1.0,227.5,"SI"],[35,"2026-04-22","2026-04-22","PV073378","20607","V162",56.75,1.0,56.75,"SI"],[36,"2026-04-22","2026-04-22","PV073378","20607","V163",19.99,1.0,19.99,"SI"],[37,"2026-04-22","2026-04-22","PV073378","20607","V185",195.25,1.0,195.25,"SI"],[38,"2026-04-22","2026-04-22","PV073378","24473","V163",19.99,1.0,19.99,"SI"],[39,"2026-04-22","2026-04-22","PV073378","24473","V185",195.25,1.0,195.25,"SI"],[40,"2026-04-22","2026-04-22","PV073378","25526","V162",56.75,2.0,113.5,"SI"],[41,"2026-04-22","2026-04-22","PV073378","25526","V185",195.25,1.0,195.25,"SI"],[42,"2026-04-22","2026-04-22","PV073378","25708","V162",56.75,1.0,56.75,"SI"],[43,"2026-04-22","2026-04-22","PV073378","25708","V163",19.99,1.0,19.99,"SI"],[44,"2026-04-22","2026-04-22","PV073378","25708","V185",195.25,1.0,195.25,"SI"],[45,"2026-04-22","2026-04-22","PV073378","25939","V185",195.25,1.0,195.25,"SI"],[46,"2026-04-22","2026-04-22","PV073378","26149","V162",56.75,1.0,56.75,"SI"],[47,"2026-04-22","2026-04-22","PV073378","26149","V163",19.99,1.0,19.99,"SI"],[48,"2026-04-22","2026-04-22","PV073378","26149","V185",195.25,1.0,195.25,"SI"],[49,"2026-04-22","2026-04-22","PV073378","26152","V162",56.75,1.0,56.75,"SI"],[50,"2026-04-22","2026-04-22","PV073378","26152","V163",19.99,1.0,19.99,"SI"],[51,"2026-04-22","2026-04-22","PV073378","26152","V168",17.97,1.0,17.97,"SI"],[52,"2026-04-22","2026-04-22","PV073378","26152","V185",195.25,1.0,195.25,"SI"],[53,"2026-04-22","2026-04-22","PV073378","26441","V162",56.75,1.0,56.75,"SI"],[54,"2026-04-22","2026-04-22","PV073378","26441","V185",195.25,1.0,195.25,"SI"],[55,"2026-04-22","2026-04-22","PV073378","26606","V162",56.75,1.0,56.75,"SI"],[56,"2026-04-22","2026-04-22","PV073378","26606","V163",19.99,1.0,19.99,"SI"],[57,"2026-04-22","2026-04-22","PV073378","26606","V168",17.97,1.0,17.97,"SI"],[58,"2026-04-22","2026-04-22","PV073378","26606","V185",195.25,1.0,195.25,"SI"],[59,"2026-04-22","2026-04-22","PV073378","26607","V162",56.75,1.0,56.75,"SI"],[60,"2026-04-22","2026-04-22","PV073378","26607","V185",195.25,1.0,195.25,"SI"],[61,"2026-04-22","2026-04-22","PV073378","26617","V162",56.75,1.0,56.75,"SI"],[62,"2026-04-22","2026-04-22","PV073378","26617","V185",195.25,1.0,195.25,"SI"],[63,"2026-04-22","2026-04-22","PV073378","26724","V163",19.99,2.0,39.98,"SI"],[64,"2026-04-22","2026-04-22","PV073378","26724","V168",17.97,1.0,17.97,"SI"],[65,"2026-04-22","2026-04-22","PV073378","26724","V185",195.25,1.0,195.25,"SI"],[66,"2026-04-23","2026-04-23","PV073378","20418","V185",195.25,1.0,195.25,"SI"],[67,"2026-04-23","2026-04-23","PV073378","22155","V185",195.25,1.0,195.25,"SI"],[68,"2026-04-23","2026-04-23","PV073378","22493","V162",56.75,1.0,56.75,"SI"],[69,"2026-04-23","2026-04-23","PV073378","22493","V163",19.99,2.0,39.98,"SI"],[70,"2026-04-23","2026-04-23","PV073378","22497","V162",56.75,1.0,56.75,"SI"],[71,"2026-04-23","2026-04-23","PV073378","22497","V163",19.99,1.0,19.99,"SI"],[72,"2026-04-23","2026-04-23","PV073378","22497","V164",48.75,1.0,48.75,"SI"],[73,"2026-04-23","2026-04-23","PV073378","22497","V185",195.25,1.0,195.25,"SI"],[74,"2026-04-23","2026-04-23","PV073378","22789","V185",195.25,1.0,195.25,"SI"],[75,"2026-04-23","2026-04-23","PV073378","23806","V185",195.25,1.0,195.25,"SI"],[76,"2026-04-23","2026-04-23","PV073378","24214","V162",56.75,1.0,56.75,"SI"],[77,"2026-04-23","2026-04-23","PV073378","24214","V163",19.99,1.0,19.99,"SI"],[78,"2026-04-23","2026-04-23","PV073378","24214","V168",17.97,1.0,17.97,"SI"],[79,"2026-04-23","2026-04-23","PV073378","24214","V185",195.25,1.0,195.25,"SI"],[80,"2026-04-23","2026-04-23","PV073378","24215","V162",56.75,1.0,56.75,"SI"],[81,"2026-04-23","2026-04-23","PV073378","24215","V163",19.99,1.0,19.99,"SI"],[82,"2026-04-23","2026-04-23","PV073378","24215","V168",17.97,1.0,17.97,"SI"],[83,"2026-04-23","2026-04-23","PV073378","24215","V185",195.25,1.0,195.25,"SI"],[84,"2026-04-23","2026-04-23","PV073378","24290","V185",195.25,1.0,195.25,"SI"],[85,"2026-04-23","2026-04-23","PV073378","25376","V185",195.25,1.0,195.25,"SI"],[86,"2026-04-23","2026-04-23","PV073378","25953","V185",195.25,1.0,195.25,"SI"],[87,"2026-04-23","2026-04-23","PV073378","26364","V162",56.75,2.0,113.5,"SI"],[88,"2026-04-23","2026-04-23","PV073378","26364","V163",19.99,1.0,19.99,"SI"],[89,"2026-04-23","2026-04-23","PV073378","26364","V185",195.25,1.0,195.25,"SI"],[90,"2026-04-23","2026-04-23","PV073378","26367","V162",56.75,1.0,56.75,"SI"],[91,"2026-04-23","2026-04-23","PV073378","26367","V163",19.99,1.0,19.99,"SI"],[92,"2026-04-23","2026-04-23","PV073378","26367","V164",48.75,1.0,48.75,"SI"],[93,"2026-04-23","2026-04-23","PV073378","26367","V185",195.25,1.0,195.25,"SI"],[94,"2026-04-23","2026-04-23","PV073378","26369","V162",56.75,1.0,56.75,"SI"],[95,"2026-04-23","2026-04-23","PV073378","26369","V163",19.99,1.0,19.99,"SI"],[96,"2026-04-23","2026-04-23","PV073378","26369","V168",17.97,1.0,17.97,"SI"],[97,"2026-04-23","2026-04-23","PV073378","26369","V185",195.25,1.0,195.25,"SI"],[98,"2026-04-23","2026-04-23","PV073378","26436","V162",56.75,1.0,56.75,"SI"],[99,"2026-04-23","2026-04-23","PV073378","26436","V163",19.99,1.0,19.99,"SI"],[100,"2026-04-23","2026-04-23","PV073378","26436","V168",17.97,2.0,35.94,"SI"],[101,"2026-04-23","2026-04-23","PV073378","26436","V185",195.25,1.0,195.25,"SI"],[102,"2026-04-23","2026-04-23","PV073378","26690","V185",195.25,1.0,195.25,"SI"],[103,"2026-04-23","2026-04-23","PV073378","26865","V185",195.25,1.0,195.25,"SI"],[104,"2026-04-23","2026-04-23","PV073378","26866","V185",195.25,1.0,195.25,"SI"],[105,"2026-04-23","2026-04-23","PV073378","27823","V162",56.75,2.0,113.5,"SI"],[106,"2026-04-23","2026-04-23","PV073378","27823","V163",19.99,2.0,39.98,"SI"],[107,"2026-04-23","2026-04-23","PV073378","27823","V185",195.25,1.0,195.25,"SI"],[108,"2026-04-23","2026-04-23","PV073378","23827","V199",150.0,1.0,150.0,"SI"],[109,"2026-04-24","2026-04-24","PV073378","14642","V185",195.25,1.0,195.25,"SI"],[110,"2026-04-24","2026-04-24","PV073378","20260","V162",56.75,1.0,56.75,"SI"],[111,"2026-04-24","2026-04-24","PV073378","20260","V163",19.99,1.0,19.99,"SI"],[112,"2026-04-24","2026-04-24","PV073378","20260","V185",195.25,1.0,195.25,"SI"],[113,"2026-04-24","2026-04-24","PV073378","21842","V185",195.25,1.0,195.25,"SI"],[114,"2026-04-24","2026-04-24","PV073378","22661","V163",19.99,1.0,19.99,"SI"],[115,"2026-04-24","2026-04-24","PV073378","22661","V168",17.97,1.0,17.97,"SI"],[116,"2026-04-24","2026-04-24","PV073378","22661","V185",195.25,1.0,195.25,"SI"],[117,"2026-04-24","2026-04-24","PV073378","22937","V185",195.25,1.0,195.25,"SI"],[118,"2026-04-24","2026-04-24","PV073378","23458","V162",56.75,1.0,56.75,"SI"],[119,"2026-04-24","2026-04-24","PV073378","23458","V163",19.99,2.0,39.98,"SI"],[120,"2026-04-24","2026-04-24","PV073378","23458","V168",17.97,1.0,17.97,"SI"],[121,"2026-04-24","2026-04-24","PV073378","23458","V185",195.25,1.0,195.25,"SI"],[122,"2026-04-24","2026-04-24","PV073378","23862","V163",19.99,1.0,19.99,"SI"],[123,"2026-04-24","2026-04-24","PV073378","23862","V185",195.25,1.0,195.25,"SI"],[124,"2026-04-24","2026-04-24","PV073378","24490","V162",56.75,1.0,56.75,"SI"],[125,"2026-04-24","2026-04-24","PV073378","24490","V163",19.99,1.0,19.99,"SI"],[126,"2026-04-24","2026-04-24","PV073378","24490","V185",195.25,1.0,195.25,"SI"],[127,"2026-04-24","2026-04-24","PV073378","24631","V162",56.75,1.0,56.75,"SI"],[128,"2026-04-24","2026-04-24","PV073378","24631","V185",195.25,1.0,195.25,"SI"],[129,"2026-04-24","2026-04-24","PV073378","25375","V162",56.75,1.0,56.75,"SI"],[130,"2026-04-24","2026-04-24","PV073378","25375","V163",19.99,1.0,19.99,"SI"],[131,"2026-04-24","2026-04-24","PV073378","25375","V185",195.25,1.0,195.25,"SI"],[132,"2026-04-24","2026-04-24","PV073378","25697","V185",195.25,1.0,195.25,"SI"],[133,"2026-04-24","2026-04-24","PV073378","26365","V162",56.75,1.0,56.75,"SI"],[134,"2026-04-24","2026-04-24","PV073378","26365","V163",19.99,1.0,19.99,"SI"],[135,"2026-04-24","2026-04-24","PV073378","26365","V185",195.25,1.0,195.25,"SI"],[136,"2026-04-24","2026-04-24","PV073378","26726","V162",56.75,1.0,56.75,"SI"],[137,"2026-04-24","2026-04-24","PV073378","26726","V163",19.99,1.0,19.99,"SI"],[138,"2026-04-24","2026-04-24","PV073378","26726","V185",195.25,1.0,195.25,"SI"],[139,"2026-04-24","2026-04-24","PV073378","26884","V162",56.75,1.0,56.75,"SI"],[140,"2026-04-24","2026-04-24","PV073378","26884","V163",19.99,1.0,19.99,"SI"],[141,"2026-04-24","2026-04-24","PV073378","26884","V185",195.25,1.0,195.25,"SI"],[142,"2026-04-24","2026-04-24","PV073378","27822","V162",56.75,1.0,56.75,"SI"],[143,"2026-04-24","2026-04-24","PV073378","27822","V185",195.25,1.0,195.25,"SI"],[144,"2026-04-25","2026-04-25","PV073378","24493","V162",56.75,1.0,56.75,"SI"],[145,"2026-04-25","2026-04-25","PV073378","24493","V163",19.99,4.0,79.96,"SI"],[146,"2026-04-25","2026-04-25","PV073378","24493","V164",48.75,1.0,48.75,"SI"],[147,"2026-04-25","2026-04-25","PV073378","24493","V165",73.63,2.0,147.26,"SI"],[148,"2026-04-25","2026-04-25","PV073378","24493","V185",195.25,1.0,195.25,"SI"],[149,"2026-04-25","2026-04-25","PV073378","25793","V162",56.75,3.0,170.25,"SI"],[150,"2026-04-25","2026-04-25","PV073378","25793","V185",195.25,1.0,195.25,"SI"],[151,"2026-04-25","2026-04-25","PV073378","25881","V162",56.75,1.0,56.75,"SI"],[152,"2026-04-25","2026-04-25","PV073378","25881","V164",48.75,1.0,48.75,"SI"],[153,"2026-04-25","2026-04-25","PV073378","25881","V185",195.25,1.0,195.25,"SI"],[154,"2026-04-25","2026-04-25","PV073378","26368","V162",56.75,1.0,56.75,"SI"],[155,"2026-04-25","2026-04-25","PV073378","26368","V163",19.99,3.0,59.97,"SI"],[156,"2026-04-25","2026-04-25","PV073378","26368","V185",195.25,1.0,195.25,"SI"],[157,"2026-04-25","2026-04-25","PV073378","26370","V162",56.75,1.0,56.75,"SI"],[158,"2026-04-25","2026-04-25","PV073378","26370","V185",195.25,1.0,195.25,"SI"],[159,"2026-04-25","2026-04-25","PV073378","26578","V162",56.75,1.0,56.75,"SI"],[160,"2026-04-25","2026-04-25","PV073378","26578","V163",19.99,1.0,19.99,"SI"],[161,"2026-04-25","2026-04-25","PV073378","26578","V164",48.75,1.0,48.75,"SI"],[162,"2026-04-25","2026-04-25","PV073378","26578","V165",73.63,1.0,73.63,"SI"],[163,"2026-04-25","2026-04-25","PV073378","26578","V185",195.25,1.0,195.25,"SI"],[164,"2026-04-25","2026-04-25","PV073378","27390","V162",56.75,1.0,56.75,"SI"],[165,"2026-04-25","2026-04-25","PV073378","27390","V185",195.25,1.0,195.25,"SI"],[166,"2026-04-26","2026-04-26","PV073378","20459","V185",195.25,1.0,195.25,"SI"],[167,"2026-04-26","2026-04-26","PV073378","20740","V185",195.25,1.0,195.25,"SI"],[168,"2026-04-26","2026-04-26","PV073378","23394","V162",56.75,1.0,56.75,"SI"],[169,"2026-04-26","2026-04-26","PV073378","23394","V185",195.25,1.0,195.25,"SI"],[170,"2026-04-26","2026-04-26","PV073378","23567","V185",195.25,1.0,195.25,"SI"],[171,"2026-04-26","2026-04-26","PV073378","23857","V163",19.99,1.0,19.99,"SI"],[172,"2026-04-26","2026-04-26","PV073378","23857","V168",17.97,2.0,35.94,"SI"],[173,"2026-04-26","2026-04-26","PV073378","23857","V185",195.25,1.0,195.25,"SI"],[174,"2026-04-26","2026-04-26","PV073378","24775","V163",19.99,2.0,39.98,"SI"],[175,"2026-04-26","2026-04-26","PV073378","24775","V168",17.97,1.0,17.97,"SI"],[176,"2026-04-26","2026-04-26","PV073378","24775","V185",195.25,1.0,195.25,"SI"],[177,"2026-04-26","2026-04-26","PV073378","25735","V185",195.25,1.0,195.25,"SI"],[178,"2026-04-26","2026-04-26","PV073378","26390","V185",195.25,1.0,195.25,"SI"],[179,"2026-04-26","2026-04-26","PV073378","26431","V163",19.99,2.0,39.98,"SI"],[180,"2026-04-26","2026-04-26","PV073378","26431","V168",17.97,2.0,35.94,"SI"],[181,"2026-04-26","2026-04-26","PV073378","26431","V185",195.25,1.0,195.25,"SI"],[182,"2026-04-26","2026-04-26","PV073378","26780","V163",19.99,3.0,59.97,"SI"],[183,"2026-04-26","2026-04-26","PV073378","26780","V185",195.25,1.0,195.25,"SI"],[184,"2026-04-26","2026-04-26","PV073378","27391","V162",56.75,1.0,56.75,"SI"],[185,"2026-04-26","2026-04-26","PV073378","27391","V164",48.75,2.0,97.5,"SI"],[186,"2026-04-26","2026-04-26","PV073378","27391","V185",195.25,1.0,195.25,"SI"],[187,"2026-04-26","2026-04-26","PV073378","27410","V185",195.25,1.0,195.25,"SI"],[188,"2026-04-26","2026-04-26","PV073378","27854","V185",195.25,1.0,195.25,"SI"],[189,"2026-04-26","2026-04-26","PV073378","24328","V199",150.0,1.0,150.0,"SI"],[190,"2026-04-27","2026-04-27","PV073533","22140","V162",56.75,1.0,56.75,"SI"],[191,"2026-04-27","2026-04-27","PV073533","22140","V164",48.75,1.0,48.75,"SI"],[192,"2026-04-27","2026-04-27","PV073533","22140","V163",19.99,2.0,39.98,"SI"],[193,"2026-04-27","2026-04-27","PV073533","22140","V168",17.97,1.0,17.97,"SI"],[194,"2026-04-27","2026-04-27","PV073533","22140","V185",195.25,1.0,195.25,"SI"],[195,"2026-04-27","2026-04-27","PV073533","22140","V165",73.63,1.0,73.63,"SI"],[196,"2026-04-27","2026-04-27","PV073533","21254","V185",195.25,1.0,195.25,"SI"],[197,"2026-04-27","2026-04-27","PV073533","22662","V185",195.25,1.0,195.25,"SI"],[198,"2026-04-27","2026-04-27","PV073533","25662","V185",195.25,1.0,195.25,"SI"],[199,"2026-04-27","2026-04-27","PV073533","25661","V185",195.25,1.0,195.25,"SI"],[200,"2026-04-27","2026-04-27","PV073533","22681","V162",56.75,1.0,56.75,"SI"],[201,"2026-04-27","2026-04-27","PV073533","22681","V164",48.75,1.0,48.75,"SI"],[202,"2026-04-27","2026-04-27","PV073533","22681","V185",195.25,1.0,195.25,"SI"],[203,"2026-04-27","2026-04-27","PV073533","27377","V162",56.75,1.0,56.75,"SI"],[204,"2026-04-27","2026-04-27","PV073533","27377","V163",19.99,1.0,19.99,"SI"],[205,"2026-04-27","2026-04-27","PV073533","27377","V185",195.25,1.0,195.25,"SI"],[206,"2026-04-27","2026-04-27","PV073533","26196","V185",195.25,1.0,195.25,"SI"],[207,"2026-04-27","2026-04-27","PV073533","25469","V185",195.25,1.0,195.25,"SI"],[208,"2026-04-27","2026-04-27","PV073533","21846","V185",195.25,1.0,195.25,"SI"],[209,"2026-04-27","2026-04-27","PV073533","26409","V164",48.75,2.0,97.5,"SI"],[210,"2026-04-27","2026-04-27","PV073533","26409","V163",19.99,1.0,19.99,"SI"],[211,"2026-04-27","2026-04-27","PV073533","26409","V168",17.97,1.0,17.97,"SI"],[212,"2026-04-27","2026-04-27","PV073533","26409","V185",195.25,1.0,195.25,"SI"],[213,"2026-04-27","2026-04-27","PV073533","25879","V162",56.75,1.0,56.75,"SI"],[214,"2026-04-27","2026-04-27","PV073533","25879","V164",48.75,1.0,48.75,"SI"],[215,"2026-04-27","2026-04-27","PV073533","25879","V163",19.99,2.0,39.98,"SI"],[216,"2026-04-27","2026-04-27","PV073533","25879","V185",195.25,1.0,195.25,"SI"],[217,"2026-04-28","2026-04-28","PV073533","26128","V162",56.75,3.0,170.25,"SI"],[218,"2026-04-28","2026-04-28","PV073533","26128","V164",48.75,1.0,48.75,"SI"],[219,"2026-04-28","2026-04-28","PV073533","26128","V185",195.25,1.0,195.25,"SI"],[220,"2026-04-28","2026-04-28","PV073533","26872","V162",56.75,3.0,170.25,"SI"],[221,"2026-04-28","2026-04-28","PV073533","26872","V164",48.75,1.0,48.75,"SI"],[222,"2026-04-28","2026-04-28","PV073533","26872","V185",195.25,1.0,195.25,"SI"],[223,"2026-04-28","2026-04-28","PV073533","17492","V185",195.25,1.0,195.25,"SI"],[224,"2026-04-28","2026-04-28","PV073533","26923","V185",195.25,1.0,195.25,"SI"],[225,"2026-04-28","2026-04-28","PV073533","24437","V185",195.25,1.0,195.25,"SI"],[226,"2026-04-28","2026-04-28","PV073533","21454","V185",195.25,1.0,195.25,"SI"],[227,"2026-04-28","2026-04-28","PV073533","26504","V185",195.25,1.0,195.25,"SI"],[228,"2026-04-28","2026-04-28","PV073533","26589","V185",195.25,1.0,195.25,"SI"],[229,"2026-04-28","2026-04-28","PV073533","26589","V162",56.75,2.0,113.5,"SI"],[230,"2026-04-28","2026-04-28","PV073533","26589","V164",48.75,1.0,48.75,"SI"],[231,"2026-04-28","2026-04-28","PV073533","26589","V165",73.63,1.0,73.63,"SI"],[232,"2026-04-28","2026-04-28","PV073533","26405","V163",19.99,3.0,59.97,"SI"],[233,"2026-04-28","2026-04-28","PV073533","26405","V168",17.97,1.0,17.97,"SI"],[234,"2026-04-28","2026-04-28","PV073533","26405","V185",195.25,1.0,195.25,"SI"],[235,"2026-04-28","2026-04-28","PV073533","26535","V163",19.99,2.0,39.98,"SI"],[236,"2026-04-28","2026-04-28","PV073533","26535","V185",195.25,1.0,195.25,"SI"],[237,"2026-04-28","2026-04-28","PV073533","26389","V162",56.75,1.0,56.75,"SI"],[238,"2026-04-28","2026-04-28","PV073533","26389","V185",195.25,1.0,195.25,"SI"],[239,"2026-04-28","2026-04-28","PV073533","26363","V162",56.75,1.0,56.75,"SI"],[240,"2026-04-28","2026-04-28","PV073533","26363","V163",19.99,1.0,19.99,"SI"],[241,"2026-04-28","2026-04-28","PV073533","26363","V165",73.63,2.0,147.26,"SI"],[242,"2026-04-28","2026-04-28","PV073533","26363","V164",48.75,1.0,48.75,"SI"],[243,"2026-04-28","2026-04-28","PV073533","26363","V185",195.25,1.0,195.25,"SI"],[244,"2026-04-28","2026-04-28","PV073533","26366","V162",56.75,1.0,56.75,"SI"],[245,"2026-04-28","2026-04-28","PV073533","26366","V163",19.99,1.0,19.99,"SI"],[246,"2026-04-28","2026-04-28","PV073533","26366","V185",195.25,1.0,195.25,"SI"],[247,"2026-04-28","2026-04-28","PV073533","25702","V185",195.25,1.0,195.25,"SI"],[248,"2026-04-29","2026-04-29","PV073533","26414","V185",195.25,1.0,195.25,"SI"],[249,"2026-04-29","2026-04-29","PV073533","26414","V168",17.97,1.0,17.97,"SI"],[250,"2026-04-29","2026-04-29","PV073533","26414","V163",19.99,1.0,19.99,"SI"],[251,"2026-04-29","2026-04-29","PV073533","26429","V162",56.75,3.0,170.25,"SI"],[252,"2026-04-29","2026-04-29","PV073533","26429","V185",195.25,1.0,195.25,"SI"],[253,"2026-04-29","2026-04-29","PV073533","27725","V185",195.25,1.0,195.25,"SI"],[254,"2026-04-29","2026-04-29","PV073533","27697","V185",195.25,1.0,195.25,"SI"],[255,"2026-04-29","2026-04-29","PV073533","27697","V162",56.75,1.0,56.75,"SI"],[256,"2026-04-29","2026-04-29","PV073533","23912","V185",195.25,1.0,195.25,"SI"],[257,"2026-04-29","2026-04-29","PV073533","23912","V162",56.75,1.0,56.75,"SI"],[258,"2026-04-29","2026-04-29","PV073533","25695","V185",195.25,1.0,195.25,"SI"],[259,"2026-04-29","2026-04-29","PV073533","25695","V163",19.99,2.0,39.98,"SI"],[260,"2026-04-29","2026-04-29","PV073533","25185","V185",195.25,1.0,195.25,"SI"],[261,"2026-04-29","2026-04-29","PV073533","24423","V185",195.25,1.0,195.25,"SI"],[262,"2026-04-29","2026-04-29","PV073533","24423","V163",19.99,2.0,39.98,"SI"],[263,"2026-04-29","2026-04-29","PV073533","26341","V185",195.25,1.0,195.25,"SI"],[264,"2026-04-29","2026-04-29","PV073533","24314","V185",195.25,1.0,195.25,"SI"],[265,"2026-04-29","2026-04-29","PV073533","25041","V185",195.25,1.0,195.25,"SI"],[266,"2026-04-29","2026-04-29","PV073533","26437","V162",56.75,1.0,56.75,"SI"],[267,"2026-04-29","2026-04-29","PV073533","26437","V163",19.99,3.0,59.97,"SI"],[268,"2026-04-29","2026-04-29","PV073533","26437","V165",73.63,2.0,147.26,"SI"],[269,"2026-04-29","2026-04-29","PV073533","26437","V185",195.25,1.0,195.25,"SI"],[270,"2026-04-29","2026-04-29","PV073533","27813","V162",56.75,1.0,56.75,"SI"],[271,"2026-04-29","2026-04-29","PV073533","27813","V164",48.75,1.0,48.75,"SI"],[272,"2026-04-29","2026-04-29","PV073533","27813","V185",195.25,1.0,195.25,"SI"],[273,"2026-04-29","2026-04-29","PV073533","22781","V162",56.75,1.0,56.75,"SI"],[274,"2026-04-29","2026-04-29","PV073533","22781","V163",19.99,1.0,19.99,"SI"],[275,"2026-04-29","2026-04-29","PV073533","22781","V164",48.75,1.0,48.75,"SI"],[276,"2026-04-29","2026-04-29","PV073533","22781","V185",195.25,1.0,195.25,"SI"],[277,"2026-04-29","2026-04-29","PV073533","23232","V185",195.25,1.0,195.25,"SI"],[278,"2026-04-29","2026-04-29","PV073533","27239","V162",56.75,1.0,56.75,"SI"],[279,"2026-04-29","2026-04-29","PV073533","27239","V185",195.25,1.0,195.25,"SI"],[280,"2026-04-29","2026-04-29","PV073533","24476","V162",56.75,2.0,113.5,"SI"],[281,"2026-04-29","2026-04-29","PV073533","24476","V163",19.99,2.0,39.98,"SI"],[282,"2026-04-29","2026-04-29","PV073533","24476","V185",195.25,1.0,195.25,"SI"],[283,"2026-04-30","2026-04-30","PV073533","23286","V162",56.75,1.0,56.75,"SI"],[284,"2026-04-30","2026-04-30","PV073533","23286","V163",19.99,3.0,59.97,"SI"],[285,"2026-04-30","2026-04-30","PV073533","23286","V185",195.25,1.0,195.25,"SI"],[286,"2026-04-30","2026-04-30","PV073533","25392","V162",56.75,1.0,56.75,"SI"],[287,"2026-04-30","2026-04-30","PV073533","25392","V185",195.25,1.0,195.25,"SI"],[288,"2026-04-30","2026-04-30","PV073533","26688","V162",56.75,1.0,56.75,"SI"],[289,"2026-04-30","2026-04-30","PV073533","26688","V163",19.99,1.0,19.99,"SI"],[290,"2026-04-30","2026-04-30","PV073533","26688","V185",195.25,1.0,195.25,"SI"],[291,"2026-04-30","2026-04-30","PV073533","26847","V163",19.99,2.0,39.98,"SI"],[292,"2026-04-30","2026-04-30","PV073533","26847","V185",195.25,1.0,195.25,"SI"],[293,"2026-04-30","2026-04-30","PV073533","26848","V163",19.99,2.0,39.98,"SI"],[294,"2026-04-30","2026-04-30","PV073533","26848","V185",195.25,1.0,195.25,"SI"],[295,"2026-04-30","2026-04-30","PV073533","26691","V163",19.99,2.0,39.98,"SI"],[296,"2026-04-30","2026-04-30","PV073533","26691","V165",73.63,1.0,73.63,"SI"],[297,"2026-04-30","2026-04-30","PV073533","26691","V185",195.25,1.0,195.25,"SI"],[298,"2026-04-30","2026-04-30","PV073533","26157","V162",56.75,1.0,56.75,"SI"],[299,"2026-04-30","2026-04-30","PV073533","26157","V185",195.25,1.0,195.25,"SI"],[300,"2026-04-30","2026-04-30","PV073533","26164","V162",56.75,1.0,56.75,"SI"],[301,"2026-04-30","2026-04-30","PV073533","26164","V185",195.25,1.0,195.25,"SI"],[302,"2026-04-30","2026-04-30","PV073533","25298","V185",195.25,1.0,195.25,"SI"],[303,"2026-04-30","2026-04-30","PV073533","27329","V185",195.25,1.0,195.25,"SI"],[304,"2026-04-30","2026-04-30","PV073533","26161","V162",56.75,1.0,56.75,"SI"],[305,"2026-04-30","2026-04-30","PV073533","26161","V163",19.99,1.0,19.99,"SI"],[306,"2026-04-30","2026-04-30","PV073533","26161","V185",195.25,1.0,195.25,"SI"],[307,"2026-04-30","2026-04-30","PV073533","26160","V162",56.75,1.0,56.75,"SI"],[308,"2026-04-30","2026-04-30","PV073533","26160","V163",19.99,1.0,19.99,"SI"],[309,"2026-04-30","2026-04-30","PV073533","26160","V185",195.25,1.0,195.25,"SI"],[310,"2026-04-30","2026-04-30","PV073533","26155","V162",56.75,1.0,56.75,"SI"],[311,"2026-04-30","2026-04-30","PV073533","26155","V185",195.25,1.0,195.25,"SI"],[312,"2026-04-30","2026-04-30","PV073533","26159","V162",56.75,1.0,56.75,"SI"],[313,"2026-04-30","2026-04-30","PV073533","26159","V185",195.25,1.0,195.25,"SI"],[314,"2026-04-30","2026-04-30","PV073533","26555","V185",195.25,1.0,195.25,"SI"],[315,"2026-04-30","2026-04-30","PV073533","27313","V185",195.25,1.0,195.25,"SI"],[316,"2026-04-30","2026-04-30","PV073533","25508","V185",195.25,1.0,195.25,"SI"],[317,"2026-04-30","2026-04-30","PV073533","27212","V185",195.25,1.0,195.25,"SI"],[318,"2026-04-30","2026-04-30","PV073533","27214","V185",195.25,1.0,195.25,"SI"],[319,"2026-04-30","2026-04-30","PV073533","27211","V185",195.25,1.0,195.25,"SI"],[320,"2026-04-30","2026-04-30","PV073533","27215","V185",195.25,1.0,195.25,"SI"],[321,"2026-04-30","2026-04-30","PV073533","27210","V185",195.25,1.0,195.25,"SI"],[322,"2026-04-30","2026-04-30","PV073533","27369","V185",195.25,1.0,195.25,"SI"],[323,"2026-04-30","2026-04-30","PV073533","26554","V185",195.25,1.0,195.25,"SI"],[324,"2026-05-01","2026-05-01","PV073533","25393","V162",56.75,1.0,56.75,"SI"],[325,"2026-05-01","2026-05-01","PV073533","25393","V185",195.25,1.0,195.25,"SI"],[326,"2026-05-01","2026-05-01","PV073533","25394","V162",56.75,1.0,56.75,"SI"],[327,"2026-05-01","2026-05-01","PV073533","25394","V185",195.25,1.0,195.25,"SI"],[328,"2026-05-01","2026-05-01","PV073533","26686","V162",56.75,1.0,56.75,"SI"],[329,"2026-05-01","2026-05-01","PV073533","26686","V185",195.25,1.0,195.25,"SI"],[330,"2026-05-01","2026-05-01","PV073533","26154","V162",56.75,1.0,56.75,"SI"],[331,"2026-05-01","2026-05-01","PV073533","26154","V185",195.25,1.0,195.25,"SI"],[332,"2026-05-01","2026-05-01","PV073533","23564","V162",56.75,1.0,56.75,"SI"],[333,"2026-05-01","2026-05-01","PV073533","23564","V185",195.25,1.0,195.25,"SI"],[334,"2026-05-01","2026-05-01","PV073533","26153","V162",56.75,1.0,56.75,"SI"],[335,"2026-05-01","2026-05-01","PV073533","26153","V185",195.25,1.0,195.25,"SI"],[336,"2026-05-01","2026-05-01","PV073533","26037","V163",19.99,5.0,99.95,"SI"],[337,"2026-05-01","2026-05-01","PV073533","26037","V185",195.25,1.0,195.25,"SI"],[338,"2026-05-01","2026-05-01","PV073533","21881","V163",19.99,2.0,39.98,"SI"],[339,"2026-05-01","2026-05-01","PV073533","21881","V185",195.25,1.0,195.25,"SI"],[340,"2026-05-01","2026-05-01","PV073533","23892","V199",150.0,1.0,150.0,"SI"],[341,"2026-05-02","2026-05-02","PV073533","22238","V163",19.99,1.0,19.99,"SI"],[342,"2026-05-02","2026-05-02","PV073533","22238","V185",195.25,1.0,195.25,"SI"],[343,"2026-05-02","2026-05-02","PV073533","24444","V168",17.97,1.0,17.97,"SI"],[344,"2026-05-02","2026-05-02","PV073533","24444","V163",19.99,1.0,19.99,"SI"],[345,"2026-05-02","2026-05-02","PV073533","24444","V185",195.25,1.0,195.25,"SI"],[346,"2026-05-02","2026-05-02","PV073533","24615","V162",56.75,2.0,113.5,"SI"],[347,"2026-05-02","2026-05-02","PV073533","24615","V164",48.75,2.0,97.5,"SI"],[348,"2026-05-02","2026-05-02","PV073533","24615","V163",19.99,1.0,19.99,"SI"],[349,"2026-05-02","2026-05-02","PV073533","24615","V185",195.25,1.0,195.25,"SI"],[350,"2026-05-02","2026-05-02","PV073533","25055","V162",56.75,1.0,56.75,"SI"],[351,"2026-05-02","2026-05-02","PV073533","25055","V163",19.99,9.0,179.91,"SI"],[352,"2026-05-02","2026-05-02","PV073533","25055","V185",195.25,1.0,195.25,"SI"],[353,"2026-05-02","2026-05-02","PV073533","25055","V164",48.75,1.0,48.75,"SI"],[354,"2026-05-02","2026-05-02","PV073533","25055","V168",17.97,1.0,17.97,"SI"],[355,"2026-05-04","2026-05-04","PV073710","24856","V185",195.25,1.0,195.25,"NO"],[356,"2026-05-04","2026-05-04","PV073710","24856","V163",19.99,1.0,19.99,"NO"],[357,"2026-05-04","2026-05-04","PV073710","25833","V163",19.99,13.0,259.87,"NO"],[358,"2026-05-04","2026-05-04","PV073710","25833","V162",56.75,2.0,113.5,"NO"],[359,"2026-05-04","2026-05-04","PV073710","25833","V168",17.97,1.0,17.97,"NO"],[360,"2026-05-04","2026-05-04","PV073710","25833","V185",195.25,1.0,195.25,"NO"],[361,"2026-05-04","2026-05-04","PV073710","24847","V163",19.99,2.0,39.98,"NO"],[362,"2026-05-04","2026-05-04","PV073710","24847","V162",56.75,1.0,56.75,"NO"],[363,"2026-05-04","2026-05-04","PV073710","24847","V168",17.97,1.0,17.97,"NO"],[364,"2026-05-04","2026-05-04","PV073710","24847","V185",195.25,1.0,195.25,"NO"],[365,"2026-05-04","2026-05-04","PV073710","27666","V185",195.25,1.0,195.25,"NO"],[366,"2026-05-04","2026-05-04","PV073710","27666","V163",19.99,3.0,59.97,"NO"],[367,"2026-05-04","2026-05-04","PV073710","27666","V168",17.97,2.0,35.94,"NO"],[368,"2026-05-04","2026-05-04","PV073710","24846","V163",19.99,3.0,59.97,"NO"],[369,"2026-05-04","2026-05-04","PV073710","24846","V165",73.63,2.0,147.26,"NO"],[370,"2026-05-04","2026-05-04","PV073710","24846","V164",48.75,1.0,48.75,"NO"],[371,"2026-05-04","2026-05-04","PV073710","24846","V162",56.75,1.0,56.75,"NO"],[372,"2026-05-04","2026-05-04","PV073710","24846","V185",195.25,1.0,195.25,"NO"],[373,"2026-05-04","2026-05-04","PV073710","20466","V163",19.99,1.0,19.99,"NO"],[374,"2026-05-04","2026-05-04","PV073710","20466","V185",195.25,1.0,195.25,"NO"],[375,"2026-05-04","2026-05-04","PV073710","26800","V163",19.99,2.0,39.98,"NO"],[376,"2026-05-04","2026-05-04","PV073710","26800","V185",195.25,1.0,195.25,"NO"],[377,"2026-05-04","2026-05-04","PV073710","26701","V163",19.99,1.0,19.99,"NO"],[378,"2026-05-04","2026-05-04","PV073710","26701","V185",195.25,1.0,195.25,"NO"],[379,"2026-05-04","2026-05-04","PV073710","24816","V163",19.99,1.0,19.99,"NO"],[380,"2026-05-04","2026-05-04","PV073710","24816","V185",195.25,1.0,195.25,"NO"],[381,"2026-05-04","2026-05-04","PV073710","24501","V163",19.99,2.0,39.98,"NO"],[382,"2026-05-04","2026-05-04","PV073710","24501","V162",56.75,2.0,113.5,"NO"],[383,"2026-05-04","2026-05-04","PV073710","24501","V185",195.25,1.0,195.25,"NO"],[384,"2026-05-05","2026-05-05","PV073710","27386","V163",19.99,2.0,39.98,"NO"],[385,"2026-05-05","2026-05-05","PV073710","27386","V168",17.97,1.0,17.97,"NO"],[386,"2026-05-05","2026-05-05","PV073710","27386","V185",195.25,1.0,195.25,"NO"],[387,"2026-05-05","2026-05-05","PV073710","24608","V163",19.99,1.0,19.99,"NO"],[388,"2026-05-05","2026-05-05","PV073710","24608","V185",195.25,1.0,195.25,"NO"],[389,"2026-05-05","2026-05-05","PV073710","27673","V163",19.99,5.0,99.95,"NO"],[390,"2026-05-05","2026-05-05","PV073710","27673","V168",17.97,1.0,17.97,"NO"],[391,"2026-05-05","2026-05-05","PV073710","27673","V185",195.25,1.0,195.25,"NO"],[392,"2026-05-05","2026-05-05","PV073710","22674","V162",56.75,1.0,56.75,"NO"],[393,"2026-05-05","2026-05-05","PV073710","22674","V164",48.75,1.0,48.75,"NO"],[394,"2026-05-05","2026-05-05","PV073710","22674","V185",195.25,1.0,195.25,"NO"],[395,"2026-05-05","2026-05-05","PV073710","27675","V164",48.75,1.0,48.75,"NO"],[396,"2026-05-05","2026-05-05","PV073710","27675","V162",56.75,1.0,56.75,"NO"],[397,"2026-05-05","2026-05-05","PV073710","27675","V185",195.25,1.0,195.25,"NO"],[398,"2026-05-05","2026-05-05","PV073710","27028","V162",56.75,2.0,113.5,"NO"],[399,"2026-05-05","2026-05-05","PV073710","27028","V163",19.99,2.0,39.98,"NO"],[400,"2026-05-05","2026-05-05","PV073710","27028","V185",195.25,1.0,195.25,"NO"],[401,"2026-05-05","2026-05-05","PV073710","24635","V163",19.99,3.0,59.97,"NO"],[402,"2026-05-05","2026-05-05","PV073710","24635","V168",17.97,1.0,17.97,"NO"],[403,"2026-05-05","2026-05-05","PV073710","24635","V185",195.25,1.0,195.25,"NO"],[404,"2026-05-05","2026-05-05","PV073710","24661","V162",56.75,1.0,56.75,"NO"],[405,"2026-05-05","2026-05-05","PV073710","24661","V164",48.75,1.0,48.75,"NO"],[406,"2026-05-05","2026-05-05","PV073710","24661","V185",195.25,1.0,195.25,"NO"],[407,"2026-05-05","2026-05-05","PV073710","25595","V163",19.99,2.0,39.98,"NO"],[408,"2026-05-05","2026-05-05","PV073710","25595","V168",17.97,1.0,17.97,"NO"],[409,"2026-05-05","2026-05-05","PV073710","25595","V185",195.25,1.0,195.25,"NO"],[410,"2026-05-05","2026-05-05","PV073710","24596","V162",56.75,1.0,56.75,"NO"],[411,"2026-05-05","2026-05-05","PV073710","24596","V163",19.99,3.0,59.97,"NO"],[412,"2026-05-05","2026-05-05","PV073710","24596","V165",73.63,2.0,147.26,"NO"],[413,"2026-05-05","2026-05-05","PV073710","24596","V168",17.97,1.0,17.97,"NO"],[414,"2026-05-05","2026-05-05","PV073710","24596","V185",195.25,1.0,195.25,"NO"]],"codeDesc":{"V199":"Move charge - Aerial - For any poles found that cannot be completed","V162":"Transfer Aerial - Strand attachment and hardware","V168":"Transfer Aerial - pole mounted wire terminal","V185":"Remove Aerial - Poles - all types and sizes (Cannot be used with cut and kick method).","V163":"Transfer Aerial - Service wire attachment - strand or pole mount (regardless of the number of wires connected to the attachment)","V165":"Transfer Aerial - Apparatus - pole or strand mount","V115":"Place Aerial - Anchor - bust type - hand","V164":"Transfer Aerial - Guy attachment - pole or anchor mount"}}</script>
 
 <!-- ============ MAIN APP SCRIPT ============ -->
 <script>
@@ -1559,15 +1649,21 @@ function triggerFileInput() {
    ===================================================================== */
 
 // State
+const PROJECTS = ['WARREN', 'SPRING RUN', 'BALTIMORE', 'PITTSBURGH'];
+let pendingProject = null; // proyecto al que se cargará el próximo archivo
+
 let state = {
-  rawRows: [],       // [no, d_ins, d_fact, job, pole, cod, pr, q, total, fc]
+  rawRows: [],       // [no, d_ins, d_fact, job, pole, cod, pr, q, total, fc, proj, crew]
+  projects: {},      // { WARREN: { rows: [...], srcName: 'archivo.xlsx' }, ... }
+  visible: {},       // { WARREN: true } — solo los "alumbrados" se muestran
+  projectMeta: {},   // { WARREN: { asig, noEjec, rev } } — inventario POR proyecto
   codeDesc: {},
   filtered: [],
   charts: { trend: null, fc: null },
   filters: {
     dateMode: 'd_ins',
     from: '', to: '',
-    fc: '', job: '', cod: '', pole: '',
+    fc: '', job: '', cod: '', pole: '', proj: '', crew: '',
     group: 'day',
     preset: 'all',
     search: ''
@@ -1575,16 +1671,341 @@ let state = {
   source: 'demo'
 };
 
+// Reconstruye rawRows combinando SOLO los proyectos visibles (alumbrados)
+function rebuildCombined() {
+  state.rawRows = [];
+  for (const p of PROJECTS) {
+    if (state.projects[p] && state.visible[p]) state.rawRows.push(...state.projects[p].rows);
+  }
+  renderProjChips();
+  const lbl = document.getElementById('dataSourceLabel');
+  if (lbl) {
+    const on = PROJECTS.filter(p => state.projects[p] && state.visible[p]);
+    lbl.textContent = on.length
+      ? on.map(p => `${p}: ${state.projects[p].rows.length.toLocaleString('en-US')}`).join(' · ')
+      : 'SIN PROYECTOS ACTIVOS · CARGÁ O ALUMBRÁ UNO';
+  }
+}
+
+// Chips: sin datos = 📂 subir | cargado+visible = ✓ verde | cargado+apagado = ○ gris
+function renderProjChips() {
+  const wrap = document.getElementById('projChips');
+  if (!wrap) return;
+  wrap.innerHTML = PROJECTS.map(p => {
+    const hasData = !!state.projects[p];               // Excel de producción cargado
+    const hasMeta = !!state.projectMeta[p];            // planos ingresados manualmente
+    const loaded = hasData || hasMeta;
+    const on = loaded && state.visible[p];
+    let info = '';
+    if (hasData) info = state.projects[p].rows.length.toLocaleString('en-US');
+    else if (hasMeta) {
+      const t = metaTotals(normMeta(state.projectMeta[p]));
+      info = (t.asig - t.noEjec - t.rev) + ' postes';
+    }
+    const style = on
+      ? 'background: var(--tysa-green); color: white; border: none;'
+      : loaded
+        ? 'background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.55); border: 1px dashed rgba(255,255,255,0.35);'
+        : 'background: rgba(255,255,255,0.12); color: var(--bg); border: 1px solid rgba(255,255,255,0.3);';
+    const icon = on ? '✓' : loaded ? '○' : '📂';
+    const label = loaded ? `${icon} ${p} · ${info}` : `${icon} ${p}`;
+    const action = loaded ? `toggleProject('${p}')` : `pickProjectFile('${p}')`;
+    const reload = loaded ? `<button class="btn-pill" onclick="pickProjectFile('${p}')" title="Cargar/recargar Excel de ${p}" style="padding: 8px 8px; background: rgba(255,255,255,0.08); color: var(--bg); border: 1px solid rgba(255,255,255,0.2); margin-left: -4px;">↻</button>` : '';
+    return `<span style="display: inline-flex; gap: 2px;"><button class="btn-pill" onclick="${action}" style="font-weight: 700; padding: 8px 14px; ${style}">${label}</button>${reload}</span>`;
+  }).join('');
+}
+
+function toggleProject(p) {
+  state.visible[p] = !state.visible[p];
+  rebuildCombined();
+  populateFilterDropdowns();
+  refresh();
+  showToast(state.visible[p] ? `${p} activado` : `${p} apagado`);
+}
+
+function pickProjectFile(proj) {
+  pendingProject = proj;
+  showToast(`Seleccioná el Excel de ${proj}...`);
+  document.getElementById('fileInput').click();
+}
+
+
+// =================== NUBE: GOOGLE SHEETS COMPARTIDO ===================
+// Acepta el link normal del Sheet (docs.google.com/spreadsheets/d/ID/edit?gid=X)
+// o el link de "Publicar en la web". Intenta varios endpoints en orden.
+// URL por defecto del Sheet de Warren (verificado público)
+const DEFAULT_CLOUD_URLS = {
+  'WARREN': 'https://docs.google.com/spreadsheets/d/1de-ETTCpxA3G1g1lEP2_3CXCfIlCI0SHbqMXC7ewPFQ/edit?gid=617915464',
+  'BALTIMORE': 'https://docs.google.com/spreadsheets/d/1r98AOxlkkJRm4awO9HVLJyzKI6plOCgjhfonVOq3a3Y/edit'
+};
+
+function loadCloudUrls() {
+  try {
+    const raw = localStorage.getItem('tysaCloudUrls');
+    state.cloudUrls = raw ? JSON.parse(raw) : {};
+  } catch(e) { state.cloudUrls = {}; }
+  // Completar con los defaults que falten
+  for (const p in DEFAULT_CLOUD_URLS) {
+    if (!state.cloudUrls[p]) state.cloudUrls[p] = DEFAULT_CLOUD_URLS[p];
+  }
+}
+function saveCloudUrlsStore() {
+  try { localStorage.setItem('tysaCloudUrls', JSON.stringify(state.cloudUrls)); } catch(e) {}
+}
+
+function openCloudModal() {
+  const wrap = document.getElementById('cloudRows');
+  const esc = (v) => String(v || '').replace(/"/g, '&quot;');
+  wrap.innerHTML = PROJECTS.map(p => `
+    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
+      <strong>${p}</strong>
+      <input type="url" class="cloud-url" data-proj="${p}" value="${esc(state.cloudUrls && state.cloudUrls[p])}"
+        placeholder="https://docs.google.com/spreadsheets/d/.../edit?gid=..."
+        style="padding: 8px; font-size: 11px; font-family: 'JetBrains Mono', monospace;">
+    </label>`).join('');
+  openModal('cloudModal');
+}
+
+function saveCloudModal() {
+  state.cloudUrls = state.cloudUrls || {};
+  document.querySelectorAll('#cloudRows .cloud-url').forEach(inp => {
+    const p = inp.dataset.proj;
+    const v = inp.value.trim();
+    if (v) state.cloudUrls[p] = v; else delete state.cloudUrls[p];
+  });
+  saveCloudUrlsStore();
+  closeModal('cloudModal');
+  showToast(`${Object.keys(state.cloudUrls).length} link(s) de nube guardados`);
+}
+
+// Construye los endpoints CSV candidatos a partir de cualquier link de Sheets.
+// Si el link no trae gid, busca la hoja por NOMBRE ("<PROYECTO> POLE TRANSFER").
+function cloudCandidates(url, proj) {
+  const u = url.trim();
+  const out = [];
+  // ¿Es link de "Publicar en la web"? (/d/e/2PACX-... /pub)
+  if (/\/pub(html)?([?#]|$)/.test(u)) {
+    let pub = u.replace('/pubhtml', '/pub');
+    if (!/output=csv/.test(pub)) pub += (pub.includes('?') ? '&' : '?') + 'output=csv';
+    out.push(pub);
+    return out;
+  }
+  // Link normal: extraer ID y gid
+  const idM = u.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  const gidM = u.match(/[?#&]gid=(\d+)/);
+  if (idM) {
+    const id = idM[1];
+    const base = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv`;
+    if (gidM) {
+      // El link trae gid: usarlo primero
+      out.push(`${base}&gid=${gidM[1]}`);
+      out.push(`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gidM[1]}`);
+    }
+    if (proj) {
+      // Buscar la hoja por nombre: "BALTIMORE POLE TRANSFER", "WARREN POLE TRANSFER", etc.
+      out.push(`${base}&sheet=${encodeURIComponent(proj + ' POLE TRANSFER')}`);
+      out.push(`${base}&sheet=${encodeURIComponent(proj)}`);
+    }
+    if (!gidM) out.push(`${base}&gid=0`);
+  } else {
+    out.push(u); // como venga
+  }
+  return out;
+}
+
+async function fetchCloudCSV(url, proj) {
+  const candidates = cloudCandidates(url, proj);
+  let lastErr = null;
+  for (const c of candidates) {
+    try {
+      const res = await fetch(c, { cache: 'no-store' });
+      if (!res.ok) { lastErr = new Error('HTTP ' + res.status); continue; }
+      const text = await res.text();
+      if (/<html/i.test(text.slice(0, 300))) { lastErr = new Error('respuesta no-CSV'); continue; }
+      // Validar que tenga datos reales (más de solo encabezados o vacío)
+      const lines = text.trim().split('\n').filter(l => l.replace(/[",\s]/g, '').length > 0);
+      if (lines.length < 2) { lastErr = new Error('hoja vacía'); continue; }
+      return text;
+    } catch(e) { lastErr = e; }
+  }
+  throw lastErr || new Error('No se pudo leer el Sheet');
+}
+
+async function loadCloudProject(p, keepOthers) {
+  const url = state.cloudUrls && state.cloudUrls[p];
+  if (!url) { showToast(`${p}: sin link de nube (☁ Nube)`); return false; }
+  try {
+    const text = await fetchCloudCSV(url, p);
+    return await new Promise((resolve) => {
+      Papa.parse(text, {
+        header: true, skipEmptyLines: 'greedy',
+        complete: (r) => {
+          if (!r.data || r.data.length === 0) { showToast(`${p}: hoja vacía`); resolve(false); return; }
+          const prevVisible = { ...state.visible };
+          ingestParsedRows(r.data, 'Nube', p);
+          if (keepOthers) {
+            state.visible = prevVisible;
+            state.visible[p] = true;
+            rebuildCombined();
+          }
+          resolve(true);
+        },
+        error: () => { showToast(`${p}: error parseando CSV`); resolve(false); }
+      });
+    });
+  } catch(e) {
+    showToast(`${p}: ${e.message}. Si persiste, usá "Publicar en la web" (☁ Nube tiene el paso).`);
+    return false;
+  }
+}
+
+async function loadAllCloud() {
+  const configured = PROJECTS.filter(p => state.cloudUrls && state.cloudUrls[p]);
+  if (configured.length === 0) { openCloudModal(); return; }
+  showToast(`🔄 Cargando ${configured.length} proyecto(s) desde la nube...`);
+  let okCount = 0;
+  for (const p of configured) {
+    if (await loadCloudProject(p, true)) okCount++;
+  }
+  for (const p of configured) if (state.projects[p]) state.visible[p] = true;
+  rebuildCombined();
+  populateFilterDropdowns();
+  applyPreset('all');
+  showToast(`✓ ${okCount}/${configured.length} proyectos cargados desde la nube`);
+}
+
+// =================== INVENTARIO POR PLANOS (por proyecto) ===================
+// projectMeta[proyecto] = { planos: [{ name, asig, noEjec, rev }] }
+// La asignación llega por planos entregados progresivamente — el total es la suma.
+const KNOWN_META = { 'WARREN': { planos: [{ name: 'GENERAL', asig: 1450, noEjec: 761, rev: 29 }] } };
+let invEditingProj = null;
+
+// Retrocompatible: convierte formato viejo {asig,noEjec,rev} a planos
+function normMeta(m) {
+  if (!m) return null;
+  if (m.planos) return m;
+  return { planos: [{ name: 'INICIAL', asig: m.asig || 0, noEjec: m.noEjec || 0, rev: m.rev || 0 }] };
+}
+function metaTotals(m) {
+  const t = { asig: 0, noEjec: 0, rev: 0 };
+  if (!m || !m.planos) return t;
+  for (const pl of m.planos) { t.asig += pl.asig || 0; t.noEjec += pl.noEjec || 0; t.rev += pl.rev || 0; }
+  return t;
+}
+
+function loadMetaStore() {
+  try {
+    const raw = localStorage.getItem('tysaProjectMeta');
+    if (raw) {
+      const obj = JSON.parse(raw);
+      for (const k in obj) obj[k] = normMeta(obj[k]);
+      state.projectMeta = obj;
+    }
+  } catch(e) {}
+}
+function saveMetaStore() {
+  try { localStorage.setItem('tysaProjectMeta', JSON.stringify(state.projectMeta)); } catch(e) {}
+}
+
+function planRowHTML(pl) {
+  const esc = (s) => String(s || '').replace(/"/g, '&quot;');
+  return `<div class="inv-plan-row" style="display: grid; grid-template-columns: 1.3fr 1.1fr 0.9fr 0.9fr 0.9fr 32px; gap: 6px; align-items: center;">
+    <input type="text" class="pl-name" value="${esc(pl.name)}" placeholder="ej: PLANO 2" style="padding: 7px;">
+    <input type="date" class="pl-date" value="${esc(pl.date)}" style="padding: 7px; font-size: 11px;">
+    <input type="number" class="pl-asig" min="0" value="${pl.asig || ''}" placeholder="30" oninput="updateInvNet()" style="padding: 7px; text-align: right;">
+    <input type="number" class="pl-noejec" min="0" value="${pl.noEjec || ''}" placeholder="0" oninput="updateInvNet()" style="padding: 7px; text-align: right;">
+    <input type="number" class="pl-rev" min="0" value="${pl.rev || ''}" placeholder="0" oninput="updateInvNet()" style="padding: 7px; text-align: right;">
+    <button onclick="this.parentElement.remove(); updateInvNet();" title="Eliminar plano" style="border: none; background: none; cursor: pointer; color: #c0392b; font-size: 16px;">✕</button>
+  </div>`;
+}
+
+function addPlanRow(pl) {
+  const wrap = document.getElementById('invPlanRows');
+  const n = wrap.querySelectorAll('.inv-plan-row').length + 1;
+  wrap.insertAdjacentHTML('beforeend', planRowHTML(pl || { name: 'PLANO ' + n }));
+  updateInvNet();
+}
+
+function readPlanRows() {
+  return [...document.querySelectorAll('#invPlanRows .inv-plan-row')].map((row, i) => ({
+    name: row.querySelector('.pl-name').value.trim() || ('PLANO ' + (i+1)),
+    date: row.querySelector('.pl-date').value || '',
+    asig: parseInt(row.querySelector('.pl-asig').value) || 0,
+    noEjec: parseInt(row.querySelector('.pl-noejec').value) || 0,
+    rev: parseInt(row.querySelector('.pl-rev').value) || 0
+  }));
+}
+
+function openInvModal(proj) {
+  invEditingProj = proj;
+  const sel = document.getElementById('invModalProjSel');
+  if (sel) sel.value = proj;
+  const p2 = document.getElementById('invModalProj2');
+  if (p2) p2.textContent = proj;
+  const m = normMeta(state.projectMeta[proj]) || normMeta(KNOWN_META[proj]);
+  const wrap = document.getElementById('invPlanRows');
+  wrap.innerHTML = '';
+  if (m && m.planos.length) m.planos.forEach(pl => addPlanRow(pl));
+  else addPlanRow({ name: 'PLANO 1' });
+  updateInvNet();
+  openModal('invModal');
+}
+
+// Cambiar de proyecto dentro del modal (los planos son manuales, no dependen del Excel)
+function switchInvProject(proj) {
+  openInvModal(proj);
+}
+
+function updateInvNet() {
+  const planos = readPlanRows();
+  let net = 0;
+  for (const pl of planos) net += pl.asig - pl.noEjec - pl.rev;
+  const el = document.getElementById('invInNet');
+  if (el) el.textContent = net.toLocaleString('en-US') + ' postes · ' + planos.length + ' plano' + (planos.length === 1 ? '' : 's');
+}
+
+function saveInvModal() {
+  const planos = readPlanRows().filter(pl => pl.asig > 0);
+  if (planos.length === 0) { showToast('Agregá al menos un plano con postes asignados'); return; }
+  state.projectMeta[invEditingProj] = { planos };
+  saveMetaStore();
+  state.visible[invEditingProj] = true;  // el proyecto se alumbra al guardar sus planos
+  closeModal('invModal');
+  rebuildCombined();
+  populateFilterDropdowns();
+  refresh();
+  showToast(`${planos.length} plano(s) guardados para ${invEditingProj}`);
+}
+
+// Editor: siempre disponible — elegís el proyecto en el selector del modal
+function openInvEditor() {
+  const on = PROJECTS.filter(p => state.visible[p]);
+  openInvModal(on[0] || 'WARREN');
+}
+
+function clearAllProjects() {
+  state.projects = {};
+  state.visible = {};
+  rebuildCombined();
+  populateFilterDropdowns();
+  applyPreset('all');
+  showToast('Datos limpiados. Cargá los proyectos de nuevo.');
+}
+
 // Load embedded data (WARREN POLE TRANSFER)
 function loadEmbedded() {
   try {
     const raw = document.getElementById('embeddedData').textContent;
     const parsed = JSON.parse(raw);
-    state.rawRows = parsed.rows || [];
+    const rows = (parsed.rows || []).map(r => {
+      const nr = r.slice(0, 10);
+      nr[10] = 'WARREN';
+      nr[11] = 'SIN ASIGNAR';
+      return nr;
+    });
+    state.projects['WARREN'] = { rows, srcName: 'Datos embebidos' };
     state.codeDesc = parsed.codeDesc || {};
     state.source = 'embedded';
-    document.getElementById('dataSourceLabel').textContent =
-      `WARREN POLE TRANSFER · ${state.rawRows.length.toLocaleString('en-US')} registros`;
   } catch(e) {
     console.error('Error loading embedded data', e);
   }
@@ -1641,9 +2062,39 @@ function periodLabel(key, group) {
 }
 
 // =================== ROW HELPERS ===================
-const ROW = { no:0, d_ins:1, d_fact:2, job:3, pole:4, cod:5, pr:6, q:7, total:8, fc:9 };
+const ROW = { no:0, d_ins:1, d_fact:2, job:3, pole:4, cod:5, pr:6, q:7, total:8, fc:9, proj:10, crew:11 };
 
 function getDate(row) { return state.filters.dateMode === 'd_fact' ? row[ROW.d_fact] : row[ROW.d_ins]; }
+
+// =================== COMPARATIVOS PROYECTO / CUADRILLA ===================
+function renderComparisons(rows) {
+  const isPole = (p) => p && p !== 'SITE SURVEY' && !/^site\s*survey$/i.test(p);
+  const agg = (keyIdx) => {
+    const map = new Map();
+    for (const r of rows) {
+      const k = r[keyIdx] || 'SIN ASIGNAR';
+      if (!map.has(k)) map.set(k, { poles: new Set(), total: 0 });
+      const m = map.get(k);
+      if (isPole(r[ROW.pole])) m.poles.add(r[ROW.proj] + '|' + r[ROW.pole]);
+      m.total += r[ROW.total] || 0;
+    }
+    return [...map.entries()]
+      .map(([k, v]) => ({ k, poles: v.poles.size, total: v.total, avg: v.poles.size > 0 ? v.total / v.poles.size : 0 }))
+      .sort((a,b) => b.total - a.total);
+  };
+  const rowHTML = (d) => `<tr style="border-bottom: 1px solid rgba(0,0,0,0.06);">
+    <td style="padding: 6px 4px; font-weight: 700;">${d.k}</td>
+    <td style="padding: 6px 4px; text-align: right;">${fmtNum(d.poles)}</td>
+    <td style="padding: 6px 4px; text-align: right;">${fmtUSD(d.total)}</td>
+    <td style="padding: 6px 4px; text-align: right; color: var(--tysa-green); font-weight: 700;">${d.poles > 0 ? fmtUSD(d.avg) : '—'}</td>
+  </tr>`;
+  const empty = '<tr><td colspan="4" style="padding: 10px 4px; color: var(--ink-muted);">Sin datos en el período</td></tr>';
+
+  const tp = document.getElementById('tblByProject');
+  if (tp) { const d = agg(ROW.proj); tp.innerHTML = d.length ? d.map(rowHTML).join('') : empty; }
+  const tc = document.getElementById('tblByCrew');
+  if (tc) { const d = agg(ROW.crew); tc.innerHTML = d.length ? d.map(rowHTML).join('') : empty; }
+}
 
 // =================== FILTER ===================
 function applyFilters() {
@@ -1662,6 +2113,8 @@ function applyFilters() {
     if (f.job && r[ROW.job] !== f.job) return false;
     if (f.cod && r[ROW.cod] !== f.cod) return false;
     if (f.pole && r[ROW.pole] !== f.pole) return false;
+    if (f.proj && r[ROW.proj] !== f.proj) return false;
+    if (f.crew && r[ROW.crew] !== f.crew) return false;
     return true;
   });
 }
@@ -1751,30 +2204,11 @@ function renderKPIs() {
   const jobs = new Set(rows.map(r => r[ROW.job]).filter(Boolean));
   const poles = new Set(rows.map(r => r[ROW.pole]).filter(Boolean));
   // Postes intervenidos = poles únicos donde hubo trabajo real (excluyendo SITE SURVEY)
-  const interventionRows = rows.filter(r => r[ROW.pole] && r[ROW.pole] !== 'SITE SURVEY' && !/^site\s*survey$/i.test(r[ROW.pole]));
-  const polesIntervened = new Set(interventionRows.map(r => r[ROW.pole]));
-  // Total $ asociado SOLO a postes intervenidos (excluyendo SITE SURVEY) para promedio limpio por poste
-  const totalIntervention = interventionRows.reduce((s,r) => s + (r[ROW.total]||0), 0);
-  const avgPerPole = polesIntervened.size > 0 ? totalIntervention / polesIntervened.size : 0;
-  // Postes SOLO V185 (puro remove, sin códigos de transfer)
-  const poleCodeMap = new Map();
-  const poleRevMap = new Map();
-  for (const r of interventionRows) {
-    const pole = r[ROW.pole];
-    const cod = String(r[ROW.cod] || '').toUpperCase();
-    if (!cod) continue;
-    if (!poleCodeMap.has(pole)) { poleCodeMap.set(pole, new Set()); poleRevMap.set(pole, 0); }
-    poleCodeMap.get(pole).add(cod);
-    poleRevMap.set(pole, poleRevMap.get(pole) + (r[ROW.total] || 0));
-  }
-  let onlyV185Count = 0, onlyV185Revenue = 0;
-  for (const [pole, codeSet] of poleCodeMap.entries()) {
-    if (codeSet.size === 1 && codeSet.has('V185')) {
-      onlyV185Count++;
-      onlyV185Revenue += poleRevMap.get(pole) || 0;
-    }
-  }
-  const onlyV185Pct = polesIntervened.size > 0 ? (onlyV185Count / polesIntervened.size * 100).toFixed(1) + '%' : '0%';
+  const polesIntervened = new Set(
+    rows
+      .filter(r => r[ROW.pole] && r[ROW.pole] !== 'SITE SURVEY' && !/^site\s*survey$/i.test(r[ROW.pole]))
+      .map(r => r[ROW.pole])
+  );
   const codes = new Set(rows.map(r => r[ROW.cod]).filter(Boolean));
   const t = totalsByFc(rows);
 
@@ -1786,11 +2220,9 @@ function renderKPIs() {
   document.getElementById('kpiAvgItem').textContent = rows.length > 0 ? fmtUSD(total / rows.length) : '$0';
   document.getElementById('kpiJobs').textContent = jobs.size;
   document.getElementById('kpiPolesIntervened').textContent = polesIntervened.size;
-  document.getElementById('kpiAvgPole').textContent = fmtUSD(avgPerPole);
-  document.getElementById('kpiCodes').textContent = codes.size;
-  document.getElementById('kpiOnlyV185').textContent = onlyV185Count;
-  document.getElementById('kpiOnlyV185Revenue').textContent = fmtUSD(onlyV185Revenue);
-  document.getElementById('kpiOnlyV185Pct').textContent = onlyV185Pct;
+  document.getElementById('kpiAvgPole').textContent = polesIntervened.size > 0 ? fmtUSD(total / polesIntervened.size) : '$0';
+
+  renderComparisons(rows);
 
   const pct = (v) => total > 0 ? ((v/total)*100).toFixed(1) + '%' : '0%';
   document.getElementById('statSiAmt').textContent = fmtUSD(t.si);
@@ -1815,16 +2247,63 @@ function renderKPIs() {
 }
 
 function renderProjectStats(rows, polesIntervenedCount, datesSet) {
-  // Constants
-  const POSTES_ASIGNADOS = 1450;
-  const NO_EJECUTABLES = 761;
-  const REQUIEREN_REVISION = 29;
-  const POSTES_POR_EJECUTAR = POSTES_ASIGNADOS - NO_EJECUTABLES - REQUIEREN_REVISION; // 660
-  
+  // Inventario = SUMA de los proyectos alumbrados que tengan meta.
+  // Un proyecto cuenta si está alumbrado — tenga o no Excel de producción cargado.
+  const on = PROJECTS.filter(p => state.visible[p] && (state.projects[p] || state.projectMeta[p]));
+  const withMeta = on.filter(p => state.projectMeta[p]);
+  const missing = on.filter(p => !state.projectMeta[p]);
+
+  let POSTES_ASIGNADOS = 0, NO_EJECUTABLES = 0, REQUIEREN_REVISION = 0, TOTAL_PLANOS = 0;
+  for (const p of withMeta) {
+    const t = metaTotals(normMeta(state.projectMeta[p]));
+    POSTES_ASIGNADOS += t.asig;
+    NO_EJECUTABLES += t.noEjec;
+    REQUIEREN_REVISION += t.rev;
+    TOTAL_PLANOS += (normMeta(state.projectMeta[p]).planos || []).length;
+  }
+  const POSTES_POR_EJECUTAR = POSTES_ASIGNADOS - NO_EJECUTABLES - REQUIEREN_REVISION;
+
+  // Subtítulo con los proyectos activos (y aviso si falta inventario)
+  const sub = document.getElementById('statsSubtitle');
+  if (sub) {
+    sub.textContent = on.length
+      ? on.join(' + ') + ' · ' + TOTAL_PLANOS + ' plano' + (TOTAL_PLANOS === 1 ? '' : 's') + (missing.length ? ` · ⚠ Faltan planos: ${missing.join(', ')}` : '')
+      : 'Pole Transfer & Removal';
+  }
+
+  const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const has = POSTES_ASIGNADOS > 0;
+  setTxt('invAsignados', has ? POSTES_ASIGNADOS.toLocaleString('en-US') : '—');
+  setTxt('invNoEjec', has ? NO_EJECUTABLES.toLocaleString('en-US') : '—');
+  setTxt('invRevision', has ? REQUIEREN_REVISION.toLocaleString('en-US') : '—');
+  setTxt('invListo', has ? POSTES_POR_EJECUTAR.toLocaleString('en-US') : '—');
+  setTxt('polesNet', has ? POSTES_POR_EJECUTAR.toLocaleString('en-US') : '—');
+
+  // Desglose de planos por fecha de asignación (proyectos alumbrados)
+  const planList = document.getElementById('invPlanList');
+  if (planList) {
+    const items = [];
+    for (const p of withMeta) {
+      for (const pl of (normMeta(state.projectMeta[p]).planos || [])) {
+        items.push({ proj: p, ...pl });
+      }
+    }
+    // Ordenar por fecha de asignación (sin fecha al final)
+    items.sort((a,b) => (a.date || '9999') < (b.date || '9999') ? -1 : 1);
+    planList.innerHTML = items.length
+      ? `<div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: var(--ink-muted); margin-bottom: 6px;">PLANOS POR FECHA DE ASIGNACIÓN</div>` +
+        items.map(it => `
+        <div style="display: flex; justify-content: space-between; gap: 8px; font-size: 12px; padding: 4px 0; border-bottom: 1px solid rgba(0,0,0,0.05);">
+          <span style="font-weight: 700;">${it.name}${on.length > 1 ? ' <span style="font-weight: 400; color: var(--ink-muted); font-size: 10px;">' + it.proj + '</span>' : ''}</span>
+          <span style="color: var(--ink-muted);">${it.date ? fmtDate(it.date) : 'sin fecha'}</span>
+          <span style="text-align: right; white-space: nowrap;">${(it.asig||0)} asig · <span style="color: #c0392b;">${(it.noEjec||0)} no ejec</span> · <strong style="color: var(--tysa-green);">${(it.asig||0)-(it.noEjec||0)-(it.rev||0)} netos</strong></span>
+        </div>`).join('')
+      : '';
+  }
+
   // Update intervened count
   document.getElementById('polesIntervenedCount').textContent = polesIntervenedCount;
-  document.getElementById('polesNetDisplay').textContent = POSTES_POR_EJECUTAR;
-  document.getElementById('polesNet').textContent = POSTES_POR_EJECUTAR.toLocaleString('en-US');
+  document.getElementById('polesNetDisplay').textContent = has ? POSTES_POR_EJECUTAR : '—';
   
   // Calculate progress percentage
   const progressPct = POSTES_POR_EJECUTAR > 0 ? (polesIntervenedCount / POSTES_POR_EJECUTAR) * 100 : 0;
@@ -2182,6 +2661,8 @@ function renderDetail() {
       return (r[ROW.job]||'').toLowerCase().includes(search)
         || (r[ROW.pole]||'').toLowerCase().includes(search)
         || (r[ROW.cod]||'').toLowerCase().includes(search)
+        || (r[ROW.proj]||'').toLowerCase().includes(search)
+        || (r[ROW.crew]||'').toLowerCase().includes(search)
         || desc.toLowerCase().includes(search);
     });
   }
@@ -2198,6 +2679,8 @@ function renderDetail() {
       <td>${r[ROW.no]}</td>
       <td>${fmtDate(r[ROW.d_ins])}</td>
       <td>${fmtDate(r[ROW.d_fact])}</td>
+      <td style="font-size: 11px;">${r[ROW.proj] || '—'}</td>
+      <td style="font-size: 11px;">${r[ROW.crew] || '—'}</td>
       <td><strong>${r[ROW.job]}</strong></td>
       <td>${r[ROW.pole] || '—'}</td>
       <td><strong>${r[ROW.cod]}</strong></td>
@@ -2206,13 +2689,20 @@ function renderDetail() {
       <td class="right">${r[ROW.q].toFixed(2)}</td>
       <td class="right"><strong>${fmtUSD2(r[ROW.total])}</strong></td>
       <td><span class="fc-badge ${fcCls(r[ROW.fc])}">${fcLab(r[ROW.fc])}</span></td>
-    </tr>`).join('') || '<tr><td colspan="11" style="text-align: center; padding: 40px; color: var(--ink-muted);">Sin resultados</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="13" style="text-align: center; padding: 40px; color: var(--ink-muted);">Sin resultados</td></tr>';
 }
 
 function populateFilterDropdowns() {
   const jobs = [...new Set(state.rawRows.map(r => r[ROW.job]).filter(Boolean))].sort();
   const codes = [...new Set(state.rawRows.map(r => r[ROW.cod]).filter(Boolean))].sort();
   const poles = [...new Set(state.rawRows.map(r => r[ROW.pole]).filter(Boolean))].sort();
+  const projs = [...new Set(state.rawRows.map(r => r[ROW.proj]).filter(Boolean))].sort();
+  const crews = [...new Set(state.rawRows.map(r => r[ROW.crew]).filter(Boolean))].sort();
+
+  const projSel = document.getElementById('filterProj');
+  if (projSel) projSel.innerHTML = '<option value="">TODOS LOS PROYECTOS</option>' + projs.map(p => `<option value="${p}">${p}</option>`).join('');
+  const crewSel = document.getElementById('filterCrew');
+  if (crewSel) crewSel.innerHTML = '<option value="">TODAS LAS CUADRILLAS</option>' + crews.map(c => `<option value="${c}">${c}</option>`).join('');
 
   const jobSel = document.getElementById('filterJob');
   jobSel.innerHTML = '<option value="">TODOS LOS JOBS</option>' + jobs.map(j => `<option value="${j}">${j}</option>`).join('');
@@ -2277,13 +2767,29 @@ function applyPreset(preset) {
 
 // =================== REFRESH ===================
 function refresh() {
-  applyFilters();
-  renderKPIs();
-  renderCharts();
-  renderBreakdowns();
-  renderAlerts();
-  renderDetail();
-  updatePrintSummary();
+  const safe = (name, fn) => {
+    try { fn(); }
+    catch(e) {
+      console.error(`Error en ${name}:`, e);
+      showToast(`⚠ Error en ${name}: ${e.message}`);
+    }
+  };
+  safe('filtros', applyFilters);
+  safe('KPIs', renderKPIs);
+  // Estadísticas del proyecto: SIEMPRE se renderizan, aunque falle otra sección
+  safe('estadísticas', () => {
+    const rows = state.filtered;
+    const dates = new Set(rows.map(r => getDate(r)).filter(Boolean));
+    const poles = new Set(
+      rows.filter(r => r[ROW.pole] && !/^site\s*survey$/i.test(r[ROW.pole])).map(r => r[ROW.proj] + '|' + r[ROW.pole])
+    );
+    renderProjectStats(rows, poles.size, dates);
+  });
+  safe('gráficas', renderCharts);
+  safe('desgloses', renderBreakdowns);
+  safe('alertas', renderAlerts);
+  safe('detalle', renderDetail);
+  safe('resumen impresión', updatePrintSummary);
 }
 
 function updatePrintSummary() {
@@ -2307,9 +2813,9 @@ function updatePrintSummary() {
 function wireEvents() {
   document.querySelectorAll('.preset-btn').forEach(b => b.addEventListener('click', () => applyPreset(b.dataset.preset)));
 
-  ['dateFrom','dateTo','filterDateMode','filterFc','filterJob','filterCod','filterPole','filterGroup'].forEach(id => {
+  ['dateFrom','dateTo','filterDateMode','filterFc','filterJob','filterCod','filterPole','filterProj','filterCrew','filterGroup'].forEach(id => {
     document.getElementById(id).addEventListener('change', (e) => {
-      const map = { dateFrom:'from', dateTo:'to', filterDateMode:'dateMode', filterFc:'fc', filterJob:'job', filterCod:'cod', filterPole:'pole', filterGroup:'group' };
+      const map = { dateFrom:'from', dateTo:'to', filterDateMode:'dateMode', filterFc:'fc', filterJob:'job', filterCod:'cod', filterPole:'pole', filterProj:'proj', filterCrew:'crew', filterGroup:'group' };
       state.filters[map[id]] = e.target.value;
       if (id === 'dateFrom' || id === 'dateTo') {
         document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
@@ -2363,13 +2869,17 @@ function handleFileUpload(e) {
           return;
         }
         const wb = XLSX.read(buf, { type: 'array' });
-        let sheet = wb.SheetNames.find(n => /warren|pole|transfer/i.test(n)) || wb.SheetNames[0];
+        // Priorizar hoja que coincida con el proyecto seleccionado, luego pole/transfer, luego la primera
+        const projPat = pendingProject ? new RegExp(pendingProject.replace(' ', '\\s*'), 'i') : null;
+        let sheet = (projPat && wb.SheetNames.find(n => projPat.test(n)))
+          || wb.SheetNames.find(n => /pole|transfer/i.test(n))
+          || wb.SheetNames[0];
         const json = XLSX.utils.sheet_to_json(wb.Sheets[sheet], { defval: '', raw: false });
         if (json.length === 0) {
           showToast(`Hoja "${sheet}" está vacía. Probá con otro archivo o usá "Pegar datos".`);
           return;
         }
-        ingestParsedRows(json, name);
+        ingestParsedRows(json, name, pendingProject);
       } else {
         // Text route — convert ArrayBuffer to string
         const text = new TextDecoder('utf-8').decode(buf);
@@ -2383,7 +2893,7 @@ function handleFileUpload(e) {
               showToast(`Archivo vacío o sin encabezados. Probá "Pegar datos".`);
               return;
             }
-            ingestParsedRows(res.data, name);
+            ingestParsedRows(res.data, name, pendingProject);
           },
           error: (err) => showToast(`Error parseando: ${err.message}`)
         });
@@ -2423,7 +2933,7 @@ function processPastedData() {
         showToast('No se detectaron filas. Verificá que copiaste con encabezados.');
         return;
       }
-      ingestParsedRows(res.data, `Pegado (${res.data.length} filas)`);
+      ingestParsedRows(res.data, `Pegado (${res.data.length} filas)`, (document.getElementById('pasteProject')||{}).value || 'WARREN');
       closeModal('pasteModal');
       document.getElementById('pasteArea').value = '';
     },
@@ -2431,7 +2941,8 @@ function processPastedData() {
   });
 }
 
-function ingestParsedRows(arr, srcName) {
+function ingestParsedRows(arr, srcName, project) {
+  project = project || pendingProject || 'WARREN';
   if (!arr || arr.length === 0) { showToast('Archivo vacío'); return; }
   // Try to detect column names flexibly (matches common variants)
   const sample = arr[0];
@@ -2446,7 +2957,7 @@ function ingestParsedRows(arr, srcName) {
   const kNo = find('^no$', '^numero$', '^#$', '^entry$');
   const kIns = find('dia.ins', 'd.ins', 'install', 'instalaci', 'fecha.ins');
   const kFact = find('dia.fact', 'd.fact', 'fact', 'invoice');
-  const kJob = find('^job$', 'work order', 'trabajo');
+  const kJob = find('^job$', '^job', 'work order', 'trabajo');
   const kPole = find('pol.no', 'pole', 'poste');
   const kCod = find('^cod', 'codigo', 'code', 'unit');
   const kPr = find('^pr$', 'price', 'precio', 'rate', 'tarifa', 'unit.*price');
@@ -2454,6 +2965,7 @@ function ingestParsedRows(arr, srcName) {
   const kTot = find('total', 'amount', 'monto', 'valor');
   const kDesc = find('descrip', 'desc');
   const kFc = find('^fc$', 'facturado', 'invoiced', 'billed', 'estado');
+  const kCrew = find('cuadrilla', '^crew', 'squad', 'equipo');
 
   const fixDate = (s) => {
     if (!s) return '';
@@ -2519,6 +3031,8 @@ function ingestParsedRows(arr, srcName) {
       total = pr * q;
     }
 
+    const crew = String(kCrew ? r[kCrew] || '' : '').trim().toUpperCase() || 'SIN ASIGNAR';
+
     rows.push([
       String(kNo ? r[kNo] || '' : ''),
       fixDate(kIns ? r[kIns] : ''),
@@ -2529,13 +3043,26 @@ function ingestParsedRows(arr, srcName) {
       pr,
       q,
       total,
-      fc
+      fc,
+      project,
+      crew
     ]);
   }
-  state.rawRows = rows;
+  state.projects[project] = { rows, srcName };
+  // Alumbrar SOLO el proyecto recién cargado; los demás se apagan (se encienden con click)
+  for (const p of PROJECTS) state.visible[p] = (p === project);
+  // Inventario: si no tenemos los números de ESTE proyecto, preguntarlos (no asumir los de Warren)
+  if (!state.projectMeta[project]) {
+    if (KNOWN_META[project]) {
+      state.projectMeta[project] = JSON.parse(JSON.stringify(KNOWN_META[project]));
+      saveMetaStore();
+    } else {
+      setTimeout(() => openInvModal(project), 400);
+    }
+  }
   state.codeDesc = newDesc;
   state.source = 'upload';
-  document.getElementById('dataSourceLabel').textContent = `${srcName.toUpperCase()} · ${rows.length.toLocaleString('en-US')} filas`;
+  rebuildCombined();
   populateFilterDropdowns();
   applyPreset('all');
   showToast(`Cargadas ${rows.length} filas desde ${srcName}`);
@@ -2622,221 +3149,6 @@ async function loadWarrenSheet() {
   }
 }
 
-// =================== WARREN LIVE · ONE-CLICK GOOGLE DRIVE LOAD ===================
-const WARREN_LIVE_ID = '1de-ETTCpxA3G1g1lEP2_3CXCfIlCI0SHbqMXC7ewPFQ';
-const WARREN_LIVE_SHEET = 'WARREN POLE TRANSFER'; // Solo se lee esta pestaña · las demás se ignoran
-const WARREN_LIVE_GID = '617915464'; // GID exacto de la pestaña WARREN POLE TRANSFER · permite carga directa por gid
-const WARREN_LIVE_VIEW_URL = `https://docs.google.com/spreadsheets/d/${WARREN_LIVE_ID}/edit`;
-
-// Estado de sincronización: timestamp de la última carga exitosa desde el Sheet
-let lastSyncTime = null;
-
-// Actualiza el indicador de sincronización (verde = ok, amarillo = cargando, rojo = error)
-function updateSyncStatus(state, detail) {
-  const dot = document.getElementById('syncDot');
-  const text = document.getElementById('syncText');
-  if (!dot || !text) return;
-
-  if (state === 'syncing') {
-    dot.style.background = 'var(--warn)';
-    dot.style.animation = 'pulse 1.5s infinite';
-    text.textContent = 'Sincronizando...';
-  } else if (state === 'synced') {
-    lastSyncTime = Date.now();
-    dot.style.background = 'var(--tysa-lime)';
-    dot.style.animation = '';
-    text.textContent = '✓ Sincronizado · ahora';
-  } else if (state === 'offline') {
-    dot.style.background = 'var(--danger)';
-    dot.style.animation = '';
-    text.textContent = `⚠ Sin conexión${detail ? ' · ' + detail : ''}`;
-  }
-}
-
-// Refresca el texto "hace X seg/min" cada 30 segundos
-function refreshSyncTimer() {
-  const text = document.getElementById('syncText');
-  if (!text || !lastSyncTime) return;
-  const sec = Math.floor((Date.now() - lastSyncTime) / 1000);
-  let timeStr;
-  if (sec < 10) timeStr = 'ahora';
-  else if (sec < 60) timeStr = `hace ${sec} seg`;
-  else if (sec < 3600) timeStr = `hace ${Math.floor(sec/60)} min`;
-  else timeStr = `hace ${Math.floor(sec/3600)} h`;
-  text.textContent = `✓ Sincronizado · ${timeStr}`;
-}
-setInterval(refreshSyncTimer, 30000);
-
-async function loadWarrenLive(silent) {
-  if (!silent) showToast('⚡ Conectando con Google Sheets...');
-  updateSyncStatus('syncing');
-
-  // Sheet nativo + gviz CSV con nombre de hoja explícito → CORS OK, sin proxy
-  const sheetParam = encodeURIComponent(WARREN_LIVE_SHEET);
-
-  // Validador: confirma que un CSV tiene el header de WARREN POLE TRANSFER
-  // (descarta si export?format=csv trae otra pestaña por error)
-  const isWarrenSheetCsv = (text) => {
-    if (!text || text.length < 50 || text.trim().startsWith('<') || !text.includes(',')) return false;
-    const firstLine = text.split('\n')[0].toLowerCase();
-    return firstLine.includes('pol') && firstLine.includes('cod') && firstLine.includes('total');
-  };
-
-  // ---- Estrategia 1: export?format=csv&gid=GID (LA MÁS CONFIABLE — apunta directo a la pestaña por GID) ----
-  // Este endpoint resuelve TODOS los problemas: targeting de pestaña exacta, sin truncamiento, sin auto-detect.
-  try {
-    const csvGidUrl = `https://docs.google.com/spreadsheets/d/${WARREN_LIVE_ID}/export?format=csv&gid=${WARREN_LIVE_GID}`;
-    const res = await fetch(csvGidUrl, { redirect: 'follow' });
-    if (res.ok) {
-      const text = await res.text();
-      if (isWarrenSheetCsv(text)) {
-        await parseCsvAndIngest(text, `Live · gid=${WARREN_LIVE_GID}`, silent);
-        updateSyncStatus('synced');
-        return;
-      }
-    }
-  } catch(e) { /* sigue al siguiente */ }
-
-  // ---- Estrategia 2: gviz CSV con nombre de hoja + rango forzado (LEE SOLO WARREN POLE TRANSFER) ----
-  // Garantiza leer solo la pestaña correcta, sin importar qué otras pestañas tenga el Sheet.
-  try {
-    const csvUrl = `https://docs.google.com/spreadsheets/d/${WARREN_LIVE_ID}/gviz/tq?tqx=out:csv&sheet=${sheetParam}&range=A:L&headers=1`;
-    const res = await fetch(csvUrl, { redirect: 'follow' });
-    if (res.ok) {
-      const text = await res.text();
-      if (isWarrenSheetCsv(text)) {
-        await parseCsvAndIngest(text, `Live · ${WARREN_LIVE_SHEET}`, silent);
-        updateSyncStatus('synced');
-        return;
-      }
-    }
-  } catch(e) { /* sigue al siguiente */ }
-
-  // ---- Estrategia 2: gviz CSV con nombre de hoja, sin rango forzado ----
-  try {
-    const csvUrl = `https://docs.google.com/spreadsheets/d/${WARREN_LIVE_ID}/gviz/tq?tqx=out:csv&sheet=${sheetParam}`;
-    const res = await fetch(csvUrl, { redirect: 'follow' });
-    if (res.ok) {
-      const text = await res.text();
-      if (isWarrenSheetCsv(text)) {
-        await parseCsvAndIngest(text, `Live · ${WARREN_LIVE_SHEET}`, silent);
-        updateSyncStatus('synced');
-        return;
-      }
-    }
-  } catch(e) { /* sigue al siguiente */ }
-
-  // ---- Estrategia 3: export?format=csv (con validación · descarta si trae otra pestaña) ----
-  try {
-    const csvExportUrl = `https://docs.google.com/spreadsheets/d/${WARREN_LIVE_ID}/export?format=csv`;
-    const res = await fetch(csvExportUrl, { redirect: 'follow' });
-    if (res.ok) {
-      const text = await res.text();
-      if (isWarrenSheetCsv(text)) {
-        await parseCsvAndIngest(text, 'Live · CSV completo', silent);
-        updateSyncStatus('synced');
-        return;
-      }
-    }
-  } catch(e) { /* sigue al siguiente */ }
-
-  // ---- Estrategia 4: gviz CSV sin nombre de hoja (último intento) ----
-  try {
-    const csvUrl = `https://docs.google.com/spreadsheets/d/${WARREN_LIVE_ID}/gviz/tq?tqx=out:csv`;
-    const res = await fetch(csvUrl, { redirect: 'follow' });
-    if (res.ok) {
-      const text = await res.text();
-      if (isWarrenSheetCsv(text)) {
-        await parseCsvAndIngest(text, 'Live · CSV directo', silent);
-        updateSyncStatus('synced');
-        return;
-      }
-    }
-  } catch(e) { /* sigue al siguiente */ }
-
-  // ---- Estrategia 4: proxy CORS sobre el XLSX export (último recurso) ----
-  if (!silent) showToast('⚡ Probando vía proxy...');
-  try {
-    const xlsxUrl = `https://docs.google.com/spreadsheets/d/${WARREN_LIVE_ID}/export?format=xlsx`;
-    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(xlsxUrl)}`;
-    const res = await fetch(proxyUrl);
-    if (!res.ok) throw new Error(`Proxy HTTP ${res.status}`);
-    const buf = await res.arrayBuffer();
-    const head = new Uint8Array(buf.slice(0, 4));
-    if (head[0] !== 0x50 || head[1] !== 0x4B) {
-      throw new Error('Drive no devolvió un XLSX válido · revisa permisos de compartir');
-    }
-    if (typeof XLSX === 'undefined') throw new Error('Librería XLSX no cargó');
-    const wb = XLSX.read(buf, { type: 'array' });
-    const sheet = wb.SheetNames.find(n => /warren|pole|transfer/i.test(n)) || wb.SheetNames[0];
-    const json = XLSX.utils.sheet_to_json(wb.Sheets[sheet], { defval: '', raw: false });
-    if (!json || json.length === 0) throw new Error(`Hoja "${sheet}" vacía`);
-    ingestParsedRows(json, `Live · ${json.length} filas · ${new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})}`);
-    if (!silent) showToast(`✓ ${json.length} filas vía proxy (hoja: ${sheet})`);
-    updateSyncStatus('synced');
-    return;
-  } catch(err) {
-    console.error('Warren Live · todas las estrategias fallaron:', err);
-    updateSyncStatus('offline', 'datos embebidos');
-    // Solo mostrar el modal grande de error si fue una llamada manual (no silent)
-    if (!silent) showLiveLoadError(err.message);
-  }
-}
-
-// Helper compartido para parsear CSV e inyectar
-function parseCsvAndIngest(csv, sourceLabel, silent) {
-  return new Promise((resolve) => {
-    Papa.parse(csv, {
-      header: true,
-      skipEmptyLines: 'greedy',
-      complete: (r) => {
-        if (r.data && r.data.length > 0) {
-          // ingestParsedRows ya agrega "· N filas" al label, no lo duplicamos acá
-          ingestParsedRows(r.data, sourceLabel);
-          if (!silent) showToast(`✓ ${r.data.length} filas cargadas (${sourceLabel})`);
-        } else {
-          if (!silent) showToast('⚠ Respuesta vacía del Sheet');
-        }
-        resolve();
-      },
-      error: (e) => { if (!silent) showToast(`Error parseando CSV: ${e.message}`); resolve(); }
-    });
-  });
-}
-
-// Mensaje claro de error con instrucciones cuando TODO falla
-function showLiveLoadError(detail) {
-  const helpMsg = document.createElement('div');
-  helpMsg.style.cssText = `
-    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
-    background: var(--tysa-darkest); color: var(--tysa-lime);
-    border: 2px solid var(--tysa-lime);
-    padding: 22px 28px; max-width: 620px; z-index: 1000;
-    font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; line-height: 1.55;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  `;
-  helpMsg.innerHTML = `
-    <div style="font-family:'Anton',sans-serif; font-size: 18px; letter-spacing: 0.05em; margin-bottom: 12px;">
-      ⚠ NO SE PUDO CARGAR EL ARCHIVO
-    </div>
-    <div style="font-size: 11px; color: rgba(255,255,255,0.65); margin-bottom: 14px; font-family:'JetBrains Mono',monospace;">${detail}</div>
-    <div style="margin-bottom: 8px; color: rgba(255,255,255,0.9);"><strong>Solución más rápida (1 vez):</strong> convertí el XLSX a Google Sheet nativo</div>
-    <ol style="margin: 8px 0 14px 22px; color: rgba(255,255,255,0.85); font-size: 12.5px;">
-      <li>Abrí el archivo en Drive</li>
-      <li>Menú: <strong>Archivo → Guardar como Hoja de cálculo de Google</strong></li>
-      <li>Compartí el nuevo Sheet: <strong>"Cualquiera con el enlace · Lector"</strong></li>
-      <li>Pasame la URL del nuevo Sheet y actualizo el botón</li>
-    </ol>
-    <div style="border-top: 1px solid rgba(255,255,255,0.15); padding-top: 12px; margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
-      <a href="${WARREN_LIVE_VIEW_URL}" target="_blank" style="background: var(--tysa-lime); color: var(--tysa-darkest); padding: 6px 14px; text-decoration: none; font-weight: 700; font-size: 11px; letter-spacing: 0.1em;">ABRIR ARCHIVO EN DRIVE ↗</a>
-      <button onclick="document.getElementById('fileInput').click(); this.parentElement.parentElement.remove();" style="background: transparent; border: 1px solid var(--tysa-lime); color: var(--tysa-lime); padding: 6px 14px; cursor: pointer; font-size: 11px; letter-spacing: 0.1em;">📂 SUBIR MANUAL</button>
-      <button onclick="this.parentElement.parentElement.remove()" style="margin-left: auto; background: transparent; border: 1px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.7); padding: 6px 14px; cursor: pointer; font-size: 11px;">CERRAR</button>
-    </div>
-  `;
-  document.body.appendChild(helpMsg);
-  setTimeout(() => { if (helpMsg.parentElement) helpMsg.remove(); }, 18000);
-}
-
 // =================== GOOGLE SHEETS URL LOAD ===================
 async function loadFromUrl() {
   const url = document.getElementById('urlInput').value.trim();
@@ -2868,9 +3180,11 @@ async function loadFromUrl() {
 
 function loadDemoData() {
   loadEmbedded();
+  state.visible['WARREN'] = true;
+  rebuildCombined();
   populateFilterDropdowns();
   applyPreset('all');
-  showToast('Datos Warren recargados');
+  showToast('Datos Warren (embebidos) recargados');
 }
 
 // =================== EXPORT CSV ===================
@@ -3024,10 +3338,23 @@ function applyStandaloneMode() {
 }
 
 // =================== INIT ===================
+window.addEventListener('error', (e) => {
+  try { showToast('⚠ ERROR: ' + (e.message || 'desconocido')); } catch(_) {}
+});
+
 function init() {
-  loadEmbedded();
+  loadMetaStore();
+  loadCloudUrls();
+  rebuildCombined();  // arranca vacío — cargá cada proyecto con su botón
   populateFilterDropdowns();
   wireEvents();
+
+  // AUTO-CARGA: al abrir la página, intentar cargar los proyectos con URL de nube
+  if (!window.__TYSA_STANDALONE__) {
+    const lbl = document.getElementById('dataSourceLabel');
+    if (lbl) lbl.textContent = '🔄 CARGANDO DESDE LA NUBE...';
+    setTimeout(() => { loadAllCloud(); }, 300);
+  }
 
   if (window.__TYSA_STANDALONE__) {
     applyStandaloneMode();
@@ -3035,17 +3362,13 @@ function init() {
     document.getElementById('filterJob').value = state.filters.job || '';
     document.getElementById('filterCod').value = state.filters.cod || '';
     document.getElementById('filterPole').value = state.filters.pole || '';
+    const pSel = document.getElementById('filterProj'); if (pSel) pSel.value = state.filters.proj || '';
+    const cSel = document.getElementById('filterCrew'); if (cSel) cSel.value = state.filters.crew || '';
     // Set preset button state
     document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === state.filters.preset));
     refresh();
-    // Snapshot mode: ocultar el indicador de sync (no aplica)
-    const syncEl = document.getElementById('syncStatus');
-    if (syncEl) syncEl.style.display = 'none';
   } else {
     applyPreset('all');
-    // Auto-sync con el Sheet en background (silencioso · cae a embedded si falla)
-    // Pequeño delay para dejar que la UI termine de pintar primero
-    setTimeout(() => loadWarrenLive(true), 300);
   }
 }
 
