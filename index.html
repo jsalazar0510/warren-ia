@@ -1079,9 +1079,9 @@ function triggerFileInput() {
         <label class="filter-label">Proyecto</label>
         <select id="filterProj"><option value="">TODOS LOS PROYECTOS</option></select>
       </div>
-      <div class="filter-cell">
+      <div class="filter-cell" style="grid-column: span 2;">
         <label class="filter-label">Cuadrilla</label>
-        <select id="filterCrew"><option value="">TODAS LAS CUADRILLAS</option></select>
+        <div id="filterCrewPills" style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding-top: 4px;"></div>
       </div>
       <div class="filter-cell">
         <label class="filter-label">Estado FC</label>
@@ -1160,8 +1160,8 @@ function triggerFileInput() {
       </div>
     </div>
 
-    <!-- COMPARATIVO POR PROYECTO Y CUADRILLA -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;" class="compare-grid">
+    <!-- COMPARATIVO POR PROYECTO -->
+    <div style="margin-top: 16px;" class="compare-grid">
       <div class="stats-card" style="padding: 16px;">
         <div class="stats-card-title">POR PROYECTO</div>
         <table style="width:100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 12px;">
@@ -1176,22 +1176,38 @@ function triggerFileInput() {
           <tbody id="tblByProject"></tbody>
         </table>
       </div>
-      <div class="stats-card" style="padding: 16px;">
-        <div class="stats-card-title">POR CUADRILLA</div>
-        <table style="width:100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 12px;">
-          <thead>
-            <tr style="border-bottom: 1px solid var(--line, rgba(0,0,0,0.15)); text-align: left;">
-              <th style="padding: 6px 4px;">CUADRILLA</th>
-              <th style="padding: 6px 4px; text-align: right;">POSTES</th>
-              <th style="padding: 6px 4px; text-align: right;">TOTAL</th>
-              <th style="padding: 6px 4px; text-align: right;">$/POSTE</th>
-            </tr>
-          </thead>
-          <tbody id="tblByCrew"></tbody>
-        </table>
-      </div>
     </div>
-    <style>@media (max-width: 800px) { .compare-grid { grid-template-columns: 1fr !important; } }</style>
+
+    <!-- RENDIMIENTO POR CUADRILLA -->
+    <div class="alert-card" style="margin: 22px 0 0; background: #FFFDF5; border: 2px solid var(--tysa-green); border-left-width: 6px; padding: 22px; box-shadow: 0 2px 0 0 #051A11;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+        <div>
+          <h3 style="font-family: 'Anton', sans-serif; font-size: 22px; letter-spacing: 0.04em; color: var(--tysa-green); margin: 0;">RENDIMIENTO POR CUADRILLA</h3>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5C6B62; margin-top: 4px;">Productividad, valor generado y proyectos por cuadrilla (respeta los filtros activos) · ordenado por postes/día</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #5C6B62; letter-spacing: 0.15em;">CUADRILLAS ACTIVAS</div>
+          <div style="font-family: 'Anton', sans-serif; font-size: 32px; color: var(--tysa-green); line-height: 1;" id="crewCount">0</div>
+        </div>
+      </div>
+      <table class="data-tbl">
+        <thead>
+          <tr>
+            <th>Cuadrilla</th>
+            <th class="right">Días Trabajados</th>
+            <th class="right">Postes</th>
+            <th class="right">Postes/Día</th>
+            <th class="right">Actividades</th>
+            <th class="right">Total Facturado</th>
+            <th class="right">$/Poste</th>
+            <th>Proyectos</th>
+          </tr>
+        </thead>
+        <tbody id="crewPerfBody"></tbody>
+        <tfoot id="crewPerfFoot"></tfoot>
+      </table>
+    </div>
+
 
     <!-- PROJECT STATS - Postes -->
     <div class="project-stats-section">
@@ -1561,6 +1577,7 @@ function triggerFileInput() {
           <option value="SPRING RUN">SPRING RUN</option>
           <option value="BALTIMORE">BALTIMORE</option>
           <option value="PITTSBURGH">PITTSBURGH</option>
+          <option value="PHILY">PHILY</option>
         </select>
       </h3>
       <button class="modal-close" onclick="closeModal('invModal')">×</button>
@@ -1615,6 +1632,7 @@ function triggerFileInput() {
           <option value="SPRING RUN">SPRING RUN</option>
           <option value="BALTIMORE">BALTIMORE</option>
           <option value="PITTSBURGH">PITTSBURGH</option>
+          <option value="PHILY">PHILY</option>
         </select>
       </div>
       <textarea id="pasteArea" placeholder="Tocá aquí y pegá los datos copiados de Google Sheets..." style="
@@ -1654,7 +1672,7 @@ function triggerFileInput() {
    ===================================================================== */
 
 // State
-const PROJECTS = ['WARREN', 'SPRING RUN', 'BALTIMORE', 'PITTSBURGH'];
+const PROJECTS = ['WARREN', 'SPRING RUN', 'BALTIMORE', 'PITTSBURGH', 'PHILY'];
 let pendingProject = null; // proyecto al que se cargará el próximo archivo
 
 let state = {
@@ -1739,7 +1757,7 @@ function pickProjectFile(proj) {
 // el diagnóstico confirmó que el navegador los bloquea (CORS) de forma consistente.
 // Apps Script evita ese bloqueo porque responde con las cabeceras correctas.
 // URL por defecto — se usa solo si el navegador no tiene ninguna guardada todavía
-const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvxZ8UQN1THGiIlJX7APunoNA55zeCXinjy8KXnXKve5fGQWejYm2c_0u8EEfia8ok/exec';
+const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrPaUNKdiJXQnGjQN6MxaMnpQYK-M6Z4hdAyYcoWuMT_D3Wor_Wi99MWGubdpx8HsO/exec';
 
 function loadAppsScriptUrl() {
   try { state.appsScriptUrl = localStorage.getItem('tysaAppsScriptUrl') || DEFAULT_APPS_SCRIPT_URL; }
@@ -2040,8 +2058,73 @@ function renderComparisons(rows) {
 
   const tp = document.getElementById('tblByProject');
   if (tp) { const d = agg(ROW.proj); tp.innerHTML = d.length ? d.map(rowHTML).join('') : empty; }
-  const tc = document.getElementById('tblByCrew');
-  if (tc) { const d = agg(ROW.crew); tc.innerHTML = d.length ? d.map(rowHTML).join('') : empty; }
+}
+
+// =================== RENDIMIENTO POR CUADRILLA ===================
+function renderCrewPerformance(rows) {
+  const isPole = (p) => p && !/^site\s*survey$/i.test(p);
+  const map = new Map();
+  for (const r of rows) {
+    const crew = r[ROW.crew] || 'SIN ASIGNAR';
+    if (!map.has(crew)) map.set(crew, { poles: new Set(), total: 0, items: 0, dates: new Set(), projects: new Set() });
+    const m = map.get(crew);
+    if (isPole(r[ROW.pole])) m.poles.add(r[ROW.proj] + '|' + r[ROW.pole]);
+    m.total += r[ROW.total] || 0;
+    m.items++;
+    const d = getDate(r);
+    if (d) m.dates.add(d);
+    if (r[ROW.proj]) m.projects.add(r[ROW.proj]);
+  }
+
+  const data = [...map.entries()].map(([crew, m]) => {
+    const days = m.dates.size;
+    const poles = m.poles.size;
+    return {
+      crew, days, poles, items: m.items, total: m.total,
+      polesPerDay: days > 0 ? poles / days : 0,
+      perPole: poles > 0 ? m.total / poles : 0,
+      projects: [...m.projects].sort().join(', ') || '—'
+    };
+  }).sort((a, b) => b.polesPerDay - a.polesPerDay); // mejor productividad primero
+
+  document.getElementById('crewCount').textContent = data.length;
+
+  const body = document.getElementById('crewPerfBody');
+  const foot = document.getElementById('crewPerfFoot');
+  if (!body) return;
+
+  if (data.length === 0) {
+    body.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: #5C6B62; font-family: 'JetBrains Mono', monospace;">Sin datos en el período seleccionado</td></tr>`;
+    foot.innerHTML = '';
+    return;
+  }
+
+  body.innerHTML = data.map((d, i) => `
+    <tr${i === 0 ? ' style="background:#EFF7EC;"' : ''}>
+      <td><strong>${i === 0 ? '🏆 ' : ''}${d.crew}</strong></td>
+      <td class="right">${d.days}</td>
+      <td class="right">${d.poles}</td>
+      <td class="right" style="color: var(--tysa-green); font-weight: 700;">${d.polesPerDay.toFixed(1)}</td>
+      <td class="right">${d.items}</td>
+      <td class="right"><strong>${fmtUSD(d.total)}</strong></td>
+      <td class="right">${d.poles > 0 ? fmtUSD(d.perPole) : '—'}</td>
+      <td style="font-size: 11px;">${d.projects}</td>
+    </tr>`).join('');
+
+  const totalDays = new Set(rows.map(r => getDate(r)).filter(Boolean)).size;
+  const totalPoles = data.reduce((s, d) => s + d.poles, 0);
+  const totalValue = data.reduce((s, d) => s + d.total, 0);
+  const totalItems = data.reduce((s, d) => s + d.items, 0);
+  foot.innerHTML = `<tr style="background:#EFF7EC;">
+    <td style="font-weight:700;">TOTAL · ${data.length} CUADRILLAS</td>
+    <td class="right" style="font-weight:700;">${totalDays}</td>
+    <td class="right" style="font-weight:700;">${totalPoles}</td>
+    <td class="right" style="font-weight:700;">${totalDays > 0 ? (totalPoles/totalDays).toFixed(1) : '0'}</td>
+    <td class="right" style="font-weight:700;">${totalItems}</td>
+    <td class="right" style="font-weight:700;">${fmtUSD(totalValue)}</td>
+    <td class="right" style="font-weight:700;">${totalPoles > 0 ? fmtUSD(totalValue/totalPoles) : '—'}</td>
+    <td></td>
+  </tr>`;
 }
 
 // =================== FILTER ===================
@@ -2171,6 +2254,7 @@ function renderKPIs() {
   document.getElementById('kpiAvgPole').textContent = polesIntervened.size > 0 ? fmtUSD(total / polesIntervened.size) : '$0';
 
   renderComparisons(rows);
+  renderCrewPerformance(rows);
 
   const pct = (v) => total > 0 ? ((v/total)*100).toFixed(1) + '%' : '0%';
   document.getElementById('statSiAmt').textContent = fmtUSD(t.si);
@@ -2612,6 +2696,24 @@ function renderDetail() {
     </tr>`).join('') || '<tr><td colspan="13" style="text-align: center; padding: 40px; color: var(--ink-muted);">Sin resultados</td></tr>';
 }
 
+// Pills clickeables de cuadrilla (en vez de un <select> escondido)
+function renderCrewPills(crews) {
+  const wrap = document.getElementById('filterCrewPills');
+  if (!wrap) return;
+  const current = state.filters.crew || '';
+  const pillStyle = (active) => `padding: 7px 14px; border-radius: 999px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; cursor: pointer; border: 1px solid ${active ? 'var(--tysa-green)' : 'rgba(0,0,0,0.2)'}; background: ${active ? 'var(--tysa-green)' : 'white'}; color: ${active ? 'white' : 'var(--ink)'};`;
+  const all = `<button type="button" onclick="selectCrewPill('')" style="${pillStyle(current === '')}">TODAS</button>`;
+  const items = crews.map(c => `<button type="button" onclick="selectCrewPill('${c.replace(/'/g, "\\'")}')" style="${pillStyle(current === c)}">${c}</button>`).join('');
+  wrap.innerHTML = all + items;
+}
+
+function selectCrewPill(crew) {
+  state.filters.crew = crew;
+  const crews = [...new Set(state.rawRows.map(r => r[ROW.crew]).filter(Boolean))].sort();
+  renderCrewPills(crews);
+  refresh();
+}
+
 function populateFilterDropdowns() {
   const jobs = [...new Set(state.rawRows.map(r => r[ROW.job]).filter(Boolean))].sort();
   const codes = [...new Set(state.rawRows.map(r => r[ROW.cod]).filter(Boolean))].sort();
@@ -2621,8 +2723,7 @@ function populateFilterDropdowns() {
 
   const projSel = document.getElementById('filterProj');
   if (projSel) projSel.innerHTML = '<option value="">TODOS LOS PROYECTOS</option>' + projs.map(p => `<option value="${p}">${p}</option>`).join('');
-  const crewSel = document.getElementById('filterCrew');
-  if (crewSel) crewSel.innerHTML = '<option value="">TODAS LAS CUADRILLAS</option>' + crews.map(c => `<option value="${c}">${c}</option>`).join('');
+  renderCrewPills(crews);
 
   const jobSel = document.getElementById('filterJob');
   jobSel.innerHTML = '<option value="">TODOS LOS JOBS</option>' + jobs.map(j => `<option value="${j}">${j}</option>`).join('');
@@ -2733,7 +2834,7 @@ function updatePrintSummary() {
 function wireEvents() {
   document.querySelectorAll('.preset-btn').forEach(b => b.addEventListener('click', () => applyPreset(b.dataset.preset)));
 
-  ['dateFrom','dateTo','filterDateMode','filterFc','filterJob','filterCod','filterPole','filterProj','filterCrew','filterGroup'].forEach(id => {
+  ['dateFrom','dateTo','filterDateMode','filterFc','filterJob','filterCod','filterPole','filterProj','filterGroup'].forEach(id => {
     document.getElementById(id).addEventListener('change', (e) => {
       const map = { dateFrom:'from', dateTo:'to', filterDateMode:'dateMode', filterFc:'fc', filterJob:'job', filterCod:'cod', filterPole:'pole', filterProj:'proj', filterCrew:'crew', filterGroup:'group' };
       state.filters[map[id]] = e.target.value;
@@ -3282,7 +3383,7 @@ function init() {
     document.getElementById('filterCod').value = state.filters.cod || '';
     document.getElementById('filterPole').value = state.filters.pole || '';
     const pSel = document.getElementById('filterProj'); if (pSel) pSel.value = state.filters.proj || '';
-    const cSel = document.getElementById('filterCrew'); if (cSel) cSel.value = state.filters.crew || '';
+    renderCrewPills([...new Set(state.rawRows.map(r => r[ROW.crew]).filter(Boolean))].sort());
     // Set preset button state
     document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === state.filters.preset));
     refresh();
