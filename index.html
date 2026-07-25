@@ -1010,15 +1010,18 @@
 <!-- ============ DATA SOURCE BAR ============ -->
 <div class="data-bar">
   <span class="label">Proyectos:</span>
-  <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm,.csv,.tsv,.txt" style="display:none">
+  <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm,.csv,.tsv,.txt" style="position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;">
   <div id="projChips" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;"></div>
+
+  <span class="label" style="color: rgba(255,255,255,0.3); margin: 0 4px;">·</span>
+
+  <button class="btn-pill ghost" onclick="openPasteModal()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">📋 Pegar</button>
+  <button class="btn-pill ghost" onclick="clearAllProjects()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">🗑 Limpiar</button>
 
   <span class="label" style="color: rgba(255,255,255,0.3); margin: 0 4px;">·</span>
 
   <button class="btn-pill ghost" onclick="openCloudModal()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">☁ Nube</button>
   <button class="btn-pill ghost" onclick="loadAllCloud()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">🔄 Cargar Nube</button>
-  <button class="btn-pill ghost" onclick="openPasteModal()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">📋 Pegar</button>
-  <button class="btn-pill ghost" onclick="clearAllProjects()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">🗑 Limpiar</button>
 
   <div class="data-status">
     <span class="stat-pip" id="dataSourceLabel">SIN PROYECTOS ACTIVOS · CARGÁ UNO</span>
@@ -1392,37 +1395,36 @@ function triggerFileInput() {
     </div>
   </div>
 
-  <!-- 09 · ALERTAS · POSTES SIN V185 -->
-  <div class="alert-card" style="margin: 22px; background: #FFFDF5; border: 2px solid #DC2626; border-left-width: 6px; padding: 22px; box-shadow: 0 2px 0 0 #051A11;">
+  <!-- 09 · PRODUCCIÓN DIARIA -->
+  <div class="alert-card" style="margin: 22px; background: #FFFDF5; border: 2px solid var(--tysa-green); border-left-width: 6px; padding: 22px; box-shadow: 0 2px 0 0 #051A11;">
     <div style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
       <div>
-        <h3 style="font-family: 'Anton', sans-serif; font-size: 22px; letter-spacing: 0.04em; color: #DC2626; margin: 0;">⚠ 09 · ALERTAS · POSTES SIN V185</h3>
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5C6B62; margin-top: 4px;">Postes con códigos de trabajo (excl. V199) pero sin V185 (Remove Aerial Pole) — posible trabajo incompleto</div>
+        <h3 style="font-family: 'Anton', sans-serif; font-size: 22px; letter-spacing: 0.04em; color: var(--tysa-green); margin: 0;">09 · PRODUCCIÓN DIARIA</h3>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5C6B62; margin-top: 4px;">Postes intervenidos, valor facturado y actividades por día (respeta los filtros activos)</div>
       </div>
       <div style="display: flex; gap: 16px; align-items: center;">
         <div style="text-align: right;">
-          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #5C6B62; letter-spacing: 0.15em;">POSTES</div>
-          <div style="font-family: 'Anton', sans-serif; font-size: 32px; color: #DC2626; line-height: 1;" id="alertCount">0</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #5C6B62; letter-spacing: 0.15em;">DÍAS</div>
+          <div style="font-family: 'Anton', sans-serif; font-size: 32px; color: var(--tysa-green); line-height: 1;" id="dailyDaysCount">0</div>
         </div>
         <div style="text-align: right;">
-          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #5C6B62; letter-spacing: 0.15em;">USD AFECTADO</div>
-          <div style="font-family: 'Anton', sans-serif; font-size: 32px; color: #051A11; line-height: 1;" id="alertTotal">$0</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #5C6B62; letter-spacing: 0.15em;">PROM. POSTES/DÍA</div>
+          <div style="font-family: 'Anton', sans-serif; font-size: 32px; color: #051A11; line-height: 1;" id="dailyAvgPoles">0</div>
         </div>
       </div>
     </div>
     <table class="data-tbl">
       <thead>
         <tr>
-          <th>Job</th>
-          <th>Pole No</th>
-          <th>Códigos presentes</th>
-          <th class="right">Items</th>
-          <th class="right">Total $</th>
-          <th>FC</th>
+          <th>Fecha</th>
+          <th class="right">Postes</th>
+          <th class="right">Valor Diario</th>
+          <th class="right">Actividades</th>
+          <th class="right">$/Poste</th>
         </tr>
       </thead>
-      <tbody id="alertBody"></tbody>
-      <tfoot id="alertFoot"></tfoot>
+      <tbody id="dailyBody"></tbody>
+      <tfoot id="dailyFoot"></tfoot>
     </table>
   </div>
 
@@ -1528,21 +1530,24 @@ function triggerFileInput() {
   </div>
 </div>
 
-<!-- ============ MODAL: PASTE DATA ============ -->
+
 <div class="modal-overlay" id="cloudModal">
-  <div class="modal" style="max-width: 640px;">
+  <div class="modal" style="max-width: 560px;">
     <div class="modal-head">
-      <h3 style="margin: 0;">☁ DATOS EN LA NUBE · GOOGLE SHEETS</h3>
+      <h3 style="margin: 0;">☁ DATOS EN LA NUBE · APPS SCRIPT</h3>
       <button class="modal-close" onclick="closeModal('cloudModal')">×</button>
     </div>
     <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
-      <div style="font-size: 12px; color: var(--ink-muted); line-height: 1.6; background: rgba(0,0,0,0.04); padding: 10px 12px; border-radius: 8px;">
-        <strong>Pegá el link del Google Sheet de cada proyecto</strong> (el mismo de la barra del navegador, con la hoja abierta).<br>
-        Requisito: el Sheet debe estar compartido como <strong>"Cualquier persona con el enlace → Lector"</strong>.<br>
-        Si Google bloquea la lectura directa, usá <strong>Archivo → Compartir → Publicar en la web → CSV</strong> y pegá ese link — la app acepta los dos.
+      <div style="font-size: 12px; line-height: 1.6; background: rgba(178,230,123,0.15); border: 1px solid var(--tysa-green); padding: 10px 12px; border-radius: 8px;">
+        Pegá acá la URL de tu Apps Script (termina en <code>/exec</code>). Un mismo link sirve para los 4 proyectos.<br>
+        El dashboard va a intentar cargar los datos <strong>solo al abrirlo desde su link real de GitHub Pages</strong> (no funciona con doble click desde tu computador).
       </div>
-      <div id="cloudRows" style="display: flex; flex-direction: column; gap: 10px;"></div>
-      <button class="btn-pill" onclick="saveCloudModal()" style="background: var(--tysa-green); color: white; font-weight: 700; padding: 10px;">GUARDAR URLS</button>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
+        <strong>URL de Apps Script</strong>
+        <input type="url" id="appsScriptUrlInput" placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+          style="padding: 8px; font-size: 11px; font-family: 'JetBrains Mono', monospace;">
+      </label>
+      <button class="btn-pill" onclick="saveCloudModal()" style="background: var(--tysa-green); color: white; font-weight: 700; padding: 10px;">GUARDAR</button>
     </div>
   </div>
 </div>
@@ -1729,124 +1734,63 @@ function pickProjectFile(proj) {
   document.getElementById('fileInput').click();
 }
 
+// =================== NUBE: SOLO VÍA APPS SCRIPT ===================
+// Los links directos a Sheets (gviz/export/publicar-en-la-web) están descartados:
+// el diagnóstico confirmó que el navegador los bloquea (CORS) de forma consistente.
+// Apps Script evita ese bloqueo porque responde con las cabeceras correctas.
+// URL por defecto — se usa solo si el navegador no tiene ninguna guardada todavía
+const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvxZ8UQN1THGiIlJX7APunoNA55zeCXinjy8KXnXKve5fGQWejYm2c_0u8EEfia8ok/exec';
 
-// =================== NUBE: GOOGLE SHEETS COMPARTIDO ===================
-// Acepta el link normal del Sheet (docs.google.com/spreadsheets/d/ID/edit?gid=X)
-// o el link de "Publicar en la web". Intenta varios endpoints en orden.
-// URL por defecto del Sheet de Warren (verificado público)
-const DEFAULT_CLOUD_URLS = {
-  'WARREN': 'https://docs.google.com/spreadsheets/d/1de-ETTCpxA3G1g1lEP2_3CXCfIlCI0SHbqMXC7ewPFQ/edit?gid=617915464',
-  'BALTIMORE': 'https://docs.google.com/spreadsheets/d/1r98AOxlkkJRm4awO9HVLJyzKI6plOCgjhfonVOq3a3Y/edit'
-};
-
-function loadCloudUrls() {
-  try {
-    const raw = localStorage.getItem('tysaCloudUrls');
-    state.cloudUrls = raw ? JSON.parse(raw) : {};
-  } catch(e) { state.cloudUrls = {}; }
-  // Completar con los defaults que falten
-  for (const p in DEFAULT_CLOUD_URLS) {
-    if (!state.cloudUrls[p]) state.cloudUrls[p] = DEFAULT_CLOUD_URLS[p];
-  }
+function loadAppsScriptUrl() {
+  try { state.appsScriptUrl = localStorage.getItem('tysaAppsScriptUrl') || DEFAULT_APPS_SCRIPT_URL; }
+  catch(e) { state.appsScriptUrl = DEFAULT_APPS_SCRIPT_URL; }
 }
-function saveCloudUrlsStore() {
-  try { localStorage.setItem('tysaCloudUrls', JSON.stringify(state.cloudUrls)); } catch(e) {}
+function saveAppsScriptUrl() {
+  try { localStorage.setItem('tysaAppsScriptUrl', state.appsScriptUrl || ''); } catch(e) {}
 }
 
 function openCloudModal() {
-  const wrap = document.getElementById('cloudRows');
-  const esc = (v) => String(v || '').replace(/"/g, '&quot;');
-  wrap.innerHTML = PROJECTS.map(p => `
-    <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
-      <strong>${p}</strong>
-      <input type="url" class="cloud-url" data-proj="${p}" value="${esc(state.cloudUrls && state.cloudUrls[p])}"
-        placeholder="https://docs.google.com/spreadsheets/d/.../edit?gid=..."
-        style="padding: 8px; font-size: 11px; font-family: 'JetBrains Mono', monospace;">
-    </label>`).join('');
+  const asInput = document.getElementById('appsScriptUrlInput');
+  if (asInput) asInput.value = state.appsScriptUrl || '';
   openModal('cloudModal');
 }
 
 function saveCloudModal() {
-  state.cloudUrls = state.cloudUrls || {};
-  document.querySelectorAll('#cloudRows .cloud-url').forEach(inp => {
-    const p = inp.dataset.proj;
-    const v = inp.value.trim();
-    if (v) state.cloudUrls[p] = v; else delete state.cloudUrls[p];
-  });
-  saveCloudUrlsStore();
+  const asInput = document.getElementById('appsScriptUrlInput');
+  state.appsScriptUrl = asInput ? asInput.value.trim() : '';
+  saveAppsScriptUrl();
   closeModal('cloudModal');
-  showToast(`${Object.keys(state.cloudUrls).length} link(s) de nube guardados`);
+  showToast(state.appsScriptUrl ? '✓ Guardado — usá "🔄 Cargar Nube"' : 'URL borrada');
 }
 
-// Construye los endpoints CSV candidatos a partir de cualquier link de Sheets.
-// Si el link no trae gid, busca la hoja por NOMBRE ("<PROYECTO> POLE TRANSFER").
-function cloudCandidates(url, proj) {
-  const u = url.trim();
-  const out = [];
-  // ¿Es link de "Publicar en la web"? (/d/e/2PACX-... /pub)
-  if (/\/pub(html)?([?#]|$)/.test(u)) {
-    let pub = u.replace('/pubhtml', '/pub');
-    if (!/output=csv/.test(pub)) pub += (pub.includes('?') ? '&' : '?') + 'output=csv';
-    out.push(pub);
-    return out;
-  }
-  // Link normal: extraer ID y gid
-  const idM = u.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
-  const gidM = u.match(/[?#&]gid=(\d+)/);
-  if (idM) {
-    const id = idM[1];
-    const base = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv`;
-    if (gidM) {
-      // El link trae gid: usarlo primero
-      out.push(`${base}&gid=${gidM[1]}`);
-      out.push(`https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gidM[1]}`);
-    }
-    if (proj) {
-      // Buscar la hoja por nombre: "BALTIMORE POLE TRANSFER", "WARREN POLE TRANSFER", etc.
-      out.push(`${base}&sheet=${encodeURIComponent(proj + ' POLE TRANSFER')}`);
-      out.push(`${base}&sheet=${encodeURIComponent(proj)}`);
-    }
-    if (!gidM) out.push(`${base}&gid=0`);
-  } else {
-    out.push(u); // como venga
-  }
-  return out;
-}
-
-async function fetchCloudCSV(url, proj) {
-  const candidates = cloudCandidates(url, proj);
-  let lastErr = null;
-  for (const c of candidates) {
-    try {
-      const res = await fetch(c, { cache: 'no-store' });
-      if (!res.ok) { lastErr = new Error('HTTP ' + res.status); continue; }
-      const text = await res.text();
-      if (/<html/i.test(text.slice(0, 300))) { lastErr = new Error('respuesta no-CSV'); continue; }
-      // Validar que tenga datos reales (más de solo encabezados o vacío)
-      const lines = text.trim().split('\n').filter(l => l.replace(/[",\s]/g, '').length > 0);
-      if (lines.length < 2) { lastErr = new Error('hoja vacía'); continue; }
-      return text;
-    } catch(e) { lastErr = e; }
-  }
-  throw lastErr || new Error('No se pudo leer el Sheet');
-}
-
-async function loadCloudProject(p, keepOthers) {
-  const url = state.cloudUrls && state.cloudUrls[p];
-  if (!url) { showToast(`${p}: sin link de nube (☁ Nube)`); return false; }
+async function loadCloudProject(p) {
+  if (!state.appsScriptUrl) return false;
+  const base = state.appsScriptUrl.trim();
+  const url = base + (base.includes('?') ? '&' : '?') + 'proj=' + encodeURIComponent(p);
   try {
-    const text = await fetchCloudCSV(url, p);
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) { showToast(`${p}: HTTP ${res.status}`); return false; }
+    const text = await res.text();
+    if (/^ERROR:/.test(text.trim())) { showToast(`${p}: ${text.trim()}`); return false; }
+    if (/accounts\.google\.com|sign in|iniciar sesión|<!DOCTYPE html/i.test(text.slice(0, 400))) {
+      showToast(`${p}: el Apps Script devolvió una página de Google, no datos. Revisá que el deploy sea "Cualquier persona".`);
+      return false;
+    }
     return await new Promise((resolve) => {
       Papa.parse(text, {
         header: true, skipEmptyLines: 'greedy',
         complete: (r) => {
-          if (!r.data || r.data.length === 0) { showToast(`${p}: hoja vacía`); resolve(false); return; }
-          const prevVisible = { ...state.visible };
+          if (!r.data || r.data.length === 0) { resolve(false); return; }
+          const prevProject = state.projects[p];
           ingestParsedRows(r.data, 'Nube', p);
-          if (keepOthers) {
-            state.visible = prevVisible;
-            state.visible[p] = true;
-            rebuildCombined();
+          const gotRows = (state.projects[p] && state.projects[p].rows) || [];
+          const gotTotal = gotRows.reduce((s, row) => s + (row[ROW.total] || 0), 0);
+          const gotJobsOrPoles = gotRows.some(row => row[ROW.job] || row[ROW.pole]);
+          if (gotRows.length === 0 || (gotTotal === 0 && !gotJobsOrPoles)) {
+            state.projects[p] = prevProject;
+            showToast(`⚠ ${p}: conectó pero sin datos reconocibles`);
+            resolve(false);
+            return;
           }
           resolve(true);
         },
@@ -1854,24 +1798,25 @@ async function loadCloudProject(p, keepOthers) {
       });
     });
   } catch(e) {
-    showToast(`${p}: ${e.message}. Si persiste, usá "Publicar en la web" (☁ Nube tiene el paso).`);
+    showToast(`🚫 ${p}: bloqueo de conexión (${e.message}). Asegurate de estar en la página real de GitHub, no en un archivo local.`);
     return false;
   }
 }
 
-async function loadAllCloud() {
-  const configured = PROJECTS.filter(p => state.cloudUrls && state.cloudUrls[p]);
-  if (configured.length === 0) { openCloudModal(); return; }
-  showToast(`🔄 Cargando ${configured.length} proyecto(s) desde la nube...`);
-  let okCount = 0;
-  for (const p of configured) {
-    if (await loadCloudProject(p, true)) okCount++;
+async function loadAllCloud(auto) {
+  if (!state.appsScriptUrl) { if (!auto) openCloudModal(); return; }
+  if (!auto) showToast('🔄 Cargando desde la nube...');
+  const okList = [];
+  for (const p of PROJECTS) {
+    if (await loadCloudProject(p)) okList.push(p);
   }
-  for (const p of configured) if (state.projects[p]) state.visible[p] = true;
+  // ingestParsedRows apaga los demás proyectos cada vez que carga uno (modo "solo este");
+  // acá queremos ver TODOS los que llegaron bien de la nube al mismo tiempo.
+  for (const p of okList) state.visible[p] = true;
   rebuildCombined();
   populateFilterDropdowns();
   applyPreset('all');
-  showToast(`✓ ${okCount}/${configured.length} proyectos cargados desde la nube`);
+  if (okList.length > 0 || !auto) showToast(`✓ ${okList.length}/${PROJECTS.length} proyectos cargados desde la nube`);
 }
 
 // =================== INVENTARIO POR PLANOS (por proyecto) ===================
@@ -2576,80 +2521,52 @@ function renderBreakdowns() {
 }
 
 // =================== ALERTS: POSTES SIN V185 ===================
-function findPolesWithoutV185(rows) {
-  // Agrupar por (job + pole) y recolectar todos los códigos
+function renderDailyProduction() {
+  const rows = state.filtered;
+  const isPole = (p) => p && !/^site\s*survey$/i.test(p);
+
+  // Agrupar por fecha (respeta el modo de fecha activo: instalación o facturación)
   const map = new Map();
   for (const r of rows) {
-    const pole = r[ROW.pole];
-    const job = r[ROW.job];
-    if (!pole || /^site\s*survey$/i.test(pole)) continue;
-    const key = job + '||' + pole;
-    if (!map.has(key)) {
-      map.set(key, {
-        job: job,
-        pole: pole,
-        codes: new Set(),
-        items: 0,
-        total: 0,
-        fc: new Set()
-      });
-    }
-    const entry = map.get(key);
-    entry.codes.add(r[ROW.cod]);
-    entry.items++;
-    entry.total += r[ROW.total] || 0;
-    if (r[ROW.fc]) entry.fc.add(r[ROW.fc]);
+    const d = getDate(r);
+    if (!d) continue;
+    if (!map.has(d)) map.set(d, { poles: new Set(), total: 0, items: 0 });
+    const e = map.get(d);
+    if (isPole(r[ROW.pole])) e.poles.add(r[ROW.proj] + '|' + r[ROW.pole]);
+    e.total += r[ROW.total] || 0;
+    e.items++;
   }
-  // Filtrar: postes con al menos un código (excluyendo V199) pero SIN V185
-  // V199 es "Move charge - poles that cannot be completed", no cuenta como trabajo real
-  const alerts = [];
-  for (const entry of map.values()) {
-    // Códigos relevantes = todos menos V199
-    const relevantCodes = [...entry.codes].filter(c => c !== 'V199');
-    if (!entry.codes.has('V185') && relevantCodes.length > 0) {
-      alerts.push({
-        job: entry.job,
-        pole: entry.pole,
-        codes: relevantCodes.sort(),
-        items: entry.items,
-        total: entry.total,
-        fc: [...entry.fc].sort().join(', ') || '—'
-      });
-    }
-  }
-  alerts.sort((a, b) => b.total - a.total);
-  return alerts;
-}
 
-function renderAlerts() {
-  const alerts = findPolesWithoutV185(state.filtered);
-  const totalAffected = alerts.reduce((s, a) => s + a.total, 0);
-  const totalItems = alerts.reduce((s, a) => s + a.items, 0);
+  const days = [...map.entries()].sort((a, b) => a[0] < b[0] ? 1 : -1); // más reciente primero
 
-  document.getElementById('alertCount').textContent = alerts.length;
-  document.getElementById('alertTotal').textContent = fmtUSD(totalAffected);
+  document.getElementById('dailyDaysCount').textContent = days.length;
+  const totalPoles = days.reduce((s, [, e]) => s + e.poles.size, 0);
+  const totalValue = days.reduce((s, [, e]) => s + e.total, 0);
+  const totalItems = days.reduce((s, [, e]) => s + e.items, 0);
+  document.getElementById('dailyAvgPoles').textContent = days.length > 0 ? (totalPoles / days.length).toFixed(1) : '0';
 
-  if (alerts.length === 0) {
-    document.getElementById('alertBody').innerHTML = `
-      <tr><td colspan="6" style="text-align: center; padding: 30px; color: #16A34A; font-family: 'JetBrains Mono', monospace;">
-        ✓ Todos los postes intervenidos tienen V185. Sin alertas.
+  if (days.length === 0) {
+    document.getElementById('dailyBody').innerHTML = `
+      <tr><td colspan="5" style="text-align: center; padding: 30px; color: #5C6B62; font-family: 'JetBrains Mono', monospace;">
+        Sin datos en el período seleccionado
       </td></tr>`;
-    document.getElementById('alertFoot').innerHTML = '';
+    document.getElementById('dailyFoot').innerHTML = '';
     return;
   }
 
-  document.getElementById('alertBody').innerHTML = alerts.map(a => `
-    <tr>
-      <td>${a.job}</td>
-      <td><strong>${a.pole}</strong></td>
-      <td style="font-family: 'JetBrains Mono', monospace; font-size: 11px;">${a.codes.map(c => `<span style="display:inline-block; padding:2px 6px; margin:1px; background:#FEF3C7; color:#92400E; border:1px solid #D97706; font-weight:700;">${c}</span>`).join('')}</td>
-      <td class="right">${a.items}</td>
-      <td class="right"><strong>${fmtUSD(a.total)}</strong></td>
-      <td><span style="display:inline-block; padding:2px 8px; background:${a.fc.includes('SI') ? '#16A34A' : '#D97706'}; color:white; font-family:'JetBrains Mono', monospace; font-size:10px; font-weight:700;">${a.fc}</span></td>
-    </tr>`).join('');
+  document.getElementById('dailyBody').innerHTML = days.map(([d, e]) => {
+    const perPole = e.poles.size > 0 ? e.total / e.poles.size : 0;
+    return `<tr>
+      <td><strong>${fmtDate(d)}</strong></td>
+      <td class="right">${e.poles.size}</td>
+      <td class="right"><strong>${fmtUSD(e.total)}</strong></td>
+      <td class="right">${e.items}</td>
+      <td class="right" style="color: var(--tysa-green); font-weight: 700;">${e.poles.size > 0 ? fmtUSD(perPole) : '—'}</td>
+    </tr>`;
+  }).join('');
 
-  document.getElementById('alertFoot').innerHTML =
-    `<tr style="background:#FEE2E2;"><td colspan="3" style="font-weight:700; color:#DC2626;">⚠ TOTAL ${alerts.length} POSTES SIN V185</td><td class="right">${totalItems}</td><td class="right" style="font-weight:700; color:#DC2626;">${fmtUSD(totalAffected)}</td><td></td></tr>`;
+  document.getElementById('dailyFoot').innerHTML =
+    `<tr style="background:#EFF7EC;"><td style="font-weight:700;">TOTAL · ${days.length} DÍAS</td><td class="right" style="font-weight:700;">${totalPoles}</td><td class="right" style="font-weight:700;">${fmtUSD(totalValue)}</td><td class="right" style="font-weight:700;">${totalItems}</td><td class="right" style="font-weight:700;">${totalPoles > 0 ? fmtUSD(totalValue/totalPoles) : '—'}</td></tr>`;
 }
 
 function renderDetail() {
@@ -2787,7 +2704,7 @@ function refresh() {
   });
   safe('gráficas', renderCharts);
   safe('desgloses', renderBreakdowns);
-  safe('alertas', renderAlerts);
+  safe('producción diaria', renderDailyProduction);
   safe('detalle', renderDetail);
   safe('resumen impresión', updatePrintSummary);
 }
@@ -3344,16 +3261,15 @@ window.addEventListener('error', (e) => {
 
 function init() {
   loadMetaStore();
-  loadCloudUrls();
-  rebuildCombined();  // arranca vacío — cargá cada proyecto con su botón
+  loadAppsScriptUrl();
+  rebuildCombined();  // arranca vacío — cargá cada proyecto con su botón "📂"
   populateFilterDropdowns();
   wireEvents();
 
-  // AUTO-CARGA: al abrir la página, intentar cargar los proyectos con URL de nube
-  if (!window.__TYSA_STANDALONE__) {
-    const lbl = document.getElementById('dataSourceLabel');
-    if (lbl) lbl.textContent = '🔄 CARGANDO DESDE LA NUBE...';
-    setTimeout(() => { loadAllCloud(); }, 300);
+  // Auto-carga silenciosa: solo dispara si ya hay una URL de Apps Script guardada
+  // (si no está configurada, no hace nada — no molesta al que sube Excel a mano)
+  if (!window.__TYSA_STANDALONE__ && state.appsScriptUrl) {
+    setTimeout(() => { loadAllCloud(true); }, 300);
   }
 
   if (window.__TYSA_STANDALONE__) {
