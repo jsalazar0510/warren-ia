@@ -1764,23 +1764,22 @@ function saveCloudModal() {
 }
 
 async function loadCloudProject(p) {
-  if (!state.appsScriptUrl) return false;
+  if (!state.appsScriptUrl) return { ok: false, msg: 'sin URL configurada' };
   const base = state.appsScriptUrl.trim();
   const url = base + (base.includes('?') ? '&' : '?') + 'proj=' + encodeURIComponent(p);
   try {
     const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) { showToast(`${p}: HTTP ${res.status}`); return false; }
+    if (!res.ok) return { ok: false, msg: `HTTP ${res.status}` };
     const text = await res.text();
-    if (/^ERROR:/.test(text.trim())) { showToast(`${p}: ${text.trim()}`); return false; }
+    if (/^ERROR:/.test(text.trim())) return { ok: false, msg: text.trim().slice(0, 80) };
     if (/accounts\.google\.com|sign in|iniciar sesión|<!DOCTYPE html/i.test(text.slice(0, 400))) {
-      showToast(`${p}: el Apps Script devolvió una página de Google, no datos. Revisá que el deploy sea "Cualquier persona".`);
-      return false;
+      return { ok: false, msg: 'devolvió página de Google (deploy no público)' };
     }
     return await new Promise((resolve) => {
       Papa.parse(text, {
         header: true, skipEmptyLines: 'greedy',
         complete: (r) => {
-          if (!r.data || r.data.length === 0) { resolve(false); return; }
+          if (!r.data || r.data.length === 0) { resolve({ ok: false, msg: 'CSV vacío' }); return; }
           const prevProject = state.projects[p];
           ingestParsedRows(r.data, 'Nube', p);
           const gotRows = (state.projects[p] && state.projects[p].rows) || [];
@@ -1788,18 +1787,16 @@ async function loadCloudProject(p) {
           const gotJobsOrPoles = gotRows.some(row => row[ROW.job] || row[ROW.pole]);
           if (gotRows.length === 0 || (gotTotal === 0 && !gotJobsOrPoles)) {
             state.projects[p] = prevProject;
-            showToast(`⚠ ${p}: conectó pero sin datos reconocibles`);
-            resolve(false);
+            resolve({ ok: false, msg: 'sin columnas reconocibles' });
             return;
           }
-          resolve(true);
+          resolve({ ok: true, msg: `${gotRows.length} filas` });
         },
-        error: () => { showToast(`${p}: error parseando CSV`); resolve(false); }
+        error: () => resolve({ ok: false, msg: 'error parseando CSV' })
       });
     });
   } catch(e) {
-    showToast(`🚫 ${p}: bloqueo de conexión (${e.message}). Asegurate de estar en la página real de GitHub, no en un archivo local.`);
-    return false;
+    return { ok: false, msg: `bloqueo de conexión (${e.message})` };
   }
 }
 
@@ -1807,8 +1804,11 @@ async function loadAllCloud(auto) {
   if (!state.appsScriptUrl) { if (!auto) openCloudModal(); return; }
   if (!auto) showToast('🔄 Cargando desde la nube...');
   const okList = [];
+  const results = [];
   for (const p of PROJECTS) {
-    if (await loadCloudProject(p)) okList.push(p);
+    const r = await loadCloudProject(p);
+    results.push(`${p}: ${r.ok ? '✓ ' + r.msg : '✗ ' + r.msg}`);
+    if (r.ok) okList.push(p);
   }
   // ingestParsedRows apaga los demás proyectos cada vez que carga uno (modo "solo este");
   // acá queremos ver TODOS los que llegaron bien de la nube al mismo tiempo.
@@ -1816,7 +1816,10 @@ async function loadAllCloud(auto) {
   rebuildCombined();
   populateFilterDropdowns();
   applyPreset('all');
-  if (okList.length > 0 || !auto) showToast(`✓ ${okList.length}/${PROJECTS.length} proyectos cargados desde la nube`);
+  // Resultado FIJO en pantalla (no un aviso pasajero) para poder revisarlo con calma
+  const lbl = document.getElementById('dataSourceLabel');
+  if (lbl) lbl.textContent = `NUBE (${new Date().toLocaleTimeString('es-CO')}): ` + results.join(' · ');
+  if (!auto) showToast(`✓ ${okList.length}/${PROJECTS.length} proyectos cargados desde la nube`);
 }
 
 // =================== INVENTARIO POR PLANOS (por proyecto) ===================
