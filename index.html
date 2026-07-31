@@ -1,0 +1,3751 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#051A11">
+<title>TYSA · Lambert's Pole Transfer · Operations Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #FAF7EE;
+    --bg-alt: #F2EDD9;
+    --bg-card: #FFFDF5;
+    --ink: #0A1410;
+    --ink-soft: #2D3A33;
+    --ink-muted: #5C6B62;
+    --ink-faint: #8A9089;
+    --line: #0A1410;
+    --line-soft: #B8B099;
+    --line-faint: #E5DEC4;
+    /* Paleta oficial TYSA Brandbook */
+    --tysa-green: #19B269;        /* Crayola Green - Pantone 3405 C */
+    --tysa-deep: #123329;         /* Phthalo Green - Pantone 627 C */
+    --tysa-darkest: #0A1F18;      /* Phthalo Green más oscuro */
+    --tysa-lime: #B2E67B;         /* Crayola Yellow-Green - Pantone 366 C */
+    --tysa-acid: #B2E67B;         /* alias */
+    --tysa-mint: #DFF4E0;         /* Chinese White - Pantone 656 C */
+    --success: #19B269;
+    --danger: #DC2626;
+    --warn: #D97706;
+    --warn-bg: #FED7AA;
+    --paper-shadow: 0 1px 0 rgba(18,51,41,0.08), 0 4px 16px rgba(18,51,41,0.05);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  body {
+    background-image:
+      radial-gradient(circle at 20% 0%, rgba(22,163,74,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 80% 100%, rgba(132,204,22,0.05) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  /* PWA standalone mode: respect iPhone safe area (notch + home indicator) */
+  html.pwa-standalone body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .display { font-family: 'Anton', sans-serif; letter-spacing: 0.02em; text-transform: uppercase; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-feature-settings: 'tnum' 1; }
+  .num { font-family: 'JetBrains Mono', monospace; font-feature-settings: 'tnum' 1; font-variant-numeric: tabular-nums; }
+
+  /* ============ HEADER ============ */
+  header.brand {
+    background: var(--tysa-darkest);
+    color: var(--bg);
+    border-bottom: 2px solid var(--ink);
+    position: sticky; top: 0; z-index: 50;
+    padding: 14px 22px;
+    display: flex; align-items: center; gap: 22px;
+  }
+  .logo-block {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-mark {
+    width: 44px; height: 44px;
+    background: transparent;
+    color: var(--tysa-lime);
+    display: grid; place-items: center;
+    padding: 2px;
+  }
+  .logo-mark svg { width: 100%; height: 100%; }
+  .logo-name { font-family: 'Anton', sans-serif; font-size: 30px; letter-spacing: 0.06em; font-weight: 400; }
+  .logo-sub { font-size: 8px; letter-spacing: 0.18em; color: var(--tysa-lime); margin-top: 0; font-family: 'JetBrains Mono', monospace; }
+
+  .brand-divider { width: 1px; height: 36px; background: rgba(255,255,255,0.15); }
+
+  .project-tag {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+  }
+  .project-name {
+    font-family: 'Anton', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.03em;
+    color: var(--bg);
+  }
+
+  .header-spacer { flex: 1; }
+
+  .header-meta {
+    display: flex; gap: 22px; align-items: center;
+    font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+  }
+  .header-meta strong { color: var(--tysa-lime); font-weight: 500; }
+
+  .live-dot {
+    display: inline-block; width: 8px; height: 8px;
+    background: var(--tysa-lime); border-radius: 50%;
+    margin-right: 6px;
+    box-shadow: 0 0 0 0 rgba(190, 242, 100, 0.8);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(190, 242, 100, 0.6); }
+    50% { box-shadow: 0 0 0 6px rgba(190, 242, 100, 0); }
+  }
+
+  /* ============ DATA SOURCE BAR ============ */
+  .data-bar {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 10px 22px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    font-size: 12px;
+    border-bottom: 1px solid var(--ink);
+  }
+  .data-bar .label { color: var(--ink-faint); letter-spacing: 0.15em; text-transform: uppercase; font-size: 10px; }
+  .data-bar input[type="text"], .data-bar input[type="file"] {
+    background: var(--tysa-darkest);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--bg);
+    padding: 6px 10px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    min-width: 320px;
+  }
+  .data-bar input[type="text"]:focus { outline: 1px solid var(--tysa-lime); border-color: var(--tysa-lime); }
+  .btn-pill {
+    background: var(--tysa-lime);
+    color: var(--tysa-darkest);
+    border: none;
+    padding: 6px 14px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .btn-pill:hover { background: var(--bg); }
+  .btn-pill:active { transform: translateY(1px); }
+  .btn-pill.ghost {
+    background: transparent;
+    color: var(--bg);
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  .btn-pill.ghost:hover { border-color: var(--tysa-lime); color: var(--tysa-lime); }
+
+  .data-status {
+    margin-left: auto;
+    display: flex; gap: 14px; align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .data-status .stat-pip {
+    background: rgba(190,242,100,0.1);
+    border: 1px solid rgba(190,242,100,0.3);
+    color: var(--tysa-lime);
+    padding: 3px 10px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ============ MAIN ============ */
+  main {
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 24px 22px 80px;
+  }
+
+  /* ============ FILTERS ============ */
+  .filters-card {
+    background: var(--bg-card);
+    border: 2px solid var(--ink);
+    box-shadow: var(--paper-shadow);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .filters-card::before {
+    content: '01 · CONTROL DE FILTROS';
+    position: absolute;
+    top: -10px; left: 16px;
+    background: var(--bg);
+    padding: 0 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--ink-muted);
+  }
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  .filter-cell {
+    padding: 16px 18px;
+    border-right: 1px solid var(--line-faint);
+    border-bottom: 1px solid var(--line-faint);
+  }
+  .filter-cell:nth-child(4n) { border-right: none; }
+  .filter-cell.full {
+    grid-column: 1 / -1;
+    border-right: none;
+  }
+  .filter-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 6px;
+    display: block;
+  }
+  .filter-cell select, .filter-cell input[type="date"] {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 6px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    width: 100%;
+    cursor: pointer;
+  }
+  .filter-cell select:focus, .filter-cell input[type="date"]:focus {
+    outline: 2px solid var(--tysa-green);
+    outline-offset: -1px;
+  }
+
+  .preset-row {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 14px 18px;
+    background: var(--bg-alt);
+    border-top: 2px solid var(--ink);
+  }
+  .preset-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink);
+    padding: 5px 12px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: all 0.1s;
+  }
+  .preset-btn:hover { background: var(--ink); color: var(--bg); }
+  .preset-btn.active {
+    background: var(--tysa-deep);
+    color: var(--tysa-lime);
+    border-color: var(--tysa-deep);
+  }
+
+  /* ============ KPI GRID ============ */
+  .kpi-section { margin-bottom: 28px; }
+  .section-title {
+    font-family: 'Anton', sans-serif;
+    font-size: 28px;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    margin-bottom: 4px;
+    display: flex; align-items: baseline; gap: 14px;
+  }
+  .section-title .num-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--ink-muted);
+    font-weight: 400;
+    text-transform: none;
+  }
+  .section-subtitle {
+    font-size: 13px;
+    color: var(--ink-muted);
+    margin-bottom: 18px;
+    font-weight: 400;
+  }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .kpi {
+    background: var(--bg-card);
+    border: 2px solid var(--ink);
+    padding: 18px 20px;
+    position: relative;
+    box-shadow: var(--paper-shadow);
+    transition: transform 0.15s;
+  }
+  .kpi:hover { transform: translateY(-2px); }
+
+  .kpi.featured {
+    grid-column: span 2;
+    background: var(--tysa-darkest);
+    color: var(--bg);
+  }
+  .kpi.featured .kpi-label { color: rgba(255,255,255,0.6); }
+  .kpi.featured .kpi-value { color: var(--tysa-lime); }
+  .kpi.featured .kpi-foot { color: rgba(255,255,255,0.5); border-top-color: rgba(255,255,255,0.15); }
+
+  .kpi-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+  }
+  .kpi-value {
+    font-family: 'Anton', sans-serif;
+    font-size: 36px;
+    letter-spacing: 0.01em;
+    line-height: 1.05;
+    color: var(--ink);
+  }
+  .kpi.featured .kpi-value { font-size: 52px; }
+  .kpi-unit {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-muted);
+    font-weight: 500;
+    margin-left: 4px;
+  }
+  .kpi-foot {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line-faint);
+    display: flex; justify-content: space-between;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ink-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .kpi-status-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .status-card {
+    background: var(--bg-card);
+    border: 2px solid var(--ink);
+    padding: 14px 18px;
+    box-shadow: var(--paper-shadow);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .status-card.si { border-left: 6px solid var(--success); }
+  .status-card.no { border-left: 6px solid var(--danger); }
+  .status-card.pend { border-left: 6px solid var(--warn); }
+  .status-stamp {
+    font-family: 'Anton', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    padding: 4px 10px;
+    border: 2px solid;
+    transform: rotate(-3deg);
+  }
+  .status-stamp.si { color: var(--success); border-color: var(--success); }
+  .status-stamp.no { color: var(--danger); border-color: var(--danger); }
+  .status-stamp.pend { color: var(--warn); border-color: var(--warn); }
+  .status-num {
+    font-family: 'Anton', sans-serif;
+    font-size: 28px;
+    line-height: 1;
+  }
+  .status-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-left: auto;
+    text-align: right;
+  }
+  .status-meta strong { color: var(--ink); display: block; font-size: 13px; }
+
+  /* ============ PROJECT STATS ============ */
+  .project-stats-section {
+    background: linear-gradient(135deg, var(--tysa-darkest) 0%, var(--tysa-deep) 100%);
+    border: 3px solid var(--tysa-green);
+    margin: 20px 0 28px;
+    padding: 22px 24px;
+    box-shadow: var(--paper-shadow);
+  }
+  .project-stats-header {
+    margin-bottom: 18px;
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+    padding-bottom: 12px;
+  }
+  .stats-title {
+    font-family: 'Anton', sans-serif;
+    font-size: 20px;
+    letter-spacing: 0.08em;
+    color: var(--tysa-lime);
+  }
+  .stats-subtitle {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 4px;
+  }
+  .project-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .stats-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 18px 20px;
+  }
+  .stats-card-title {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 8px;
+  }
+  .stats-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 6px 0;
+  }
+  .stat-row.separator {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 12px;
+    margin-bottom: 6px;
+  }
+  .stat-row.minor {
+    padding: 4px 0 4px 12px;
+    font-size: 11px;
+    opacity: 0.8;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.8);
+    font-weight: 400;
+  }
+  .stat-row.minor .stat-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+  }
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--bg);
+    font-feature-settings: 'tnum' 1;
+  }
+  .stat-value.total { color: var(--tysa-lime); font-size: 22px; }
+  .stat-value.negative { color: #ff6b6b; }
+  .stat-value.highlighted { color: var(--tysa-green); font-size: 20px; }
+  .stat-value.warn { color: var(--warn); }
+  .stat-row.minor .stat-value { font-size: 14px; }
+
+  .progress-block {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .progress-main {
+    padding-bottom: 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .progress-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+  .progress-value {
+    font-family: 'Anton', sans-serif;
+    font-size: 42px;
+    color: var(--tysa-lime);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .progress-total {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: rgba(255,255,255,0.4);
+    font-weight: 400;
+  }
+  .progress-bar-wrap {
+    background: rgba(0,0,0,0.3);
+    height: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    margin: 10px 0 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--tysa-green) 0%, var(--tysa-lime) 100%);
+    transition: width 0.6s ease;
+    box-shadow: 0 0 8px rgba(25,178,105,0.6);
+  }
+  .progress-pct {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--tysa-lime);
+    font-weight: 700;
+    text-align: right;
+  }
+
+  .projection-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .projection-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .projection-row.final {
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+  }
+  .proj-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+    min-width: 110px;
+    letter-spacing: 0.05em;
+  }
+  .proj-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--bg);
+    font-feature-settings: 'tnum' 1;
+  }
+  .proj-value.highlighted {
+    color: var(--tysa-lime);
+    font-size: 18px;
+  }
+  .proj-value.final {
+    color: var(--tysa-green);
+    font-size: 14px;
+  }
+  .proj-unit {
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ============ CHARTS ============ */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .chart-card {
+    background: var(--bg-card);
+    border: 2px solid var(--ink);
+    padding: 20px;
+    box-shadow: var(--paper-shadow);
+    position: relative;
+  }
+  .chart-card::before {
+    content: attr(data-num);
+    position: absolute;
+    top: -10px; left: 16px;
+    background: var(--bg);
+    padding: 0 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--ink-muted);
+  }
+  .chart-title {
+    font-family: 'Anton', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+  .chart-sub {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-bottom: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+  .chart-host { position: relative; height: 280px; }
+  .chart-host.tall { height: 320px; }
+
+  /* ============ BREAKDOWN TABLES ============ */
+  .breakdowns {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .breakdown-card {
+    background: var(--bg-card);
+    border: 2px solid var(--ink);
+    box-shadow: var(--paper-shadow);
+    overflow: hidden;
+  }
+  .breakdown-head {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 14px 18px;
+    display: flex; align-items: baseline; justify-content: space-between;
+  }
+  .breakdown-head h3 {
+    font-family: 'Anton', sans-serif;
+    font-size: 18px;
+    letter-spacing: 0.02em;
+    font-weight: normal;
+  }
+  .breakdown-head .count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--tysa-lime);
+    letter-spacing: 0.1em;
+  }
+
+  table.data-tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  table.data-tbl th {
+    background: var(--bg-alt);
+    color: var(--ink-muted);
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--line);
+  }
+  table.data-tbl th.right, table.data-tbl td.right { text-align: right; }
+  table.data-tbl td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line-faint);
+    color: var(--ink);
+    vertical-align: middle;
+  }
+  table.data-tbl tr:hover td { background: var(--bg-alt); }
+  table.data-tbl tbody tr:last-child td { border-bottom: none; }
+  table.data-tbl tfoot td {
+    background: var(--tysa-darkest);
+    color: var(--tysa-lime);
+    font-weight: 600;
+    border-top: 2px solid var(--ink);
+    border-bottom: none;
+  }
+
+  /* compact bar inside cell */
+  .bar-cell {
+    position: relative;
+    display: inline-block;
+    width: 70px;
+    height: 6px;
+    background: var(--line-faint);
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .bar-cell .fill {
+    position: absolute;
+    top: 0; left: 0; height: 100%;
+    background: var(--tysa-green);
+  }
+
+  /* fc badges */
+  .fc-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 700;
+    border: 1px solid;
+  }
+  .fc-badge.si { color: var(--success); border-color: var(--success); background: rgba(22,163,74,0.08); }
+  .fc-badge.no { color: var(--danger); border-color: var(--danger); background: rgba(220,38,38,0.08); }
+  .fc-badge.pend { color: var(--warn); border-color: var(--warn); background: rgba(217,119,6,0.08); }
+
+  /* ============ DETAIL TABLE ============ */
+  .detail-card {
+    background: var(--bg-card);
+    border: 2px solid var(--ink);
+    box-shadow: var(--paper-shadow);
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .detail-head {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .detail-head h3 {
+    font-family: 'Anton', sans-serif;
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    font-weight: normal;
+    flex: 1;
+  }
+  .detail-head input[type="text"] {
+    background: var(--tysa-darkest);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--bg);
+    padding: 6px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    width: 220px;
+  }
+  .detail-head .pager {
+    color: var(--tysa-lime);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .detail-body {
+    max-height: 480px;
+    overflow: auto;
+  }
+  .detail-body table { width: 100%; }
+  .detail-body th {
+    position: sticky; top: 0;
+    background: var(--bg-alt);
+    z-index: 5;
+  }
+
+  /* ============ ACTION BAR (footer) ============ */
+  .action-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--tysa-darkest);
+    border-top: 2px solid var(--ink);
+    padding: 14px 22px;
+    display: flex; gap: 12px; align-items: center;
+    z-index: 40;
+    box-shadow: 0 -8px 24px rgba(10,20,16,0.1);
+  }
+  .action-bar .label {
+    color: rgba(255,255,255,0.55);
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+    margin-right: 6px;
+  }
+  .btn {
+    background: transparent;
+    color: var(--bg);
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 9px 18px;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .btn:hover { background: rgba(255,255,255,0.06); border-color: var(--tysa-lime); color: var(--tysa-lime); }
+  .btn.primary {
+    background: var(--tysa-lime);
+    color: var(--tysa-darkest);
+    border-color: var(--tysa-lime);
+  }
+  .btn.primary:hover { background: var(--bg); border-color: var(--bg); color: var(--tysa-darkest); }
+  .btn svg { width: 14px; height: 14px; }
+
+  .action-bar .spacer { flex: 1; }
+
+  /* ============ MODAL ============ */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(5,26,17,0.7);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(6px);
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--bg);
+    border: 2px solid var(--ink);
+    max-width: 560px; width: 92%;
+    box-shadow: 6px 6px 0 var(--tysa-darkest);
+  }
+  .modal-head {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-head h3 { font-family: 'Anton', sans-serif; font-size: 20px; font-weight: normal; letter-spacing: 0.02em; }
+  .modal-close {
+    background: transparent; border: 1px solid rgba(255,255,255,0.3);
+    color: var(--bg); width: 28px; height: 28px;
+    font-size: 16px; cursor: pointer;
+  }
+  .modal-body { padding: 22px 20px; }
+  .modal-body p { color: var(--ink-soft); font-size: 13px; margin-bottom: 14px; }
+  .share-link-box {
+    background: var(--ink);
+    color: var(--tysa-lime);
+    padding: 12px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    word-break: break-all;
+    border: 1px solid var(--ink);
+    margin-bottom: 14px;
+  }
+  .share-actions { display: flex; gap: 10px; }
+
+  /* ============ EMPTY STATE ============ */
+  .empty {
+    padding: 60px 20px;
+    text-align: center;
+    border: 2px dashed var(--line-soft);
+    background: var(--bg-card);
+    color: var(--ink-muted);
+  }
+
+  /* ============ TOAST ============ */
+  .toast {
+    position: fixed; top: 90px; right: 24px;
+    background: var(--tysa-darkest);
+    color: var(--tysa-lime);
+    padding: 12px 18px;
+    border: 1px solid var(--tysa-lime);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    z-index: 200;
+    transform: translateX(120%);
+    transition: transform 0.3s;
+  }
+  .toast.show { transform: translateX(0); }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid { grid-template-columns: 1fr; }
+    .breakdowns { grid-template-columns: 1fr; }
+    .filters-grid { grid-template-columns: repeat(2, 1fr); }
+    .filter-cell:nth-child(2n) { border-right: none; }
+    .filter-cell:nth-child(4n) { border-right: 1px solid var(--line-faint); }
+  }
+  @media (max-width: 700px) {
+    .kpi-grid { grid-template-columns: 1fr; }
+    .kpi.featured { grid-column: span 1; }
+    .kpi-status-row { grid-template-columns: 1fr; }
+    .filters-grid { grid-template-columns: 1fr; }
+    .filter-cell { border-right: none !important; }
+    header.brand { flex-wrap: wrap; gap: 12px; padding: 12px 16px; }
+    .header-meta { font-size: 9px; gap: 12px; }
+    main { padding: 16px 12px 100px; }
+    .data-bar input[type="text"] { min-width: 200px; }
+    .action-bar { flex-wrap: wrap; gap: 8px; padding: 12px; }
+    .btn { padding: 8px 12px; font-size: 10px; }
+  }
+
+  /* ============ PRINT STYLES ============ */
+  @media print {
+    @page { size: letter; margin: 14mm 12mm; }
+    body { background: white !important; }
+    body::before { content: ''; display: none; }
+
+    header.brand {
+      position: static;
+      background: var(--tysa-darkest) !important;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      page-break-after: avoid;
+    }
+    .data-bar, .action-bar, .preset-row, .detail-head input,
+    #fileInput, #urlInput, .btn-pill, .modal-overlay,
+    .toast, .filters-card .filter-cell select,
+    .filters-card .filter-cell input,
+    .data-bar { display: none !important; }
+
+    /* Show a printable filter summary instead */
+    #printFilterSummary { display: block !important; }
+
+    main { max-width: 100%; padding: 8px 0 0; }
+    .kpi, .chart-card, .breakdown-card, .detail-card, .filters-card {
+      box-shadow: none !important;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      border: 1.5px solid #000 !important;
+    }
+    .kpi.featured { background: var(--tysa-darkest) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .breakdown-head, .detail-head { background: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .charts-grid { grid-template-columns: 1fr 1fr; }
+    .chart-host { height: 220px; }
+    .detail-body { max-height: none !important; overflow: visible; }
+    .breakdown-card, .chart-card, .kpi-section { margin-bottom: 14px; page-break-inside: avoid; }
+    table.data-tbl { font-size: 10px; }
+    table.data-tbl td, table.data-tbl th { padding: 4px 8px; }
+    .section-title { font-size: 22px; }
+    .kpi-value { font-size: 28px !important; }
+    .kpi.featured .kpi-value { font-size: 36px !important; }
+  }
+  #printFilterSummary { display: none; }
+  @media print {
+    #printFilterSummary {
+      padding: 14px 0;
+      border-bottom: 2px solid #000;
+      margin-bottom: 16px;
+    }
+    #printFilterSummary h2 {
+      font-family: 'Anton', sans-serif;
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    #printFilterSummary .meta-line {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #333;
+      margin: 3px 0;
+    }
+  }
+
+  /* Help info */
+  .help-tip {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .help-tip code {
+    background: var(--bg-alt);
+    padding: 1px 4px;
+    border: 1px solid var(--line-faint);
+    color: var(--ink);
+    font-size: 10px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="brand">
+  <div class="logo-block">
+    <div class="logo-mark" aria-label="TYSA">
+      <svg viewBox="0 0 100 100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="display:block;">
+        <g transform="translate(50,50)" fill="currentColor">
+          <path d="M 0,-32 C -8,-30 -14,-22 -14,-10 C -14,-4 -10,-2 -6,-4 C -2,-8 2,-18 0,-32 Z" transform="rotate(0)"/>
+          <path d="M 0,-32 C -8,-30 -14,-22 -14,-10 C -14,-4 -10,-2 -6,-4 C -2,-8 2,-18 0,-32 Z" transform="rotate(51.43)"/>
+          <path d="M 0,-32 C -8,-30 -14,-22 -14,-10 C -14,-4 -10,-2 -6,-4 C -2,-8 2,-18 0,-32 Z" transform="rotate(102.86)"/>
+          <path d="M 0,-32 C -8,-30 -14,-22 -14,-10 C -14,-4 -10,-2 -6,-4 C -2,-8 2,-18 0,-32 Z" transform="rotate(154.29)"/>
+          <path d="M 0,-32 C -8,-30 -14,-22 -14,-10 C -14,-4 -10,-2 -6,-4 C -2,-8 2,-18 0,-32 Z" transform="rotate(205.71)"/>
+          <path d="M 0,-32 C -8,-30 -14,-22 -14,-10 C -14,-4 -10,-2 -6,-4 C -2,-8 2,-18 0,-32 Z" transform="rotate(257.14)"/>
+          <path d="M 0,-32 C -8,-30 -14,-22 -14,-10 C -14,-4 -10,-2 -6,-4 C -2,-8 2,-18 0,-32 Z" transform="rotate(308.57)"/>
+        </g>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-name">TYSA</div>
+      <div class="logo-sub">TECNOLOGÍA Y SERVICIOS ASOCIADOS</div>
+    </div>
+  </div>
+
+  <div class="brand-divider"></div>
+
+  <div>
+    <div class="project-tag">PROJECT · VERIZON / LAMBERTS</div>
+    <div class="project-name">Lambert's Pole Transfer</div>
+  </div>
+
+  <div class="header-spacer"></div>
+
+  <div class="header-meta">
+    <div><span class="live-dot"></span>LIVE · <strong id="hdrDateRange">—</strong></div>
+    <div>RECORDS · <strong id="hdrRecCount">0</strong></div>
+    <div>VERSION · <strong>3.0</strong></div>
+  </div>
+</header>
+
+<!-- ============ DATA SOURCE BAR ============ -->
+<div class="data-bar">
+  <span class="label">Proyectos:</span>
+  <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm,.csv,.tsv,.txt" style="position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;">
+  <div id="projChips" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;"></div>
+
+  <span class="label" style="color: rgba(255,255,255,0.3); margin: 0 4px;">·</span>
+
+  <button class="btn-pill ghost" onclick="openPasteModal()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">📋 Pegar</button>
+  <button class="btn-pill ghost" onclick="clearAllProjects()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">🗑 Limpiar</button>
+
+  <span class="label" style="color: rgba(255,255,255,0.3); margin: 0 4px;">·</span>
+
+  <button class="btn-pill ghost" onclick="openCloudModal()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">☁ Nube</button>
+  <button class="btn-pill ghost" onclick="loadAllCloud()" style="border-color: rgba(255,255,255,0.3); color: var(--bg);">🔄 Cargar Nube</button>
+
+  <div class="data-status">
+    <span class="stat-pip" id="dataSourceLabel">SIN PROYECTOS ACTIVOS · CARGÁ UNO</span>
+  </div>
+</div>
+
+<script>
+// iOS PWA: el click() programático en file inputs a veces falla.
+// Esta función asegura que el dialog se abra confiablemente.
+function triggerFileInput() {
+  const input = document.getElementById('fileInput');
+  if (!input) {
+    showToast('Error: no se encontró el input. Recargá la página.');
+    return;
+  }
+  try {
+    input.click();
+  } catch (err) {
+    showToast('No se pudo abrir el selector. Probá "Pegar datos" en su lugar.');
+    console.error('File input trigger error:', err);
+  }
+}
+</script>
+
+<!-- ============ MAIN ============ -->
+<main>
+
+  <!-- Print summary header -->
+  <div id="printFilterSummary">
+    <h2>TYSA · LAMBERT'S POLE TRANSFER · REPORTE OPERATIVO</h2>
+    <div class="meta-line">Período: <span id="prtRange">—</span></div>
+    <div class="meta-line">Filtros aplicados: <span id="prtFilters">—</span></div>
+    <div class="meta-line">Generado: <span id="prtGen">—</span></div>
+  </div>
+
+  <!-- 01 · FILTERS -->
+  <div class="filters-card">
+    <div class="filters-grid">
+      <div class="filter-cell">
+        <label class="filter-label">Filtrar fechas por</label>
+        <select id="filterDateMode">
+          <option value="d_ins">DÍA INSTALACIÓN</option>
+          <option value="d_fact">DÍA FACTURACIÓN</option>
+        </select>
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Desde</label>
+        <input type="date" id="dateFrom" />
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Hasta</label>
+        <input type="date" id="dateTo" />
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Proyecto</label>
+        <select id="filterProj"><option value="">TODOS LOS PROYECTOS</option></select>
+      </div>
+      <div class="filter-cell" style="grid-column: span 2;">
+        <label class="filter-label">Cuadrilla</label>
+        <div id="filterCrewPills" style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding-top: 4px;"></div>
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Estado FC</label>
+        <select id="filterFc">
+          <option value="">TODOS</option>
+          <option value="SI">SOLO FACTURADO (SI)</option>
+          <option value="NO">SOLO NO FACTURADO</option>
+          <option value="PEND">SOLO PENDIENTE</option>
+        </select>
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Job</label>
+        <select id="filterJob"><option value="">TODOS LOS JOBS</option></select>
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Código</label>
+        <select id="filterCod"><option value="">TODOS LOS CÓDIGOS</option></select>
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Pole No</label>
+        <select id="filterPole"><option value="">TODOS LOS POLES</option></select>
+      </div>
+      <div class="filter-cell">
+        <label class="filter-label">Agrupación</label>
+        <select id="filterGroup">
+          <option value="day">POR DÍA</option>
+          <option value="week">POR SEMANA</option>
+          <option value="month">POR MES</option>
+        </select>
+      </div>
+    </div>
+    <div class="preset-row">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: var(--ink-muted); align-self: center; margin-right: 6px;">PRESETS:</span>
+      <button class="preset-btn" data-preset="today">HOY</button>
+      <button class="preset-btn" data-preset="yesterday">AYER</button>
+      <button class="preset-btn" data-preset="thisWeek">ESTA SEMANA</button>
+      <button class="preset-btn" data-preset="lastWeek">SEMANA PASADA</button>
+      <button class="preset-btn" data-preset="thisMonth">ESTE MES</button>
+      <button class="preset-btn" data-preset="lastMonth">MES PASADO</button>
+      <button class="preset-btn" data-preset="last7">ÚLTIMOS 7</button>
+      <button class="preset-btn" data-preset="last30">ÚLTIMOS 30</button>
+      <button class="preset-btn" data-preset="last90">ÚLTIMOS 90</button>
+      <button class="preset-btn active" data-preset="all">TODO</button>
+    </div>
+  </div>
+
+  <!-- 02 · KPIs -->
+  <div class="kpi-section">
+    <div class="section-title">RESUMEN EJECUTIVO <span class="num-tag">02 · KPIs</span></div>
+    <div class="section-subtitle">Indicadores clave del período seleccionado</div>
+
+    <div class="kpi-grid">
+      <div class="kpi featured">
+        <div class="kpi-label">Volumen Total Facturable</div>
+        <div class="kpi-value"><span id="kpiTotal">$0</span><span class="kpi-unit">USD</span></div>
+        <div class="kpi-foot">
+          <span>PROMEDIO/DÍA · <strong id="kpiAvgDay">$0</strong></span>
+          <span>DÍAS ACTIVOS · <strong id="kpiActiveDays">0</strong></span>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Items / Líneas</div>
+        <div class="kpi-value"><span id="kpiItems">0</span></div>
+        <div class="kpi-foot">
+          <span>Q TOTAL · <strong id="kpiQ">0</strong></span>
+          <span>$ PROM/ITEM · <strong id="kpiAvgItem">$0</strong></span>
+        </div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Postes Intervenidos</div>
+        <div class="kpi-value"><span id="kpiPolesIntervened">0</span><span class="kpi-unit">POSTES</span></div>
+        <div class="kpi-foot">
+          <span>JOBS · <strong id="kpiJobs">0</strong></span>
+          <span>$ PROM/POSTE · <strong id="kpiAvgPole">$0</strong></span>
+        </div>
+        <div id="kpiSinAsignarAviso" style="display:none; margin-top:8px; padding:6px 10px; background:#F3E8FF; border-left:3px solid #7C3AED; border-radius:4px; cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:10px; color:#5B21B6; font-weight:700;"
+             onclick="document.getElementById('cardSinAsignar').scrollIntoView({behavior:'smooth', block:'center'})"
+             title="Click para ver el detalle">
+          &#9888; <span id="kpiSinAsignarNum">0</span> SIN ASIGNAR &#183; VER DETALLE &#8595;
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPARATIVO POR PROYECTO -->
+    <div style="margin-top: 16px;" class="compare-grid">
+      <div class="stats-card" style="padding: 16px;">
+        <div class="stats-card-title">POR PROYECTO</div>
+        <table style="width:100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--line, rgba(0,0,0,0.15)); text-align: left;">
+              <th style="padding: 6px 4px;">PROYECTO</th>
+              <th style="padding: 6px 4px; text-align: right;">POSTES</th>
+              <th style="padding: 6px 4px; text-align: right;">TOTAL</th>
+              <th style="padding: 6px 4px; text-align: right;">$/POSTE</th>
+            </tr>
+          </thead>
+          <tbody id="tblByProject"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RENDIMIENTO POR CUADRILLA -->
+    <div class="alert-card" style="margin: 22px 0 0; background: #FFFDF5; border: 2px solid var(--tysa-green); border-left-width: 6px; padding: 22px; box-shadow: 0 2px 0 0 #051A11;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+        <div>
+          <h3 style="font-family: 'Anton', sans-serif; font-size: 22px; letter-spacing: 0.04em; color: var(--tysa-green); margin: 0;">RENDIMIENTO POR CUADRILLA</h3>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5C6B62; margin-top: 4px;">Productividad, valor generado y proyectos por cuadrilla (respeta los filtros activos) · ordenado por postes/día</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #5C6B62; letter-spacing: 0.15em;">CUADRILLAS ACTIVAS</div>
+          <div style="font-family: 'Anton', sans-serif; font-size: 32px; color: var(--tysa-green); line-height: 1;" id="crewCount">0</div>
+        </div>
+      </div>
+      <table class="data-tbl">
+        <thead>
+          <tr>
+            <th>Cuadrilla</th>
+            <th class="right">Días Trabajados</th>
+            <th class="right">Postes</th>
+            <th class="right">Postes/Día</th>
+            <th class="right">Actividades</th>
+            <th class="right">Total Facturado</th>
+            <th class="right">$/Poste</th>
+            <th>Proyectos</th>
+          </tr>
+        </thead>
+        <tbody id="crewPerfBody"></tbody>
+        <tfoot id="crewPerfFoot"></tfoot>
+      </table>
+    </div>
+
+
+    <!-- PROJECT STATS - Postes -->
+    <div class="project-stats-section">
+      <div class="project-stats-header">
+        <div class="stats-title">ESTADÍSTICAS DEL PROYECTO</div>
+        <div class="stats-subtitle" id="statsSubtitle">Pole Transfer & Removal</div>
+      </div>
+      <div class="project-stats-grid">
+        <!-- Left: Postes Overview -->
+        <div class="stats-card main">
+          <div class="stats-card-title">POSTES ASIGNADOS <span id="asigFuente" style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.1em; color:var(--ink-muted); margin-left:8px;"></span></div>
+          <div class="stats-metrics">
+            <div class="stat-row">
+              <span class="stat-label">Total Asignados</span>
+              <span class="stat-value total" id="invAsignados">—</span>
+            </div>
+            <div class="stat-row separator">
+              <span class="stat-label">No Ejecutables</span>
+              <span class="stat-value negative" id="invNoEjec">—</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-label">Ejecutables</span>
+              <span class="stat-value highlighted" id="polesNet">—</span>
+            </div>
+            <div class="stat-row minor">
+              <span class="stat-label">Ya Ejecutados</span>
+              <span class="stat-value" id="invEjecutados">—</span>
+            </div>
+            <div class="stat-row minor">
+              <span class="stat-label">Pendientes</span>
+              <span class="stat-value warn" id="invPendientes">—</span>
+            </div>
+            <div class="stat-row minor" id="rowVisitadosN" style="display:none;">
+              <span class="stat-label" title="Postes marcados N a los que si se fue, pero no se pudieron ejecutar (poda, acceso, no encontrado)">Visitados no ejecutables</span>
+              <span class="stat-value" style="color:#B45309;" id="invVisitadosN">—</span>
+            </div>
+            <div class="stat-row minor" id="rowSinAsignar" style="display:none;">
+              <span class="stat-label" title="Postes trabajados que no aparecen en la tabla de asignaciones">Trabajados sin asignar</span>
+              <span class="stat-value" style="color:#7C3AED;" id="invSinAsignar">—</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right: Progress & Projection -->
+        <div class="stats-card progress">
+          <div class="stats-card-title">AVANCE Y PROYECCIÓN</div>
+          <div class="progress-block">
+            <div class="progress-main">
+              <div class="progress-label">Postes Intervenidos</div>
+              <div class="progress-value">
+                <span id="polesIntervenedCount">0</span>
+                <span class="progress-total">/ <span id="polesNetDisplay">660</span></span>
+              </div>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div>
+              </div>
+              <div class="progress-pct" id="progressPct">0%</div>
+            </div>
+            <div class="projection-block">
+              <div class="projection-row">
+                <span class="proj-label">Tasa Promedio (2 sem)</span>
+                <span class="proj-value" id="ratePerDay">0</span>
+                <span class="proj-unit">postes/día</span>
+              </div>
+              <div class="projection-row">
+                <span class="proj-label">Días Restantes</span>
+                <span class="proj-value highlighted" id="daysRemaining">—</span>
+                <span class="proj-unit">días hábiles</span>
+              </div>
+              <div class="projection-row final">
+                <span class="proj-label">Finalización Proyectada</span>
+                <span class="proj-value final" id="projectedEnd">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POSTES PENDIENTES POR TRABAJAR -->
+    <div class="alert-card" style="margin: 22px 0 0; background: #FFFDF5; border: 2px solid #D97706; border-left-width: 6px; padding: 22px; box-shadow: 0 2px 0 0 #051A11;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+        <div>
+          <h3 style="font-family: 'Anton', sans-serif; font-size: 22px; letter-spacing: 0.04em; color: #B45309; margin: 0;">POSTES PENDIENTES POR TRABAJAR</h3>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5C6B62; margin-top: 4px;">Postes asignados y ejecutables que todavia no aparecen en la produccion del dia a dia</div>
+        </div>
+        <div style="display: flex; gap: 16px; align-items: center;">
+          <div style="text-align: right;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #5C6B62; letter-spacing: 0.15em;">PENDIENTES</div>
+            <div style="font-family: 'Anton', sans-serif; font-size: 32px; color: #B45309; line-height: 1;" id="pendCount">0</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #5C6B62; letter-spacing: 0.15em;">AVANCE</div>
+            <div style="font-family: 'Anton', sans-serif; font-size: 32px; color: var(--tysa-green); line-height: 1;" id="pendPct">&mdash;</div>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
+        <input type="text" id="pendSearch" placeholder="Buscar por LOC, BGE, EWO, dirección, código VZ o comentario..." style="flex: 1; min-width: 220px; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+        <label style="font-family: 'JetBrains Mono', monospace; font-size: 11px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+          <input type="checkbox" id="pendVerNoEjec"> Mostrar tambien los NO ejecutables
+        </label>
+        <button class="btn-pill" onclick="exportPendientes()" style="background:#B45309; color:white; font-weight:700; padding:8px 16px; white-space:nowrap;">⬇ DESCARGAR LISTA</button>
+      </div>
+      <table class="data-tbl">
+        <thead>
+          <tr>
+            <th>LOC</th>
+            <th>BGE (Poste)</th>
+            <th>VZ</th>
+            <th>EWO (Proyecto)</th>
+            <th>Dirección</th>
+            <th>Asignado</th>
+            <th>Estado</th>
+            <th>Comentarios</th>
+          </tr>
+        </thead>
+        <tbody id="pendBody"></tbody>
+        <tfoot id="pendFoot"></tfoot>
+      </table>
+    </div>
+
+    <!-- POSTES INTERVENIDOS SIN ASIGNAR -->
+    <div class="alert-card" id="cardSinAsignar" style="margin: 22px 0 0; background: #FFFDF5; border: 2px solid #7C3AED; border-left-width: 6px; padding: 22px; box-shadow: 0 2px 0 0 #051A11;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+        <div>
+          <h3 style="font-family: 'Anton', sans-serif; font-size: 22px; letter-spacing: 0.04em; color: #6D28D9; margin: 0;">POSTES INTERVENIDOS SIN ASIGNAR</h3>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5C6B62; margin-top: 4px;">Postes trabajados en produccion que no cruzan con la tabla de asignaciones &mdash; revisar si es error de digitacion, EWO cambiado o trabajo por facturar</div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <div style="text-align: right;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #5C6B62; letter-spacing: 0.15em;">SIN ASIGNAR</div>
+            <div style="font-family: 'Anton', sans-serif; font-size: 32px; color: #6D28D9; line-height: 1;" id="saCount">0</div>
+          </div>
+          <button class="btn-pill" onclick="exportSinAsignar()" style="background:#6D28D9; color:white; font-weight:700; padding:8px 16px; white-space:nowrap;">&#11015; DESCARGAR</button>
+        </div>
+      </div>
+      <table class="data-tbl">
+        <thead>
+          <tr>
+            <th>BGE (Poste)</th>
+            <th>EWO usado</th>
+            <th>Proyecto</th>
+            <th>Fecha trabajado</th>
+            <th>Posible motivo</th>
+          </tr>
+        </thead>
+        <tbody id="saBody"></tbody>
+      </table>
+    </div>
+
+
+    <div class="kpi-status-row">
+      <div class="status-card si">
+        <div class="status-stamp si">FACTURADO</div>
+        <div>
+          <div class="status-num" id="statSiAmt">$0</div>
+        </div>
+        <div class="status-meta">
+          <strong id="statSiCount">0 items</strong>
+          <span id="statSiPct">0%</span>
+        </div>
+      </div>
+      <div class="status-card no">
+        <div class="status-stamp no">NO FACT</div>
+        <div>
+          <div class="status-num" id="statNoAmt">$0</div>
+        </div>
+        <div class="status-meta">
+          <strong id="statNoCount">0 items</strong>
+          <span id="statNoPct">0%</span>
+        </div>
+      </div>
+      <div class="status-card pend">
+        <div class="status-stamp pend">PENDIENTE</div>
+        <div>
+          <div class="status-num" id="statPendAmt">$0</div>
+        </div>
+        <div class="status-meta">
+          <strong id="statPendCount">0 items</strong>
+          <span id="statPendPct">0%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03 · CHARTS -->
+  <div class="charts-grid">
+    <div class="chart-card" data-num="03 · TENDENCIA">
+      <div class="chart-title" id="trendTitle">Volumen por día</div>
+      <div class="chart-sub" id="trendSub">USD facturado vs no facturado</div>
+      <div class="chart-host tall"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="chart-card" data-num="04 · DISTRIBUCIÓN">
+      <div class="chart-title">Estado de facturación</div>
+      <div class="chart-sub">SI / NO / Pendiente</div>
+      <div class="chart-host tall"><canvas id="fcChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 05 · BREAKDOWNS -->
+  <div class="breakdowns">
+    <div class="breakdown-card">
+      <div class="breakdown-head">
+        <h3>05 · CÓDIGOS UTILIZADOS</h3>
+        <span class="count" id="codesCount">0 códigos</span>
+      </div>
+      <table class="data-tbl">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Descripción</th>
+            <th class="right">Q</th>
+            <th class="right">Total $</th>
+          </tr>
+        </thead>
+        <tbody id="codesBody"></tbody>
+        <tfoot id="codesFoot"></tfoot>
+      </table>
+    </div>
+
+    <div class="breakdown-card">
+      <div class="breakdown-head">
+        <h3>06 · TOP JOBS</h3>
+        <span class="count" id="jobsCount">0 jobs</span>
+      </div>
+      <table class="data-tbl">
+        <thead>
+          <tr>
+            <th>Job</th>
+            <th class="right">Items</th>
+            <th class="right">Poles</th>
+            <th class="right">Total $</th>
+          </tr>
+        </thead>
+        <tbody id="jobsBody"></tbody>
+        <tfoot id="jobsFoot"></tfoot>
+      </table>
+    </div>
+
+    <div class="breakdown-card">
+      <div class="breakdown-head">
+        <h3>07 · POR <span id="periodTitle">DÍA</span></h3>
+        <span class="count" id="periodCount">0 períodos</span>
+      </div>
+      <table class="data-tbl">
+        <thead>
+          <tr>
+            <th>Período</th>
+            <th class="right">Items</th>
+            <th class="right">Jobs</th>
+            <th class="right">SI</th>
+            <th class="right">NO/Pend</th>
+            <th class="right">Total $</th>
+          </tr>
+        </thead>
+        <tbody id="periodBody"></tbody>
+        <tfoot id="periodFoot"></tfoot>
+      </table>
+    </div>
+
+    <div class="breakdown-card">
+      <div class="breakdown-head">
+        <h3>08 · POSTES INTERVENIDOS</h3>
+        <span class="count" id="polesCount">0 poles</span>
+      </div>
+      <table class="data-tbl">
+        <thead>
+          <tr>
+            <th>Pole No</th>
+            <th>Job</th>
+            <th class="right">Items</th>
+            <th class="right">$ / Poste</th>
+            <th class="right">Total $</th>
+          </tr>
+        </thead>
+        <tbody id="polesBody"></tbody>
+        <tfoot id="polesFoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- 09 · PRODUCCIÓN DIARIA -->
+  <div class="alert-card" style="margin: 22px; background: #FFFDF5; border: 2px solid var(--tysa-green); border-left-width: 6px; padding: 22px; box-shadow: 0 2px 0 0 #051A11;">
+    <div style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+      <div>
+        <h3 style="font-family: 'Anton', sans-serif; font-size: 22px; letter-spacing: 0.04em; color: var(--tysa-green); margin: 0;">09 · PRODUCCIÓN DIARIA</h3>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #5C6B62; margin-top: 4px;">Postes intervenidos, valor facturado y actividades por día (respeta los filtros activos)</div>
+      </div>
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <div style="text-align: right;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #5C6B62; letter-spacing: 0.15em;">DÍAS</div>
+          <div style="font-family: 'Anton', sans-serif; font-size: 32px; color: var(--tysa-green); line-height: 1;" id="dailyDaysCount">0</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #5C6B62; letter-spacing: 0.15em;">PROM. POSTES/DÍA</div>
+          <div style="font-family: 'Anton', sans-serif; font-size: 32px; color: #051A11; line-height: 1;" id="dailyAvgPoles">0</div>
+        </div>
+      </div>
+    </div>
+    <table class="data-tbl">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th class="right">Postes</th>
+          <th class="right">Valor Diario</th>
+          <th class="right">Actividades</th>
+          <th class="right">$/Poste</th>
+        </tr>
+      </thead>
+      <tbody id="dailyBody"></tbody>
+      <tfoot id="dailyFoot"></tfoot>
+    </table>
+  </div>
+
+  <!-- 10 · DETAIL TABLE -->
+  <div class="detail-card">
+    <div class="detail-head">
+      <h3>10 · DETALLE COMPLETO</h3>
+      <input type="text" id="detailSearch" placeholder="Buscar job, pole, código...">
+      <span class="pager" id="detailPager">0 filas</span>
+    </div>
+    <div class="detail-body">
+      <table class="data-tbl">
+        <thead>
+          <tr>
+            <th>NO</th>
+            <th>D. Inst.</th>
+            <th>D. Fact.</th>
+            <th>Proy.</th>
+            <th>Cuad.</th>
+            <th>Job</th>
+            <th>Pole</th>
+            <th>Cód.</th>
+            <th>Descripción</th>
+            <th class="right">PR</th>
+            <th class="right">Q</th>
+            <th class="right">Total</th>
+            <th>FC</th>
+          </tr>
+        </thead>
+        <tbody id="detailBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- ============ ACTION BAR ============ -->
+<div class="action-bar">
+  <span class="label">Acciones:</span>
+  <button class="btn primary" onclick="exportStandaloneHtml()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+    DESCARGAR HTML COMPARTIBLE
+  </button>
+  <button class="btn" onclick="window.print()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+    IMPRIMIR / PDF
+  </button>
+  <button class="btn" onclick="exportCsv()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+    EXPORTAR CSV
+  </button>
+  <button class="btn" onclick="openShareHelp()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
+    ¿CÓMO COMPARTIR?
+  </button>
+  <div class="spacer"></div>
+  <span style="color: rgba(255,255,255,0.45); font-size: 10px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em;">© TYSA LLC · EDGEWATER, FL</span>
+</div>
+
+<!-- ============ MODAL: HELP — CÓMO COMPARTIR ============ -->
+<div class="modal-overlay" id="helpShareModal">
+  <div class="modal" style="max-width: 640px;">
+    <div class="modal-head">
+      <h3>CÓMO OBTENER UN LINK PARA COMPARTIR</h3>
+      <button class="modal-close" onclick="closeModal('helpShareModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size: 13px; line-height: 1.6;">
+        El botón <strong style="color: var(--tysa-deep);">"DESCARGAR HTML COMPARTIBLE"</strong> te genera un archivo
+        autocontenido con el reporte (filtros + datos incluidos). Puedes compartirlo de varias formas:
+      </p>
+
+      <div style="background: var(--bg-alt); border-left: 4px solid var(--tysa-green); padding: 12px 14px; margin: 16px 0;">
+        <strong style="font-size: 12px; letter-spacing: 0.15em; color: var(--tysa-deep);">OPCIÓN 1 · GOOGLE DRIVE (LINK REAL)</strong>
+        <ol style="margin: 8px 0 0 18px; font-size: 12px; line-height: 1.7;">
+          <li>Descarga el archivo HTML</li>
+          <li>Súbelo a tu Google Drive (drag &amp; drop)</li>
+          <li>Click derecho → <strong>"Compartir"</strong> → "Cualquier persona con el link"</li>
+          <li>Copia el link y mándalo por WhatsApp, email, lo que sea</li>
+        </ol>
+      </div>
+
+      <div style="background: var(--bg-alt); border-left: 4px solid var(--tysa-acid); padding: 12px 14px; margin: 16px 0;">
+        <strong style="font-size: 12px; letter-spacing: 0.15em; color: var(--tysa-deep);">OPCIÓN 2 · ENVIAR DIRECTO</strong>
+        <p style="margin: 6px 0 0; font-size: 12px; line-height: 1.7;">
+          Adjunta el archivo HTML directamente a un email o WhatsApp. Quien lo reciba lo abre en cualquier
+          navegador y ve el reporte completo (no necesita internet).
+        </p>
+      </div>
+
+      <div style="background: var(--bg-alt); border-left: 4px solid var(--warn); padding: 12px 14px; margin: 16px 0;">
+        <strong style="font-size: 12px; letter-spacing: 0.15em; color: var(--tysa-deep);">OPCIÓN 3 · IMPRIMIR / PDF</strong>
+        <p style="margin: 6px 0 0; font-size: 12px; line-height: 1.7;">
+          Si prefieres PDF, usa <strong>"IMPRIMIR / PDF"</strong> → "Guardar como PDF". También subible a Drive con un click.
+        </p>
+      </div>
+
+      <div class="share-actions" style="margin-top: 18px;">
+        <button class="btn-pill" onclick="exportStandaloneHtml(); closeModal('helpShareModal');">📄 DESCARGAR HTML AHORA</button>
+        <button class="btn-pill ghost" onclick="closeModal('helpShareModal')" style="color: var(--ink); border-color: var(--ink);">CERRAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal-overlay" id="cloudModal">
+  <div class="modal" style="max-width: 560px;">
+    <div class="modal-head">
+      <h3 style="margin: 0;">☁ DATOS EN LA NUBE · APPS SCRIPT</h3>
+      <button class="modal-close" onclick="closeModal('cloudModal')">×</button>
+    </div>
+    <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+      <div style="font-size: 12px; line-height: 1.6; background: rgba(178,230,123,0.15); border: 1px solid var(--tysa-green); padding: 10px 12px; border-radius: 8px;">
+        Pegá acá la URL de tu Apps Script (termina en <code>/exec</code>). Un mismo link sirve para los 4 proyectos.<br>
+        El dashboard va a intentar cargar los datos <strong>solo al abrirlo desde su link real de GitHub Pages</strong> (no funciona con doble click desde tu computador).
+      </div>
+      <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
+        <strong>URL de Apps Script</strong>
+        <input type="url" id="appsScriptUrlInput" placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+          style="padding: 8px; font-size: 11px; font-family: 'JetBrains Mono', monospace;">
+      </label>
+      <button class="btn-pill" onclick="saveCloudModal()" style="background: var(--tysa-green); color: white; font-weight: 700; padding: 10px;">GUARDAR</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal-overlay" id="pasteModal">
+  <div class="modal" style="max-width: 720px;">
+    <div class="modal-head">
+      <h3>📋 PEGAR DATOS DE GOOGLE SHEETS</h3>
+      <button class="modal-close" onclick="closeModal('pasteModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="background: var(--tysa-mint); border: 2px solid var(--tysa-green); padding: 12px 14px; margin-bottom: 14px;">
+        <strong style="color: var(--tysa-deep); font-size: 13px;">⚡ La forma más rápida en iPhone</strong>
+        <p style="margin: 6px 0 0; font-size: 12px; line-height: 1.6; color: var(--ink-soft);">
+          No necesitas subir archivos. Copiás de Google Sheets y pegás acá. Funciona perfecto en iPhone, iPad y desktop.
+        </p>
+      </div>
+
+      <p style="font-size: 12px; line-height: 1.6; margin-bottom: 6px;"><strong>Paso a paso en iPhone:</strong></p>
+      <ol style="margin: 0 0 14px 18px; font-size: 12px; line-height: 1.85; color: var(--ink-soft);">
+        <li>Abrí la <strong>app Google Sheets</strong> en tu iPhone, andá a tu hoja Warren</li>
+        <li>Tocá el cuadro gris superior izquierdo (donde se cruzan las letras y los números) <strong>para seleccionar TODA la hoja</strong></li>
+        <li>Tocá <strong>"Copiar"</strong> en el menú que aparece</li>
+        <li>Volvé acá, tocá el área grande de abajo y elegí <strong>"Pegar"</strong></li>
+        <li>Tocá <strong>"⚡ PROCESAR DATOS"</strong></li>
+      </ol>
+
+      <div style="background: var(--bg-alt); border-left: 4px solid var(--tysa-acid); padding: 10px 12px; margin-bottom: 12px; font-size: 11px; color: var(--ink-soft);">
+        <strong>Asegurate</strong> de que en la primera línea estén los encabezados: <code style="background: var(--bg); padding: 1px 4px; border: 1px solid var(--line-faint);">NO · DIA INS · DIA FACT · Job · Pol No · cod · PR · Q · TOTAL · DESCRIPTION · FC</code>
+      </div>
+
+      <div style="margin-bottom: 10px;">
+        <label style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: var(--ink-muted);">PROYECTO DESTINO:</label>
+        <select id="pasteProject" style="margin-left: 8px; padding: 6px 10px;">
+          <option value="WARREN">WARREN</option>
+          <option value="SPRING RUN">SPRING RUN</option>
+          <option value="BALTIMORE">BALTIMORE</option>
+          <option value="PITTSBURGH">PITTSBURGH</option>
+          <option value="PHILY">PHILY</option>
+        </select>
+      </div>
+      <textarea id="pasteArea" placeholder="Tocá aquí y pegá los datos copiados de Google Sheets..." style="
+        width: 100%;
+        min-height: 240px;
+        padding: 14px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        border: 2px solid var(--ink);
+        background: var(--bg-card);
+        color: var(--ink);
+        resize: vertical;
+        outline: none;
+        -webkit-appearance: none;
+      "></textarea>
+
+      <div class="share-actions" style="margin-top: 14px;">
+        <button class="btn-pill" onclick="processPastedData()" style="background: var(--tysa-lime); color: var(--tysa-darkest); font-weight: 700; padding: 10px 20px;">⚡ PROCESAR DATOS</button>
+        <button class="btn-pill ghost" onclick="document.getElementById('pasteArea').value=''" style="color: var(--ink); border-color: var(--ink);">LIMPIAR</button>
+        <button class="btn-pill ghost" onclick="closeModal('pasteModal')" style="color: var(--ink); border-color: var(--ink); margin-left: auto;">CANCELAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: SNAPSHOT BANNER ============ -->
+
+<div class="toast" id="toast">—</div>
+
+<!-- ============ EMBEDDED DATA ============ -->
+<script id="embeddedData" type="application/json">{"rows":[[1,"2026-03-26","2026-04-02","PV073159","SITE SURVEY","V199",150.0,25.0,3750.0,"SI"],[2,"2026-03-27","2026-04-03","PV073159","SITE SURVEY","V199",150.0,58.0,8700.0,"SI"],[3,"2026-03-28","2026-04-04","PV073159","SITE SURVEY","V199",150.0,19.0,2850.0,"SI"],[4,"2026-04-07","2026-04-07","PV073159","SITE SURVEY","V199",150.0,13.0,1950.0,"SI"],[5,"2026-04-08","2026-04-08","PV073159","SITE SURVEY","V199",150.0,41.0,6150.0,"SI"],[6,"2026-04-09","2026-04-09","PV073159","SITE SURVEY","V199",150.0,40.0,6000.0,"SI"],[7,"2026-04-10","2026-04-10","PV073159","SITE SURVEY","V199",150.0,75.0,11250.0,"SI"],[8,"2026-04-11","2026-04-11","PV073159","SITE SURVEY","V199",150.0,66.0,9900.0,"SI"],[9,"2026-04-14","2026-04-14","PV073159","SITE SURVEY","V199",150.0,42.0,6300.0,"SI"],[10,"2026-04-15","2026-04-15","PV073159","SITE SURVEY","V199",150.0,35.0,5250.0,"SI"],[11,"2026-04-17","2026-04-17","PV073159","SITE SURVEY","V199",150.0,80.0,12000.0,"SI"],[12,"2026-04-18","2026-04-18","PV073159","SITE SURVEY","V199",150.0,165.0,24750.0,"SI"],[13,"2026-04-19","2026-04-19","PV073159","SITE SURVEY","V199",150.0,97.0,14550.0,"SI"],[14,"2026-04-15","2026-04-15","PV073159","26608","V162",56.75,1.0,56.75,"SI"],[15,"2026-04-15","2026-04-15","PV073159","26608","V168",17.97,1.0,17.97,"SI"],[16,"2026-04-15","2026-04-15","PV073159","26608","V185",195.25,1.0,195.25,"SI"],[17,"2026-04-15","2026-04-15","PV073159","25585","V162",56.75,1.0,56.75,"SI"],[18,"2026-04-15","2026-04-15","PV073159","25585","V163",19.99,1.0,19.99,"SI"],[19,"2026-04-15","2026-04-15","PV073159","25585","V168",17.97,1.0,17.97,"SI"],[20,"2026-04-15","2026-04-15","PV073159","25585","V185",195.25,1.0,195.25,"SI"],[21,"2026-04-15","2026-04-15","PV073159","26616","V162",56.75,1.0,56.75,"SI"],[22,"2026-04-15","2026-04-15","PV073159","26616","V163",19.99,1.0,19.99,"SI"],[23,"2026-04-15","2026-04-15","PV073159","26616","V185",195.25,1.0,195.25,"SI"],[21,"2026-04-16","2026-04-16","PV073159","25877","V162",56.75,3.0,170.25,"SI"],[22,"2026-04-16","2026-04-16","PV073159","25877","V165",73.63,1.0,73.63,"SI"],[23,"2026-04-16","2026-04-16","PV073159","25877","V163",19.99,2.0,39.98,"SI"],[24,"2026-04-17","2026-04-17","PV073159","26612","V162",56.75,2.0,113.5,"SI"],[25,"2026-04-17","2026-04-17","PV073159","26612","V163",19.99,2.0,39.98,"SI"],[26,"2026-04-17","2026-04-17","PV073159","26612","V185",195.25,1.0,195.25,"SI"],[27,"2026-04-17","2026-04-17","PV073159","26613","V162",56.75,1.0,56.75,"SI"],[28,"2026-04-17","2026-04-17","PV073159","26613","V163",19.99,1.0,19.99,"SI"],[29,"2026-04-17","2026-04-17","PV073159","26613","V168",17.97,1.0,17.97,"SI"],[30,"2026-04-17","2026-04-17","PV073159","26613","V185",195.25,1.0,195.25,"SI"],[31,"2026-04-22","2026-04-22","PV073378","17495","V162",56.75,1.0,56.75,"SI"],[32,"2026-04-22","2026-04-22","PV073378","17495","V163",19.99,1.0,19.99,"SI"],[33,"2026-04-22","2026-04-22","PV073378","17495","V185",195.25,1.0,195.25,"SI"],[34,"2026-04-22","2026-04-22","PV073378","20607","V115",227.5,1.0,227.5,"SI"],[35,"2026-04-22","2026-04-22","PV073378","20607","V162",56.75,1.0,56.75,"SI"],[36,"2026-04-22","2026-04-22","PV073378","20607","V163",19.99,1.0,19.99,"SI"],[37,"2026-04-22","2026-04-22","PV073378","20607","V185",195.25,1.0,195.25,"SI"],[38,"2026-04-22","2026-04-22","PV073378","24473","V163",19.99,1.0,19.99,"SI"],[39,"2026-04-22","2026-04-22","PV073378","24473","V185",195.25,1.0,195.25,"SI"],[40,"2026-04-22","2026-04-22","PV073378","25526","V162",56.75,2.0,113.5,"SI"],[41,"2026-04-22","2026-04-22","PV073378","25526","V185",195.25,1.0,195.25,"SI"],[42,"2026-04-22","2026-04-22","PV073378","25708","V162",56.75,1.0,56.75,"SI"],[43,"2026-04-22","2026-04-22","PV073378","25708","V163",19.99,1.0,19.99,"SI"],[44,"2026-04-22","2026-04-22","PV073378","25708","V185",195.25,1.0,195.25,"SI"],[45,"2026-04-22","2026-04-22","PV073378","25939","V185",195.25,1.0,195.25,"SI"],[46,"2026-04-22","2026-04-22","PV073378","26149","V162",56.75,1.0,56.75,"SI"],[47,"2026-04-22","2026-04-22","PV073378","26149","V163",19.99,1.0,19.99,"SI"],[48,"2026-04-22","2026-04-22","PV073378","26149","V185",195.25,1.0,195.25,"SI"],[49,"2026-04-22","2026-04-22","PV073378","26152","V162",56.75,1.0,56.75,"SI"],[50,"2026-04-22","2026-04-22","PV073378","26152","V163",19.99,1.0,19.99,"SI"],[51,"2026-04-22","2026-04-22","PV073378","26152","V168",17.97,1.0,17.97,"SI"],[52,"2026-04-22","2026-04-22","PV073378","26152","V185",195.25,1.0,195.25,"SI"],[53,"2026-04-22","2026-04-22","PV073378","26441","V162",56.75,1.0,56.75,"SI"],[54,"2026-04-22","2026-04-22","PV073378","26441","V185",195.25,1.0,195.25,"SI"],[55,"2026-04-22","2026-04-22","PV073378","26606","V162",56.75,1.0,56.75,"SI"],[56,"2026-04-22","2026-04-22","PV073378","26606","V163",19.99,1.0,19.99,"SI"],[57,"2026-04-22","2026-04-22","PV073378","26606","V168",17.97,1.0,17.97,"SI"],[58,"2026-04-22","2026-04-22","PV073378","26606","V185",195.25,1.0,195.25,"SI"],[59,"2026-04-22","2026-04-22","PV073378","26607","V162",56.75,1.0,56.75,"SI"],[60,"2026-04-22","2026-04-22","PV073378","26607","V185",195.25,1.0,195.25,"SI"],[61,"2026-04-22","2026-04-22","PV073378","26617","V162",56.75,1.0,56.75,"SI"],[62,"2026-04-22","2026-04-22","PV073378","26617","V185",195.25,1.0,195.25,"SI"],[63,"2026-04-22","2026-04-22","PV073378","26724","V163",19.99,2.0,39.98,"SI"],[64,"2026-04-22","2026-04-22","PV073378","26724","V168",17.97,1.0,17.97,"SI"],[65,"2026-04-22","2026-04-22","PV073378","26724","V185",195.25,1.0,195.25,"SI"],[66,"2026-04-23","2026-04-23","PV073378","20418","V185",195.25,1.0,195.25,"SI"],[67,"2026-04-23","2026-04-23","PV073378","22155","V185",195.25,1.0,195.25,"SI"],[68,"2026-04-23","2026-04-23","PV073378","22493","V162",56.75,1.0,56.75,"SI"],[69,"2026-04-23","2026-04-23","PV073378","22493","V163",19.99,2.0,39.98,"SI"],[70,"2026-04-23","2026-04-23","PV073378","22497","V162",56.75,1.0,56.75,"SI"],[71,"2026-04-23","2026-04-23","PV073378","22497","V163",19.99,1.0,19.99,"SI"],[72,"2026-04-23","2026-04-23","PV073378","22497","V164",48.75,1.0,48.75,"SI"],[73,"2026-04-23","2026-04-23","PV073378","22497","V185",195.25,1.0,195.25,"SI"],[74,"2026-04-23","2026-04-23","PV073378","22789","V185",195.25,1.0,195.25,"SI"],[75,"2026-04-23","2026-04-23","PV073378","23806","V185",195.25,1.0,195.25,"SI"],[76,"2026-04-23","2026-04-23","PV073378","24214","V162",56.75,1.0,56.75,"SI"],[77,"2026-04-23","2026-04-23","PV073378","24214","V163",19.99,1.0,19.99,"SI"],[78,"2026-04-23","2026-04-23","PV073378","24214","V168",17.97,1.0,17.97,"SI"],[79,"2026-04-23","2026-04-23","PV073378","24214","V185",195.25,1.0,195.25,"SI"],[80,"2026-04-23","2026-04-23","PV073378","24215","V162",56.75,1.0,56.75,"SI"],[81,"2026-04-23","2026-04-23","PV073378","24215","V163",19.99,1.0,19.99,"SI"],[82,"2026-04-23","2026-04-23","PV073378","24215","V168",17.97,1.0,17.97,"SI"],[83,"2026-04-23","2026-04-23","PV073378","24215","V185",195.25,1.0,195.25,"SI"],[84,"2026-04-23","2026-04-23","PV073378","24290","V185",195.25,1.0,195.25,"SI"],[85,"2026-04-23","2026-04-23","PV073378","25376","V185",195.25,1.0,195.25,"SI"],[86,"2026-04-23","2026-04-23","PV073378","25953","V185",195.25,1.0,195.25,"SI"],[87,"2026-04-23","2026-04-23","PV073378","26364","V162",56.75,2.0,113.5,"SI"],[88,"2026-04-23","2026-04-23","PV073378","26364","V163",19.99,1.0,19.99,"SI"],[89,"2026-04-23","2026-04-23","PV073378","26364","V185",195.25,1.0,195.25,"SI"],[90,"2026-04-23","2026-04-23","PV073378","26367","V162",56.75,1.0,56.75,"SI"],[91,"2026-04-23","2026-04-23","PV073378","26367","V163",19.99,1.0,19.99,"SI"],[92,"2026-04-23","2026-04-23","PV073378","26367","V164",48.75,1.0,48.75,"SI"],[93,"2026-04-23","2026-04-23","PV073378","26367","V185",195.25,1.0,195.25,"SI"],[94,"2026-04-23","2026-04-23","PV073378","26369","V162",56.75,1.0,56.75,"SI"],[95,"2026-04-23","2026-04-23","PV073378","26369","V163",19.99,1.0,19.99,"SI"],[96,"2026-04-23","2026-04-23","PV073378","26369","V168",17.97,1.0,17.97,"SI"],[97,"2026-04-23","2026-04-23","PV073378","26369","V185",195.25,1.0,195.25,"SI"],[98,"2026-04-23","2026-04-23","PV073378","26436","V162",56.75,1.0,56.75,"SI"],[99,"2026-04-23","2026-04-23","PV073378","26436","V163",19.99,1.0,19.99,"SI"],[100,"2026-04-23","2026-04-23","PV073378","26436","V168",17.97,2.0,35.94,"SI"],[101,"2026-04-23","2026-04-23","PV073378","26436","V185",195.25,1.0,195.25,"SI"],[102,"2026-04-23","2026-04-23","PV073378","26690","V185",195.25,1.0,195.25,"SI"],[103,"2026-04-23","2026-04-23","PV073378","26865","V185",195.25,1.0,195.25,"SI"],[104,"2026-04-23","2026-04-23","PV073378","26866","V185",195.25,1.0,195.25,"SI"],[105,"2026-04-23","2026-04-23","PV073378","27823","V162",56.75,2.0,113.5,"SI"],[106,"2026-04-23","2026-04-23","PV073378","27823","V163",19.99,2.0,39.98,"SI"],[107,"2026-04-23","2026-04-23","PV073378","27823","V185",195.25,1.0,195.25,"SI"],[108,"2026-04-23","2026-04-23","PV073378","23827","V199",150.0,1.0,150.0,"SI"],[109,"2026-04-24","2026-04-24","PV073378","14642","V185",195.25,1.0,195.25,"SI"],[110,"2026-04-24","2026-04-24","PV073378","20260","V162",56.75,1.0,56.75,"SI"],[111,"2026-04-24","2026-04-24","PV073378","20260","V163",19.99,1.0,19.99,"SI"],[112,"2026-04-24","2026-04-24","PV073378","20260","V185",195.25,1.0,195.25,"SI"],[113,"2026-04-24","2026-04-24","PV073378","21842","V185",195.25,1.0,195.25,"SI"],[114,"2026-04-24","2026-04-24","PV073378","22661","V163",19.99,1.0,19.99,"SI"],[115,"2026-04-24","2026-04-24","PV073378","22661","V168",17.97,1.0,17.97,"SI"],[116,"2026-04-24","2026-04-24","PV073378","22661","V185",195.25,1.0,195.25,"SI"],[117,"2026-04-24","2026-04-24","PV073378","22937","V185",195.25,1.0,195.25,"SI"],[118,"2026-04-24","2026-04-24","PV073378","23458","V162",56.75,1.0,56.75,"SI"],[119,"2026-04-24","2026-04-24","PV073378","23458","V163",19.99,2.0,39.98,"SI"],[120,"2026-04-24","2026-04-24","PV073378","23458","V168",17.97,1.0,17.97,"SI"],[121,"2026-04-24","2026-04-24","PV073378","23458","V185",195.25,1.0,195.25,"SI"],[122,"2026-04-24","2026-04-24","PV073378","23862","V163",19.99,1.0,19.99,"SI"],[123,"2026-04-24","2026-04-24","PV073378","23862","V185",195.25,1.0,195.25,"SI"],[124,"2026-04-24","2026-04-24","PV073378","24490","V162",56.75,1.0,56.75,"SI"],[125,"2026-04-24","2026-04-24","PV073378","24490","V163",19.99,1.0,19.99,"SI"],[126,"2026-04-24","2026-04-24","PV073378","24490","V185",195.25,1.0,195.25,"SI"],[127,"2026-04-24","2026-04-24","PV073378","24631","V162",56.75,1.0,56.75,"SI"],[128,"2026-04-24","2026-04-24","PV073378","24631","V185",195.25,1.0,195.25,"SI"],[129,"2026-04-24","2026-04-24","PV073378","25375","V162",56.75,1.0,56.75,"SI"],[130,"2026-04-24","2026-04-24","PV073378","25375","V163",19.99,1.0,19.99,"SI"],[131,"2026-04-24","2026-04-24","PV073378","25375","V185",195.25,1.0,195.25,"SI"],[132,"2026-04-24","2026-04-24","PV073378","25697","V185",195.25,1.0,195.25,"SI"],[133,"2026-04-24","2026-04-24","PV073378","26365","V162",56.75,1.0,56.75,"SI"],[134,"2026-04-24","2026-04-24","PV073378","26365","V163",19.99,1.0,19.99,"SI"],[135,"2026-04-24","2026-04-24","PV073378","26365","V185",195.25,1.0,195.25,"SI"],[136,"2026-04-24","2026-04-24","PV073378","26726","V162",56.75,1.0,56.75,"SI"],[137,"2026-04-24","2026-04-24","PV073378","26726","V163",19.99,1.0,19.99,"SI"],[138,"2026-04-24","2026-04-24","PV073378","26726","V185",195.25,1.0,195.25,"SI"],[139,"2026-04-24","2026-04-24","PV073378","26884","V162",56.75,1.0,56.75,"SI"],[140,"2026-04-24","2026-04-24","PV073378","26884","V163",19.99,1.0,19.99,"SI"],[141,"2026-04-24","2026-04-24","PV073378","26884","V185",195.25,1.0,195.25,"SI"],[142,"2026-04-24","2026-04-24","PV073378","27822","V162",56.75,1.0,56.75,"SI"],[143,"2026-04-24","2026-04-24","PV073378","27822","V185",195.25,1.0,195.25,"SI"],[144,"2026-04-25","2026-04-25","PV073378","24493","V162",56.75,1.0,56.75,"SI"],[145,"2026-04-25","2026-04-25","PV073378","24493","V163",19.99,4.0,79.96,"SI"],[146,"2026-04-25","2026-04-25","PV073378","24493","V164",48.75,1.0,48.75,"SI"],[147,"2026-04-25","2026-04-25","PV073378","24493","V165",73.63,2.0,147.26,"SI"],[148,"2026-04-25","2026-04-25","PV073378","24493","V185",195.25,1.0,195.25,"SI"],[149,"2026-04-25","2026-04-25","PV073378","25793","V162",56.75,3.0,170.25,"SI"],[150,"2026-04-25","2026-04-25","PV073378","25793","V185",195.25,1.0,195.25,"SI"],[151,"2026-04-25","2026-04-25","PV073378","25881","V162",56.75,1.0,56.75,"SI"],[152,"2026-04-25","2026-04-25","PV073378","25881","V164",48.75,1.0,48.75,"SI"],[153,"2026-04-25","2026-04-25","PV073378","25881","V185",195.25,1.0,195.25,"SI"],[154,"2026-04-25","2026-04-25","PV073378","26368","V162",56.75,1.0,56.75,"SI"],[155,"2026-04-25","2026-04-25","PV073378","26368","V163",19.99,3.0,59.97,"SI"],[156,"2026-04-25","2026-04-25","PV073378","26368","V185",195.25,1.0,195.25,"SI"],[157,"2026-04-25","2026-04-25","PV073378","26370","V162",56.75,1.0,56.75,"SI"],[158,"2026-04-25","2026-04-25","PV073378","26370","V185",195.25,1.0,195.25,"SI"],[159,"2026-04-25","2026-04-25","PV073378","26578","V162",56.75,1.0,56.75,"SI"],[160,"2026-04-25","2026-04-25","PV073378","26578","V163",19.99,1.0,19.99,"SI"],[161,"2026-04-25","2026-04-25","PV073378","26578","V164",48.75,1.0,48.75,"SI"],[162,"2026-04-25","2026-04-25","PV073378","26578","V165",73.63,1.0,73.63,"SI"],[163,"2026-04-25","2026-04-25","PV073378","26578","V185",195.25,1.0,195.25,"SI"],[164,"2026-04-25","2026-04-25","PV073378","27390","V162",56.75,1.0,56.75,"SI"],[165,"2026-04-25","2026-04-25","PV073378","27390","V185",195.25,1.0,195.25,"SI"],[166,"2026-04-26","2026-04-26","PV073378","20459","V185",195.25,1.0,195.25,"SI"],[167,"2026-04-26","2026-04-26","PV073378","20740","V185",195.25,1.0,195.25,"SI"],[168,"2026-04-26","2026-04-26","PV073378","23394","V162",56.75,1.0,56.75,"SI"],[169,"2026-04-26","2026-04-26","PV073378","23394","V185",195.25,1.0,195.25,"SI"],[170,"2026-04-26","2026-04-26","PV073378","23567","V185",195.25,1.0,195.25,"SI"],[171,"2026-04-26","2026-04-26","PV073378","23857","V163",19.99,1.0,19.99,"SI"],[172,"2026-04-26","2026-04-26","PV073378","23857","V168",17.97,2.0,35.94,"SI"],[173,"2026-04-26","2026-04-26","PV073378","23857","V185",195.25,1.0,195.25,"SI"],[174,"2026-04-26","2026-04-26","PV073378","24775","V163",19.99,2.0,39.98,"SI"],[175,"2026-04-26","2026-04-26","PV073378","24775","V168",17.97,1.0,17.97,"SI"],[176,"2026-04-26","2026-04-26","PV073378","24775","V185",195.25,1.0,195.25,"SI"],[177,"2026-04-26","2026-04-26","PV073378","25735","V185",195.25,1.0,195.25,"SI"],[178,"2026-04-26","2026-04-26","PV073378","26390","V185",195.25,1.0,195.25,"SI"],[179,"2026-04-26","2026-04-26","PV073378","26431","V163",19.99,2.0,39.98,"SI"],[180,"2026-04-26","2026-04-26","PV073378","26431","V168",17.97,2.0,35.94,"SI"],[181,"2026-04-26","2026-04-26","PV073378","26431","V185",195.25,1.0,195.25,"SI"],[182,"2026-04-26","2026-04-26","PV073378","26780","V163",19.99,3.0,59.97,"SI"],[183,"2026-04-26","2026-04-26","PV073378","26780","V185",195.25,1.0,195.25,"SI"],[184,"2026-04-26","2026-04-26","PV073378","27391","V162",56.75,1.0,56.75,"SI"],[185,"2026-04-26","2026-04-26","PV073378","27391","V164",48.75,2.0,97.5,"SI"],[186,"2026-04-26","2026-04-26","PV073378","27391","V185",195.25,1.0,195.25,"SI"],[187,"2026-04-26","2026-04-26","PV073378","27410","V185",195.25,1.0,195.25,"SI"],[188,"2026-04-26","2026-04-26","PV073378","27854","V185",195.25,1.0,195.25,"SI"],[189,"2026-04-26","2026-04-26","PV073378","24328","V199",150.0,1.0,150.0,"SI"],[190,"2026-04-27","2026-04-27","PV073533","22140","V162",56.75,1.0,56.75,"SI"],[191,"2026-04-27","2026-04-27","PV073533","22140","V164",48.75,1.0,48.75,"SI"],[192,"2026-04-27","2026-04-27","PV073533","22140","V163",19.99,2.0,39.98,"SI"],[193,"2026-04-27","2026-04-27","PV073533","22140","V168",17.97,1.0,17.97,"SI"],[194,"2026-04-27","2026-04-27","PV073533","22140","V185",195.25,1.0,195.25,"SI"],[195,"2026-04-27","2026-04-27","PV073533","22140","V165",73.63,1.0,73.63,"SI"],[196,"2026-04-27","2026-04-27","PV073533","21254","V185",195.25,1.0,195.25,"SI"],[197,"2026-04-27","2026-04-27","PV073533","22662","V185",195.25,1.0,195.25,"SI"],[198,"2026-04-27","2026-04-27","PV073533","25662","V185",195.25,1.0,195.25,"SI"],[199,"2026-04-27","2026-04-27","PV073533","25661","V185",195.25,1.0,195.25,"SI"],[200,"2026-04-27","2026-04-27","PV073533","22681","V162",56.75,1.0,56.75,"SI"],[201,"2026-04-27","2026-04-27","PV073533","22681","V164",48.75,1.0,48.75,"SI"],[202,"2026-04-27","2026-04-27","PV073533","22681","V185",195.25,1.0,195.25,"SI"],[203,"2026-04-27","2026-04-27","PV073533","27377","V162",56.75,1.0,56.75,"SI"],[204,"2026-04-27","2026-04-27","PV073533","27377","V163",19.99,1.0,19.99,"SI"],[205,"2026-04-27","2026-04-27","PV073533","27377","V185",195.25,1.0,195.25,"SI"],[206,"2026-04-27","2026-04-27","PV073533","26196","V185",195.25,1.0,195.25,"SI"],[207,"2026-04-27","2026-04-27","PV073533","25469","V185",195.25,1.0,195.25,"SI"],[208,"2026-04-27","2026-04-27","PV073533","21846","V185",195.25,1.0,195.25,"SI"],[209,"2026-04-27","2026-04-27","PV073533","26409","V164",48.75,2.0,97.5,"SI"],[210,"2026-04-27","2026-04-27","PV073533","26409","V163",19.99,1.0,19.99,"SI"],[211,"2026-04-27","2026-04-27","PV073533","26409","V168",17.97,1.0,17.97,"SI"],[212,"2026-04-27","2026-04-27","PV073533","26409","V185",195.25,1.0,195.25,"SI"],[213,"2026-04-27","2026-04-27","PV073533","25879","V162",56.75,1.0,56.75,"SI"],[214,"2026-04-27","2026-04-27","PV073533","25879","V164",48.75,1.0,48.75,"SI"],[215,"2026-04-27","2026-04-27","PV073533","25879","V163",19.99,2.0,39.98,"SI"],[216,"2026-04-27","2026-04-27","PV073533","25879","V185",195.25,1.0,195.25,"SI"],[217,"2026-04-28","2026-04-28","PV073533","26128","V162",56.75,3.0,170.25,"SI"],[218,"2026-04-28","2026-04-28","PV073533","26128","V164",48.75,1.0,48.75,"SI"],[219,"2026-04-28","2026-04-28","PV073533","26128","V185",195.25,1.0,195.25,"SI"],[220,"2026-04-28","2026-04-28","PV073533","26872","V162",56.75,3.0,170.25,"SI"],[221,"2026-04-28","2026-04-28","PV073533","26872","V164",48.75,1.0,48.75,"SI"],[222,"2026-04-28","2026-04-28","PV073533","26872","V185",195.25,1.0,195.25,"SI"],[223,"2026-04-28","2026-04-28","PV073533","17492","V185",195.25,1.0,195.25,"SI"],[224,"2026-04-28","2026-04-28","PV073533","26923","V185",195.25,1.0,195.25,"SI"],[225,"2026-04-28","2026-04-28","PV073533","24437","V185",195.25,1.0,195.25,"SI"],[226,"2026-04-28","2026-04-28","PV073533","21454","V185",195.25,1.0,195.25,"SI"],[227,"2026-04-28","2026-04-28","PV073533","26504","V185",195.25,1.0,195.25,"SI"],[228,"2026-04-28","2026-04-28","PV073533","26589","V185",195.25,1.0,195.25,"SI"],[229,"2026-04-28","2026-04-28","PV073533","26589","V162",56.75,2.0,113.5,"SI"],[230,"2026-04-28","2026-04-28","PV073533","26589","V164",48.75,1.0,48.75,"SI"],[231,"2026-04-28","2026-04-28","PV073533","26589","V165",73.63,1.0,73.63,"SI"],[232,"2026-04-28","2026-04-28","PV073533","26405","V163",19.99,3.0,59.97,"SI"],[233,"2026-04-28","2026-04-28","PV073533","26405","V168",17.97,1.0,17.97,"SI"],[234,"2026-04-28","2026-04-28","PV073533","26405","V185",195.25,1.0,195.25,"SI"],[235,"2026-04-28","2026-04-28","PV073533","26535","V163",19.99,2.0,39.98,"SI"],[236,"2026-04-28","2026-04-28","PV073533","26535","V185",195.25,1.0,195.25,"SI"],[237,"2026-04-28","2026-04-28","PV073533","26389","V162",56.75,1.0,56.75,"SI"],[238,"2026-04-28","2026-04-28","PV073533","26389","V185",195.25,1.0,195.25,"SI"],[239,"2026-04-28","2026-04-28","PV073533","26363","V162",56.75,1.0,56.75,"SI"],[240,"2026-04-28","2026-04-28","PV073533","26363","V163",19.99,1.0,19.99,"SI"],[241,"2026-04-28","2026-04-28","PV073533","26363","V165",73.63,2.0,147.26,"SI"],[242,"2026-04-28","2026-04-28","PV073533","26363","V164",48.75,1.0,48.75,"SI"],[243,"2026-04-28","2026-04-28","PV073533","26363","V185",195.25,1.0,195.25,"SI"],[244,"2026-04-28","2026-04-28","PV073533","26366","V162",56.75,1.0,56.75,"SI"],[245,"2026-04-28","2026-04-28","PV073533","26366","V163",19.99,1.0,19.99,"SI"],[246,"2026-04-28","2026-04-28","PV073533","26366","V185",195.25,1.0,195.25,"SI"],[247,"2026-04-28","2026-04-28","PV073533","25702","V185",195.25,1.0,195.25,"SI"],[248,"2026-04-29","2026-04-29","PV073533","26414","V185",195.25,1.0,195.25,"SI"],[249,"2026-04-29","2026-04-29","PV073533","26414","V168",17.97,1.0,17.97,"SI"],[250,"2026-04-29","2026-04-29","PV073533","26414","V163",19.99,1.0,19.99,"SI"],[251,"2026-04-29","2026-04-29","PV073533","26429","V162",56.75,3.0,170.25,"SI"],[252,"2026-04-29","2026-04-29","PV073533","26429","V185",195.25,1.0,195.25,"SI"],[253,"2026-04-29","2026-04-29","PV073533","27725","V185",195.25,1.0,195.25,"SI"],[254,"2026-04-29","2026-04-29","PV073533","27697","V185",195.25,1.0,195.25,"SI"],[255,"2026-04-29","2026-04-29","PV073533","27697","V162",56.75,1.0,56.75,"SI"],[256,"2026-04-29","2026-04-29","PV073533","23912","V185",195.25,1.0,195.25,"SI"],[257,"2026-04-29","2026-04-29","PV073533","23912","V162",56.75,1.0,56.75,"SI"],[258,"2026-04-29","2026-04-29","PV073533","25695","V185",195.25,1.0,195.25,"SI"],[259,"2026-04-29","2026-04-29","PV073533","25695","V163",19.99,2.0,39.98,"SI"],[260,"2026-04-29","2026-04-29","PV073533","25185","V185",195.25,1.0,195.25,"SI"],[261,"2026-04-29","2026-04-29","PV073533","24423","V185",195.25,1.0,195.25,"SI"],[262,"2026-04-29","2026-04-29","PV073533","24423","V163",19.99,2.0,39.98,"SI"],[263,"2026-04-29","2026-04-29","PV073533","26341","V185",195.25,1.0,195.25,"SI"],[264,"2026-04-29","2026-04-29","PV073533","24314","V185",195.25,1.0,195.25,"SI"],[265,"2026-04-29","2026-04-29","PV073533","25041","V185",195.25,1.0,195.25,"SI"],[266,"2026-04-29","2026-04-29","PV073533","26437","V162",56.75,1.0,56.75,"SI"],[267,"2026-04-29","2026-04-29","PV073533","26437","V163",19.99,3.0,59.97,"SI"],[268,"2026-04-29","2026-04-29","PV073533","26437","V165",73.63,2.0,147.26,"SI"],[269,"2026-04-29","2026-04-29","PV073533","26437","V185",195.25,1.0,195.25,"SI"],[270,"2026-04-29","2026-04-29","PV073533","27813","V162",56.75,1.0,56.75,"SI"],[271,"2026-04-29","2026-04-29","PV073533","27813","V164",48.75,1.0,48.75,"SI"],[272,"2026-04-29","2026-04-29","PV073533","27813","V185",195.25,1.0,195.25,"SI"],[273,"2026-04-29","2026-04-29","PV073533","22781","V162",56.75,1.0,56.75,"SI"],[274,"2026-04-29","2026-04-29","PV073533","22781","V163",19.99,1.0,19.99,"SI"],[275,"2026-04-29","2026-04-29","PV073533","22781","V164",48.75,1.0,48.75,"SI"],[276,"2026-04-29","2026-04-29","PV073533","22781","V185",195.25,1.0,195.25,"SI"],[277,"2026-04-29","2026-04-29","PV073533","23232","V185",195.25,1.0,195.25,"SI"],[278,"2026-04-29","2026-04-29","PV073533","27239","V162",56.75,1.0,56.75,"SI"],[279,"2026-04-29","2026-04-29","PV073533","27239","V185",195.25,1.0,195.25,"SI"],[280,"2026-04-29","2026-04-29","PV073533","24476","V162",56.75,2.0,113.5,"SI"],[281,"2026-04-29","2026-04-29","PV073533","24476","V163",19.99,2.0,39.98,"SI"],[282,"2026-04-29","2026-04-29","PV073533","24476","V185",195.25,1.0,195.25,"SI"],[283,"2026-04-30","2026-04-30","PV073533","23286","V162",56.75,1.0,56.75,"SI"],[284,"2026-04-30","2026-04-30","PV073533","23286","V163",19.99,3.0,59.97,"SI"],[285,"2026-04-30","2026-04-30","PV073533","23286","V185",195.25,1.0,195.25,"SI"],[286,"2026-04-30","2026-04-30","PV073533","25392","V162",56.75,1.0,56.75,"SI"],[287,"2026-04-30","2026-04-30","PV073533","25392","V185",195.25,1.0,195.25,"SI"],[288,"2026-04-30","2026-04-30","PV073533","26688","V162",56.75,1.0,56.75,"SI"],[289,"2026-04-30","2026-04-30","PV073533","26688","V163",19.99,1.0,19.99,"SI"],[290,"2026-04-30","2026-04-30","PV073533","26688","V185",195.25,1.0,195.25,"SI"],[291,"2026-04-30","2026-04-30","PV073533","26847","V163",19.99,2.0,39.98,"SI"],[292,"2026-04-30","2026-04-30","PV073533","26847","V185",195.25,1.0,195.25,"SI"],[293,"2026-04-30","2026-04-30","PV073533","26848","V163",19.99,2.0,39.98,"SI"],[294,"2026-04-30","2026-04-30","PV073533","26848","V185",195.25,1.0,195.25,"SI"],[295,"2026-04-30","2026-04-30","PV073533","26691","V163",19.99,2.0,39.98,"SI"],[296,"2026-04-30","2026-04-30","PV073533","26691","V165",73.63,1.0,73.63,"SI"],[297,"2026-04-30","2026-04-30","PV073533","26691","V185",195.25,1.0,195.25,"SI"],[298,"2026-04-30","2026-04-30","PV073533","26157","V162",56.75,1.0,56.75,"SI"],[299,"2026-04-30","2026-04-30","PV073533","26157","V185",195.25,1.0,195.25,"SI"],[300,"2026-04-30","2026-04-30","PV073533","26164","V162",56.75,1.0,56.75,"SI"],[301,"2026-04-30","2026-04-30","PV073533","26164","V185",195.25,1.0,195.25,"SI"],[302,"2026-04-30","2026-04-30","PV073533","25298","V185",195.25,1.0,195.25,"SI"],[303,"2026-04-30","2026-04-30","PV073533","27329","V185",195.25,1.0,195.25,"SI"],[304,"2026-04-30","2026-04-30","PV073533","26161","V162",56.75,1.0,56.75,"SI"],[305,"2026-04-30","2026-04-30","PV073533","26161","V163",19.99,1.0,19.99,"SI"],[306,"2026-04-30","2026-04-30","PV073533","26161","V185",195.25,1.0,195.25,"SI"],[307,"2026-04-30","2026-04-30","PV073533","26160","V162",56.75,1.0,56.75,"SI"],[308,"2026-04-30","2026-04-30","PV073533","26160","V163",19.99,1.0,19.99,"SI"],[309,"2026-04-30","2026-04-30","PV073533","26160","V185",195.25,1.0,195.25,"SI"],[310,"2026-04-30","2026-04-30","PV073533","26155","V162",56.75,1.0,56.75,"SI"],[311,"2026-04-30","2026-04-30","PV073533","26155","V185",195.25,1.0,195.25,"SI"],[312,"2026-04-30","2026-04-30","PV073533","26159","V162",56.75,1.0,56.75,"SI"],[313,"2026-04-30","2026-04-30","PV073533","26159","V185",195.25,1.0,195.25,"SI"],[314,"2026-04-30","2026-04-30","PV073533","26555","V185",195.25,1.0,195.25,"SI"],[315,"2026-04-30","2026-04-30","PV073533","27313","V185",195.25,1.0,195.25,"SI"],[316,"2026-04-30","2026-04-30","PV073533","25508","V185",195.25,1.0,195.25,"SI"],[317,"2026-04-30","2026-04-30","PV073533","27212","V185",195.25,1.0,195.25,"SI"],[318,"2026-04-30","2026-04-30","PV073533","27214","V185",195.25,1.0,195.25,"SI"],[319,"2026-04-30","2026-04-30","PV073533","27211","V185",195.25,1.0,195.25,"SI"],[320,"2026-04-30","2026-04-30","PV073533","27215","V185",195.25,1.0,195.25,"SI"],[321,"2026-04-30","2026-04-30","PV073533","27210","V185",195.25,1.0,195.25,"SI"],[322,"2026-04-30","2026-04-30","PV073533","27369","V185",195.25,1.0,195.25,"SI"],[323,"2026-04-30","2026-04-30","PV073533","26554","V185",195.25,1.0,195.25,"SI"],[324,"2026-05-01","2026-05-01","PV073533","25393","V162",56.75,1.0,56.75,"SI"],[325,"2026-05-01","2026-05-01","PV073533","25393","V185",195.25,1.0,195.25,"SI"],[326,"2026-05-01","2026-05-01","PV073533","25394","V162",56.75,1.0,56.75,"SI"],[327,"2026-05-01","2026-05-01","PV073533","25394","V185",195.25,1.0,195.25,"SI"],[328,"2026-05-01","2026-05-01","PV073533","26686","V162",56.75,1.0,56.75,"SI"],[329,"2026-05-01","2026-05-01","PV073533","26686","V185",195.25,1.0,195.25,"SI"],[330,"2026-05-01","2026-05-01","PV073533","26154","V162",56.75,1.0,56.75,"SI"],[331,"2026-05-01","2026-05-01","PV073533","26154","V185",195.25,1.0,195.25,"SI"],[332,"2026-05-01","2026-05-01","PV073533","23564","V162",56.75,1.0,56.75,"SI"],[333,"2026-05-01","2026-05-01","PV073533","23564","V185",195.25,1.0,195.25,"SI"],[334,"2026-05-01","2026-05-01","PV073533","26153","V162",56.75,1.0,56.75,"SI"],[335,"2026-05-01","2026-05-01","PV073533","26153","V185",195.25,1.0,195.25,"SI"],[336,"2026-05-01","2026-05-01","PV073533","26037","V163",19.99,5.0,99.95,"SI"],[337,"2026-05-01","2026-05-01","PV073533","26037","V185",195.25,1.0,195.25,"SI"],[338,"2026-05-01","2026-05-01","PV073533","21881","V163",19.99,2.0,39.98,"SI"],[339,"2026-05-01","2026-05-01","PV073533","21881","V185",195.25,1.0,195.25,"SI"],[340,"2026-05-01","2026-05-01","PV073533","23892","V199",150.0,1.0,150.0,"SI"],[341,"2026-05-02","2026-05-02","PV073533","22238","V163",19.99,1.0,19.99,"SI"],[342,"2026-05-02","2026-05-02","PV073533","22238","V185",195.25,1.0,195.25,"SI"],[343,"2026-05-02","2026-05-02","PV073533","24444","V168",17.97,1.0,17.97,"SI"],[344,"2026-05-02","2026-05-02","PV073533","24444","V163",19.99,1.0,19.99,"SI"],[345,"2026-05-02","2026-05-02","PV073533","24444","V185",195.25,1.0,195.25,"SI"],[346,"2026-05-02","2026-05-02","PV073533","24615","V162",56.75,2.0,113.5,"SI"],[347,"2026-05-02","2026-05-02","PV073533","24615","V164",48.75,2.0,97.5,"SI"],[348,"2026-05-02","2026-05-02","PV073533","24615","V163",19.99,1.0,19.99,"SI"],[349,"2026-05-02","2026-05-02","PV073533","24615","V185",195.25,1.0,195.25,"SI"],[350,"2026-05-02","2026-05-02","PV073533","25055","V162",56.75,1.0,56.75,"SI"],[351,"2026-05-02","2026-05-02","PV073533","25055","V163",19.99,9.0,179.91,"SI"],[352,"2026-05-02","2026-05-02","PV073533","25055","V185",195.25,1.0,195.25,"SI"],[353,"2026-05-02","2026-05-02","PV073533","25055","V164",48.75,1.0,48.75,"SI"],[354,"2026-05-02","2026-05-02","PV073533","25055","V168",17.97,1.0,17.97,"SI"],[355,"2026-05-04","2026-05-04","PV073710","24856","V185",195.25,1.0,195.25,"NO"],[356,"2026-05-04","2026-05-04","PV073710","24856","V163",19.99,1.0,19.99,"NO"],[357,"2026-05-04","2026-05-04","PV073710","25833","V163",19.99,13.0,259.87,"NO"],[358,"2026-05-04","2026-05-04","PV073710","25833","V162",56.75,2.0,113.5,"NO"],[359,"2026-05-04","2026-05-04","PV073710","25833","V168",17.97,1.0,17.97,"NO"],[360,"2026-05-04","2026-05-04","PV073710","25833","V185",195.25,1.0,195.25,"NO"],[361,"2026-05-04","2026-05-04","PV073710","24847","V163",19.99,2.0,39.98,"NO"],[362,"2026-05-04","2026-05-04","PV073710","24847","V162",56.75,1.0,56.75,"NO"],[363,"2026-05-04","2026-05-04","PV073710","24847","V168",17.97,1.0,17.97,"NO"],[364,"2026-05-04","2026-05-04","PV073710","24847","V185",195.25,1.0,195.25,"NO"],[365,"2026-05-04","2026-05-04","PV073710","27666","V185",195.25,1.0,195.25,"NO"],[366,"2026-05-04","2026-05-04","PV073710","27666","V163",19.99,3.0,59.97,"NO"],[367,"2026-05-04","2026-05-04","PV073710","27666","V168",17.97,2.0,35.94,"NO"],[368,"2026-05-04","2026-05-04","PV073710","24846","V163",19.99,3.0,59.97,"NO"],[369,"2026-05-04","2026-05-04","PV073710","24846","V165",73.63,2.0,147.26,"NO"],[370,"2026-05-04","2026-05-04","PV073710","24846","V164",48.75,1.0,48.75,"NO"],[371,"2026-05-04","2026-05-04","PV073710","24846","V162",56.75,1.0,56.75,"NO"],[372,"2026-05-04","2026-05-04","PV073710","24846","V185",195.25,1.0,195.25,"NO"],[373,"2026-05-04","2026-05-04","PV073710","20466","V163",19.99,1.0,19.99,"NO"],[374,"2026-05-04","2026-05-04","PV073710","20466","V185",195.25,1.0,195.25,"NO"],[375,"2026-05-04","2026-05-04","PV073710","26800","V163",19.99,2.0,39.98,"NO"],[376,"2026-05-04","2026-05-04","PV073710","26800","V185",195.25,1.0,195.25,"NO"],[377,"2026-05-04","2026-05-04","PV073710","26701","V163",19.99,1.0,19.99,"NO"],[378,"2026-05-04","2026-05-04","PV073710","26701","V185",195.25,1.0,195.25,"NO"],[379,"2026-05-04","2026-05-04","PV073710","24816","V163",19.99,1.0,19.99,"NO"],[380,"2026-05-04","2026-05-04","PV073710","24816","V185",195.25,1.0,195.25,"NO"],[381,"2026-05-04","2026-05-04","PV073710","24501","V163",19.99,2.0,39.98,"NO"],[382,"2026-05-04","2026-05-04","PV073710","24501","V162",56.75,2.0,113.5,"NO"],[383,"2026-05-04","2026-05-04","PV073710","24501","V185",195.25,1.0,195.25,"NO"],[384,"2026-05-05","2026-05-05","PV073710","27386","V163",19.99,2.0,39.98,"NO"],[385,"2026-05-05","2026-05-05","PV073710","27386","V168",17.97,1.0,17.97,"NO"],[386,"2026-05-05","2026-05-05","PV073710","27386","V185",195.25,1.0,195.25,"NO"],[387,"2026-05-05","2026-05-05","PV073710","24608","V163",19.99,1.0,19.99,"NO"],[388,"2026-05-05","2026-05-05","PV073710","24608","V185",195.25,1.0,195.25,"NO"],[389,"2026-05-05","2026-05-05","PV073710","27673","V163",19.99,5.0,99.95,"NO"],[390,"2026-05-05","2026-05-05","PV073710","27673","V168",17.97,1.0,17.97,"NO"],[391,"2026-05-05","2026-05-05","PV073710","27673","V185",195.25,1.0,195.25,"NO"],[392,"2026-05-05","2026-05-05","PV073710","22674","V162",56.75,1.0,56.75,"NO"],[393,"2026-05-05","2026-05-05","PV073710","22674","V164",48.75,1.0,48.75,"NO"],[394,"2026-05-05","2026-05-05","PV073710","22674","V185",195.25,1.0,195.25,"NO"],[395,"2026-05-05","2026-05-05","PV073710","27675","V164",48.75,1.0,48.75,"NO"],[396,"2026-05-05","2026-05-05","PV073710","27675","V162",56.75,1.0,56.75,"NO"],[397,"2026-05-05","2026-05-05","PV073710","27675","V185",195.25,1.0,195.25,"NO"],[398,"2026-05-05","2026-05-05","PV073710","27028","V162",56.75,2.0,113.5,"NO"],[399,"2026-05-05","2026-05-05","PV073710","27028","V163",19.99,2.0,39.98,"NO"],[400,"2026-05-05","2026-05-05","PV073710","27028","V185",195.25,1.0,195.25,"NO"],[401,"2026-05-05","2026-05-05","PV073710","24635","V163",19.99,3.0,59.97,"NO"],[402,"2026-05-05","2026-05-05","PV073710","24635","V168",17.97,1.0,17.97,"NO"],[403,"2026-05-05","2026-05-05","PV073710","24635","V185",195.25,1.0,195.25,"NO"],[404,"2026-05-05","2026-05-05","PV073710","24661","V162",56.75,1.0,56.75,"NO"],[405,"2026-05-05","2026-05-05","PV073710","24661","V164",48.75,1.0,48.75,"NO"],[406,"2026-05-05","2026-05-05","PV073710","24661","V185",195.25,1.0,195.25,"NO"],[407,"2026-05-05","2026-05-05","PV073710","25595","V163",19.99,2.0,39.98,"NO"],[408,"2026-05-05","2026-05-05","PV073710","25595","V168",17.97,1.0,17.97,"NO"],[409,"2026-05-05","2026-05-05","PV073710","25595","V185",195.25,1.0,195.25,"NO"],[410,"2026-05-05","2026-05-05","PV073710","24596","V162",56.75,1.0,56.75,"NO"],[411,"2026-05-05","2026-05-05","PV073710","24596","V163",19.99,3.0,59.97,"NO"],[412,"2026-05-05","2026-05-05","PV073710","24596","V165",73.63,2.0,147.26,"NO"],[413,"2026-05-05","2026-05-05","PV073710","24596","V168",17.97,1.0,17.97,"NO"],[414,"2026-05-05","2026-05-05","PV073710","24596","V185",195.25,1.0,195.25,"NO"]],"codeDesc":{"V199":"Move charge - Aerial - For any poles found that cannot be completed","V162":"Transfer Aerial - Strand attachment and hardware","V168":"Transfer Aerial - pole mounted wire terminal","V185":"Remove Aerial - Poles - all types and sizes (Cannot be used with cut and kick method).","V163":"Transfer Aerial - Service wire attachment - strand or pole mount (regardless of the number of wires connected to the attachment)","V165":"Transfer Aerial - Apparatus - pole or strand mount","V115":"Place Aerial - Anchor - bust type - hand","V164":"Transfer Aerial - Guy attachment - pole or anchor mount"}}</script>
+
+<!-- ============ MAIN APP SCRIPT ============ -->
+<script>
+/* =====================================================================
+   TYSA · Warren Pole Transfer · Operations Intelligence
+   ===================================================================== */
+
+// State
+const PROJECTS = ['WARREN', 'SPRING RUN', 'BALTIMORE', 'PITTSBURGH', 'PHILY'];
+let pendingProject = null; // proyecto al que se cargará el próximo archivo
+
+let state = {
+  rawRows: [],       // [no, d_ins, d_fact, job, pole, cod, pr, q, total, fc, proj, crew]
+  projects: {},      // { WARREN: { rows: [...], srcName: 'archivo.xlsx' }, ... }
+  visible: {},       // { WARREN: true } — solo los "alumbrados" se muestran
+  asignaciones: [],  // tabla maestra de postes asignados (BGE, EWO, ejecutable, comentario)
+  codeDesc: {},
+  filtered: [],
+  charts: { trend: null, fc: null },
+  filters: {
+    dateMode: 'd_ins',
+    from: '', to: '',
+    fc: '', job: '', cod: '', pole: '', proj: '', crew: '',
+    group: 'day',
+    preset: 'all',
+    search: ''
+  },
+  source: 'demo'
+};
+
+// Reconstruye rawRows combinando SOLO los proyectos visibles (alumbrados)
+function rebuildCombined() {
+  state.rawRows = [];
+  for (const p of PROJECTS) {
+    if (state.projects[p] && state.visible[p]) state.rawRows.push(...state.projects[p].rows);
+  }
+  renderProjChips();
+  const lbl = document.getElementById('dataSourceLabel');
+  if (lbl) {
+    const on = PROJECTS.filter(p => state.projects[p] && state.visible[p]);
+    lbl.textContent = on.length
+      ? on.map(p => `${p}: ${state.projects[p].rows.length.toLocaleString('en-US')}`).join(' · ')
+      : 'SIN PROYECTOS ACTIVOS · CARGÁ O ALUMBRÁ UNO';
+  }
+}
+
+// Chips: sin datos = 📂 subir | cargado+visible = ✓ verde | cargado+apagado = ○ gris
+function renderProjChips() {
+  const wrap = document.getElementById('projChips');
+  if (!wrap) return;
+  wrap.innerHTML = PROJECTS.map(p => {
+    const loaded = !!state.projects[p];   // datos de produccion cargados
+    const on = loaded && state.visible[p];
+    const info = loaded ? state.projects[p].rows.length.toLocaleString('en-US') : '';
+    const style = on
+      ? 'background: var(--tysa-green); color: white; border: none;'
+      : loaded
+        ? 'background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.55); border: 1px dashed rgba(255,255,255,0.35);'
+        : 'background: rgba(255,255,255,0.12); color: var(--bg); border: 1px solid rgba(255,255,255,0.3);';
+    const icon = on ? '✓' : loaded ? '○' : '📂';
+    const label = loaded ? `${icon} ${p} · ${info}` : `${icon} ${p}`;
+    const action = loaded ? `toggleProject('${p}')` : `pickProjectFile('${p}')`;
+    const reload = loaded ? `<button class="btn-pill" onclick="pickProjectFile('${p}')" title="Cargar/recargar Excel de ${p}" style="padding: 8px 8px; background: rgba(255,255,255,0.08); color: var(--bg); border: 1px solid rgba(255,255,255,0.2); margin-left: -4px;">↻</button>` : '';
+    return `<span style="display: inline-flex; gap: 2px;"><button class="btn-pill" onclick="${action}" style="font-weight: 700; padding: 8px 14px; ${style}">${label}</button>${reload}</span>`;
+  }).join('');
+}
+
+function toggleProject(p) {
+  state.visible[p] = !state.visible[p];
+  rebuildCombined();
+  populateFilterDropdowns();
+  refresh();
+  showToast(state.visible[p] ? `${p} activado` : `${p} apagado`);
+}
+
+function pickProjectFile(proj) {
+  pendingProject = proj;
+  showToast(`Seleccioná el Excel de ${proj}...`);
+  document.getElementById('fileInput').click();
+}
+
+// =================== NUBE: SOLO VÍA APPS SCRIPT ===================
+// Los links directos a Sheets (gviz/export/publicar-en-la-web) están descartados:
+// el diagnóstico confirmó que el navegador los bloquea (CORS) de forma consistente.
+// Apps Script evita ese bloqueo porque responde con las cabeceras correctas.
+// URL por defecto — se usa solo si el navegador no tiene ninguna guardada todavía
+const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrPaUNKdiJXQnGjQN6MxaMnpQYK-M6Z4hdAyYcoWuMT_D3Wor_Wi99MWGubdpx8HsO/exec';
+
+function loadAppsScriptUrl() {
+  try { state.appsScriptUrl = localStorage.getItem('tysaAppsScriptUrl') || DEFAULT_APPS_SCRIPT_URL; }
+  catch(e) { state.appsScriptUrl = DEFAULT_APPS_SCRIPT_URL; }
+}
+function saveAppsScriptUrl() {
+  try { localStorage.setItem('tysaAppsScriptUrl', state.appsScriptUrl || ''); } catch(e) {}
+}
+
+function openCloudModal() {
+  const asInput = document.getElementById('appsScriptUrlInput');
+  if (asInput) asInput.value = state.appsScriptUrl || '';
+  openModal('cloudModal');
+}
+
+function saveCloudModal() {
+  const asInput = document.getElementById('appsScriptUrlInput');
+  state.appsScriptUrl = asInput ? asInput.value.trim() : '';
+  saveAppsScriptUrl();
+  closeModal('cloudModal');
+  showToast(state.appsScriptUrl ? '✓ Guardado — usá "🔄 Cargar Nube"' : 'URL borrada');
+}
+
+async function loadCloudProject(p) {
+  if (!state.appsScriptUrl) return { ok: false, msg: 'sin URL configurada' };
+  const base = state.appsScriptUrl.trim();
+  const url = base + (base.includes('?') ? '&' : '?') + 'proj=' + encodeURIComponent(p);
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return { ok: false, msg: `HTTP ${res.status}` };
+    const text = await res.text();
+    if (/^ERROR:/.test(text.trim())) return { ok: false, msg: text.trim().slice(0, 80) };
+    if (/accounts\.google\.com|sign in|iniciar sesión|<!DOCTYPE html/i.test(text.slice(0, 400))) {
+      return { ok: false, msg: 'devolvió página de Google (deploy no público)' };
+    }
+    return await new Promise((resolve) => {
+      Papa.parse(text, {
+        header: true, skipEmptyLines: 'greedy',
+        complete: (r) => {
+          if (!r.data || r.data.length === 0) { resolve({ ok: false, msg: 'CSV vacío' }); return; }
+          const headers = Object.keys(r.data[0] || {});
+          const prevProject = state.projects[p];
+          ingestParsedRows(r.data, 'Nube', p);
+          const gotRows = (state.projects[p] && state.projects[p].rows) || [];
+          const gotTotal = gotRows.reduce((s, row) => s + (row[ROW.total] || 0), 0);
+          const gotJobsOrPoles = gotRows.some(row => row[ROW.job] || row[ROW.pole]);
+          if (gotRows.length === 0 || (gotTotal === 0 && !gotJobsOrPoles)) {
+            state.projects[p] = prevProject;
+            resolve({ ok: false, msg: 'sin columnas reconocibles' });
+            return;
+          }
+          if (gotTotal === 0) {
+            // Cargó filas con job/poste, pero el total da $0 en TODAS — mostrar
+            // una muestra de los valores en bruto (antes de parsear) para diagnosticar.
+            const kTotName = headers.find(h => /total/i.test(h)) || '(no encontrada)';
+            const kPrName = headers.find(h => /^pr$/i.test(h)) || '(no encontrada)';
+            const kQName = headers.find(h => /^q$|quantity|cant/i.test(h)) || '(no encontrada)';
+            const sample = r.data.slice(0, 3).map(row =>
+              `TOTAL="${row[kTotName] ?? ''}" PR="${row[kPrName] ?? ''}" Q="${row[kQName] ?? ''}"`
+            ).join(' | ');
+            resolve({ ok: true, msg: `${gotRows.length} filas · ⚠ TODO EN $0 · muestra cruda: ${sample}` });
+            return;
+          }
+          resolve({ ok: true, msg: `${gotRows.length} filas` });
+        },
+        error: () => resolve({ ok: false, msg: 'error parseando CSV' })
+      });
+    });
+  } catch(e) {
+    return { ok: false, msg: `bloqueo de conexión (${e.message})` };
+  }
+}
+
+async function loadAllCloud(auto) {
+  if (!state.appsScriptUrl) { if (!auto) openCloudModal(); return; }
+  if (!auto) showToast('🔄 Cargando desde la nube...');
+  const okList = [];
+  const results = [];
+  for (const p of PROJECTS) {
+    const r = await loadCloudProject(p);
+    results.push(`${p}: ${r.ok ? '✓ ' + r.msg : '✗ ' + r.msg}`);
+    if (r.ok) okList.push(p);
+  }
+  // Tabla maestra de asignaciones (postes asignados de todos los proyectos)
+  const ra = await loadAsignaciones();
+  results.push(`ASIGNACIONES: ${ra.ok ? '✓ ' + ra.msg : '✗ ' + ra.msg}`);
+  // ingestParsedRows apaga los demás proyectos cada vez que carga uno (modo "solo este");
+  // acá queremos ver TODOS los que llegaron bien de la nube al mismo tiempo.
+  for (const p of okList) state.visible[p] = true;
+  rebuildCombined();
+  populateFilterDropdowns();
+  applyPreset('all');
+  // Resultado FIJO en pantalla (no un aviso pasajero) para poder revisarlo con calma
+  const lbl = document.getElementById('dataSourceLabel');
+  if (lbl) lbl.textContent = `NUBE (${new Date().toLocaleTimeString('es-CO')}): ` + results.join(' · ');
+  if (!auto) showToast(`✓ ${okList.length}/${PROJECTS.length} proyectos cargados desde la nube`);
+}
+
+
+// =================== ASIGNACIONES DE POSTES ===================
+// Tabla maestra con los postes asignados. Columnas: BGE (numero de poste),
+// EWO (numero de proyecto), EJECUTABLE (si/no) y COMENTARIOS.
+
+// Normaliza un numero de poste para poder cruzarlo entre tablas
+// (quita espacios, guiones, puntos y ceros a la izquierda).
+function normPoste(v) {
+  let s = String(v == null ? '' : v).trim().toUpperCase();
+  s = s.replace(/[\s\-_.]/g, '');
+  s = s.replace(/^0+(?=\d)/, '');
+  return s;
+}
+
+function parseAsignaciones(arr) {
+  if (!arr || !arr.length) return [];
+  const keys = Object.keys(arr[0] || {});
+  const find = (...pats) => {
+    for (const p of pats) {
+      const k = keys.find(k => new RegExp(p, 'i').test(String(k).trim()));
+      if (k) return k;
+    }
+    return null;
+  };
+  const kBge  = find('^bge$', 'bge', 'poste', '^pole', 'pol.no');
+  const kEwo  = find('^ewo$', 'ewo', 'proyecto', 'project', '^job');
+  const kEjec = find('ejecutable', 'ejecutar', 'executable');
+  const kCom  = find('comentario', 'coment', 'observ', 'nota', 'remark');
+  const kDir  = find('direcci', 'address', 'ubicac');
+  const kVz   = find('verizon', '^vz', 'codigo.*vz');
+  const kFec  = find('fecha.*asign', 'asignaci', '^fecha');
+  const kLoc  = find('^loc$', '^loc', 'locacion', 'location');
+
+  const out = [];
+  for (const r of arr) {
+    const bge = String(kBge ? r[kBge] || '' : '').trim();
+    if (!bge) continue;                  // sin poste no sirve
+    if (/^bge$/i.test(bge)) continue;    // fila de encabezado repetida
+    const ejecRaw = String(kEjec ? r[kEjec] || '' : '').trim();
+    // "NO" explicito = no ejecutable; cualquier otra cosa (SI, vacio) = ejecutable
+    const noEjecutable = /^\s*(no|n)\s*$/i.test(ejecRaw);
+    // Un BGE puede traer varios numeros o texto extra: "26892/TAGGED 26890"
+    const keys = String(bge).split(/[\/,;]+/).map(normPoste).filter(Boolean);
+    out.push({
+      bge,
+      keys: keys.length ? keys : [normPoste(bge)],
+      ewo: String(kEwo ? r[kEwo] || '' : '').trim(),
+      ejecutable: !noEjecutable,
+      ejecRaw: ejecRaw || '—',
+      comentario: String(kCom ? r[kCom] || '' : '').trim(),
+      direccion: String(kDir ? r[kDir] || '' : '').trim(),
+      vz: String(kVz ? r[kVz] || '' : '').trim(),
+      loc: String(kLoc ? r[kLoc] || '' : '').trim(),
+      fecha: String(kFec ? r[kFec] || '' : '').trim()
+    });
+  }
+  return out;
+}
+
+// Postes que YA aparecen trabajados en la produccion cargada.
+// Devuelve tres cosas para poder cruzar con precision:
+//  - porJob:  claves "JOB|POSTE"  (match exacto dentro del mismo EWO)
+//  - sueltos: claves "POSTE"      (match global, por si el EWO no coincide)
+//  - jobs:    set de jobs vistos  (para saber si un EWO esta cargado o no)
+function postesEjecutados(filas) {
+  const porJob = new Set(), sueltos = new Set(), jobs = new Set();
+  for (const r of (filas || state.rawRows)) {
+    const job = normPoste(r[ROW.job] || '');
+    if (job) jobs.add(job);
+    const p = r[ROW.pole];
+    if (!p) continue;
+    if (/^site\s*survey$/i.test(String(p).trim())) continue;
+    // Un mismo campo puede traer varios postes: "69/71" o "27/28/29"
+    for (const parte of String(p).split(/[\/,;]+/)) {
+      const k = normPoste(parte);
+      if (!k) continue;
+      sueltos.add(k);
+      if (job) porJob.add(job + '|' + k);
+    }
+  }
+  return { porJob, sueltos, jobs };
+}
+
+// Busca en las asignaciones un BGE parecido (hasta 2 caracteres de diferencia),
+// para cazar numeros mal digitados entre la tabla y la produccion.
+function bgeParecido(k, asig) {
+  const dist = (a, b) => {
+    if (Math.abs(a.length - b.length) > 2) return 99;
+    const dp = Array.from({ length: a.length + 1 }, (_, i) => [i].concat(new Array(b.length).fill(0)));
+    for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+    for (let i = 1; i <= a.length; i++) {
+      for (let j = 1; j <= b.length; j++) {
+        dp[i][j] = Math.min(
+          dp[i-1][j] + 1,
+          dp[i][j-1] + 1,
+          dp[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1)
+        );
+      }
+    }
+    return dp[a.length][b.length];
+  };
+  if (k.length < 3) return null;         // numeros muy cortos dan falsos positivos
+  let mejor = null, mejorD = 3;
+  for (const a of asig) {
+    for (const ak of a.keys) {
+      if (ak.length < 3) continue;
+      const d = dist(k, ak);
+      if (d < mejorD) { mejorD = d; mejor = a; }
+      if (d === 1) return a;             // suficientemente parecido, cortamos
+    }
+  }
+  return mejorD <= 2 ? mejor : null;
+}
+
+// Postes TRABAJADOS en produccion que no aparecen en la tabla de asignaciones.
+// Sirve para cazar dos cosas: trabajo hecho sin asignar (facturable) o
+// un BGE mal escrito en alguna de las dos tablas.
+function trabajadosSinAsignar(asig, filas) {
+  const porEwo = new Set(), sueltos = new Set(), ewos = new Set();
+  for (const a of asig) {
+    const e = normPoste(a.ewo || '');
+    if (e) ewos.add(e);
+    for (const k of a.keys) {
+      sueltos.add(k);
+      if (e) porEwo.add(e + '|' + k);
+    }
+  }
+
+  const out = new Map();
+  for (const r of (filas || state.rawRows)) {
+    const p = r[ROW.pole];
+    if (!p || /^site\s*survey$/i.test(String(p).trim())) continue;
+    const jobRaw = r[ROW.job] || '';
+    const job = normPoste(jobRaw);
+    const ewoConocido = job && ewos.has(job);
+    for (const parte of String(p).split(/[\/,;]+/)) {
+      const k = normPoste(parte);
+      if (!k) continue;
+      const asignado = ewoConocido ? porEwo.has(job + '|' + k) : sueltos.has(k);
+      if (asignado) continue;
+      const id = job + '|' + k;
+      if (out.has(id)) continue;
+
+      // ¿Por que no cruzo? Dos causas tipicas, ambas accionables:
+      //  a) el poste SI esta asignado pero bajo otro EWO
+      //  b) el numero esta mal escrito en alguna de las dos tablas
+      let pista = '';
+      const mismoBge = asig.filter(a => a.keys.indexOf(k) !== -1);
+      if (mismoBge.length) {
+        const otros = [...new Set(mismoBge.map(a => a.ewo).filter(Boolean))];
+        pista = '⚠ Asignado, pero bajo otro EWO: ' + (otros.join(', ') || '(sin EWO)');
+      } else {
+        const cerca = bgeParecido(k, asig);
+        if (cerca) pista = '¿Sera el BGE ' + cerca.bge + '? (' + (cerca.ewo || 'sin EWO') + (cerca.direccion ? ' · ' + cerca.direccion : '') + ')';
+        else pista = 'No aparece en la tabla de asignaciones';
+      }
+
+      out.set(id, {
+        bge: String(parte).trim(),
+        keys: [k],
+        ewo: jobRaw,
+        ejecutable: true,
+        ejecRaw: '—',
+        comentario: pista,
+        direccion: '',
+        vz: '',
+        fecha: fmtDate(getDate(r)) || '',
+        sinAsignar: true,
+        proj: r[ROW.proj] || ''
+      });
+    }
+  }
+  return [...out.values()];
+}
+
+// ¿Este poste asignado ya fue trabajado?
+// Si su EWO existe en la produccion cargada, exige que coincidan EWO + poste
+// (evita falsos positivos entre proyectos con numeracion parecida).
+// Si el EWO no esta cargado, cae al match por numero de poste.
+function estaEjecutado(a, ejec) {
+  const ewo = normPoste(a.ewo || '');
+  const ewoCargado = ewo && ejec.jobs.has(ewo);
+  for (const k of a.keys) {
+    if (ewoCargado) { if (ejec.porJob.has(ewo + '|' + k)) return true; }
+    else if (ejec.sueltos.has(k)) return true;
+  }
+  return false;
+}
+
+async function loadAsignaciones() {
+  if (!state.appsScriptUrl) return { ok: false, msg: 'sin URL' };
+  const base = state.appsScriptUrl.trim();
+  const url = base + (base.includes('?') ? '&' : '?') + 'tipo=asignaciones';
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return { ok: false, msg: `HTTP ${res.status}` };
+    const text = await res.text();
+    if (/^ERROR:/.test(text.trim())) return { ok: false, msg: text.trim().slice(0, 90) };
+    if (/accounts\.google\.com|<!DOCTYPE html/i.test(text.slice(0, 400))) {
+      return { ok: false, msg: 'devolvio pagina de Google, no datos' };
+    }
+    return await new Promise((resolve) => {
+      Papa.parse(text, {
+        header: true, skipEmptyLines: 'greedy',
+        complete: (r) => {
+          const filas = parseAsignaciones(r.data);
+          if (!filas.length) {
+            const cols = Object.keys((r.data && r.data[0]) || {}).slice(0, 6).join(', ');
+            resolve({ ok: false, msg: `sin columna BGE reconocible (columnas: ${cols})` });
+            return;
+          }
+          state.asignaciones = filas;
+          resolve({ ok: true, msg: `${filas.length} postes` });
+        },
+        error: () => resolve({ ok: false, msg: 'error parseando CSV' })
+      });
+    });
+  } catch (e) {
+    return { ok: false, msg: `bloqueo de conexion (${e.message})` };
+  }
+}
+
+// =================== TABLA DE POSTES PENDIENTES ===================
+let _pendCache = { pendientes: [], noEjecutables: [], totalEjec: 0, hechos: 0, sinAsignar: [] };
+
+function renderPendientes(pendientes, noEjecutables, totalEjec, hechos, sinAsignar) {
+  if (pendientes) _pendCache = { pendientes, noEjecutables, totalEjec, hechos, sinAsignar: sinAsignar || [] };
+  const { pendientes: pend, noEjecutables: noEjec, totalEjec: tot, hechos: done, sinAsignar: sinAsig } = _pendCache;
+
+  const body = document.getElementById('pendBody');
+  const foot = document.getElementById('pendFoot');
+  if (!body) return;
+
+  document.getElementById('pendCount').textContent = pend.length;
+  document.getElementById('pendPct').textContent = tot > 0 ? ((done / tot) * 100).toFixed(1) + '%' : '—';
+
+  const verNoEjec = (document.getElementById('pendVerNoEjec') || {}).checked;
+  const q = ((document.getElementById('pendSearch') || {}).value || '').toLowerCase().trim();
+
+  let filas = verNoEjec ? pend.concat(noEjec) : pend.slice();
+  if (q) {
+    filas = filas.filter(a =>
+      a.bge.toLowerCase().includes(q) ||
+      (a.loc || '').toLowerCase().includes(q) ||
+      (a.ewo || '').toLowerCase().includes(q) ||
+      (a.vz || '').toLowerCase().includes(q) ||
+      (a.direccion || '').toLowerCase().includes(q) ||
+      (a.comentario || '').toLowerCase().includes(q)
+    );
+  }
+  // Agrupar por EWO para que sea facil repartir trabajo
+  const numLoc = (v) => { const n = parseInt(String(v).replace(/\D/g, ''), 10); return isNaN(n) ? 1e9 : n; };
+  filas.sort((a, b) => (a.ewo || 'zzz').localeCompare(b.ewo || 'zzz') || numLoc(a.loc) - numLoc(b.loc) || a.bge.localeCompare(b.bge));
+
+  _pendCache.visibles = filas;
+  if (filas.length === 0) {
+    const msg = (state.asignaciones || []).length === 0
+      ? 'Cargá la tabla de asignaciones con "🔄 Cargar Nube"'
+      : (q ? 'Ningún poste coincide con la búsqueda' : '✓ No quedan postes pendientes');
+    body.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#5C6B62; font-family:'JetBrains Mono',monospace;">${msg}</td></tr>`;
+    foot.innerHTML = '';
+    return;
+  }
+
+  _pendCache.visibles = filas;   // lo que se ve es lo que se descarga
+
+  const MAX = 400;
+  body.innerHTML = filas.slice(0, MAX).map(a => {
+    const ok = a.ejecutable;
+    return `<tr>
+      <td style="font-weight:700; color:var(--tysa-green);">${a.loc || '—'}</td>
+      <td><strong>${a.bge}</strong></td>
+      <td style="font-size:11px;">${a.vz || '—'}</td>
+      <td>${a.ewo || '—'}</td>
+      <td style="font-size:11px; max-width:300px;">${a.direccion || '—'}</td>
+      <td style="font-size:11px; white-space:nowrap;">${a.fecha || '—'}</td>
+      <td><span style="display:inline-block; padding:2px 8px; background:${a.sinAsignar ? '#7C3AED' : (ok ? '#D97706' : '#6B7280')}; color:white; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700;">${a.sinAsignar ? 'SIN ASIGNAR' : (ok ? 'PENDIENTE' : 'NO EJEC.')}</span></td>
+      <td style="font-size:11px; max-width:320px;">${a.comentario || '—'}</td>
+    </tr>`;
+  }).join('');
+
+  const extra = filas.length > MAX ? ` (mostrando ${MAX})` : '';
+  foot.innerHTML = `<tr style="background:#FEF3C7;">
+    <td colspan="4" style="font-weight:700;">${filas.length} poste(s)${extra}</td>
+    <td colspan="4" style="font-weight:700;">Ejecutados ${done} de ${tot} · faltan ${pend.length}</td>
+  </tr>`;
+}
+
+function clearAllProjects() {
+  state.projects = {};
+  state.visible = {};
+  rebuildCombined();
+  populateFilterDropdowns();
+  applyPreset('all');
+  showToast('Datos limpiados. Cargá los proyectos de nuevo.');
+}
+
+// Load embedded data (WARREN POLE TRANSFER)
+function loadEmbedded() {
+  try {
+    const raw = document.getElementById('embeddedData').textContent;
+    const parsed = JSON.parse(raw);
+    const rows = (parsed.rows || []).map(r => {
+      const nr = r.slice(0, 10);
+      nr[10] = 'WARREN';
+      nr[11] = 'SIN ASIGNAR';
+      return nr;
+    });
+    state.projects['WARREN'] = { rows, srcName: 'Datos embebidos' };
+    state.codeDesc = parsed.codeDesc || {};
+    state.source = 'embedded';
+  } catch(e) {
+    console.error('Error loading embedded data', e);
+  }
+}
+
+// =================== HELPERS ===================
+const fmtUSD = (v) => '$' + (v||0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const fmtUSD2 = (v) => '$' + (v||0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtNum = (v) => (v||0).toLocaleString('en-US');
+const fmtDate = (iso) => {
+  if (!iso) return '—';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y.slice(2)}`;
+};
+const fmtDateLong = (iso) => {
+  if (!iso) return '—';
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' });
+};
+
+const FC_KEYS = { 'SI':'si', 'NO':'no', '':'pend' };
+const FC_LABEL = { 'SI':'SI', 'NO':'NO', '':'—' };
+
+// Get ISO week start (Monday)
+function weekKey(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d.setDate(diff));
+  return monday.toISOString().slice(0, 10);
+}
+function monthKey(iso) { return iso.slice(0, 7); }
+function dayKey(iso) { return iso; }
+
+function periodKey(iso, group) {
+  if (!iso) return '';
+  if (group === 'week') return weekKey(iso);
+  if (group === 'month') return monthKey(iso);
+  return dayKey(iso);
+}
+function periodLabel(key, group) {
+  if (group === 'week') {
+    const start = new Date(key + 'T00:00:00');
+    const end = new Date(start); end.setDate(end.getDate() + 6);
+    const fmt = (d) => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+    return `${fmt(start)} – ${fmt(end)}`;
+  }
+  if (group === 'month') {
+    const [y,m] = key.split('-');
+    const names = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+    return `${names[parseInt(m)-1]} ${y}`;
+  }
+  return fmtDate(key);
+}
+
+// =================== ROW HELPERS ===================
+const ROW = { no:0, d_ins:1, d_fact:2, job:3, pole:4, cod:5, pr:6, q:7, total:8, fc:9, proj:10, crew:11 };
+
+function getDate(row) { return state.filters.dateMode === 'd_fact' ? row[ROW.d_fact] : row[ROW.d_ins]; }
+
+// =================== COMPARATIVOS PROYECTO / CUADRILLA ===================
+function renderComparisons(rows) {
+  const isPole = (p) => p && p !== 'SITE SURVEY' && !/^site\s*survey$/i.test(p);
+  const agg = (keyIdx) => {
+    const map = new Map();
+    for (const r of rows) {
+      const k = r[keyIdx] || 'SIN ASIGNAR';
+      if (!map.has(k)) map.set(k, { poles: new Set(), total: 0 });
+      const m = map.get(k);
+      if (isPole(r[ROW.pole])) m.poles.add(r[ROW.proj] + '|' + r[ROW.pole]);
+      m.total += r[ROW.total] || 0;
+    }
+    return [...map.entries()]
+      .map(([k, v]) => ({ k, poles: v.poles.size, total: v.total, avg: v.poles.size > 0 ? v.total / v.poles.size : 0 }))
+      .sort((a,b) => b.total - a.total);
+  };
+  const rowHTML = (d) => `<tr style="border-bottom: 1px solid rgba(0,0,0,0.06);">
+    <td style="padding: 6px 4px; font-weight: 700;">${d.k}</td>
+    <td style="padding: 6px 4px; text-align: right;">${fmtNum(d.poles)}</td>
+    <td style="padding: 6px 4px; text-align: right;">${fmtUSD(d.total)}</td>
+    <td style="padding: 6px 4px; text-align: right; color: var(--tysa-green); font-weight: 700;">${d.poles > 0 ? fmtUSD(d.avg) : '—'}</td>
+  </tr>`;
+  const empty = '<tr><td colspan="4" style="padding: 10px 4px; color: var(--ink-muted);">Sin datos en el período</td></tr>';
+
+  const tp = document.getElementById('tblByProject');
+  if (tp) { const d = agg(ROW.proj); tp.innerHTML = d.length ? d.map(rowHTML).join('') : empty; }
+}
+
+// =================== RENDIMIENTO POR CUADRILLA ===================
+function renderCrewPerformance(rows) {
+  const isPole = (p) => p && !/^site\s*survey$/i.test(p);
+  const map = new Map();
+  for (const r of rows) {
+    const crew = r[ROW.crew] || 'SIN ASIGNAR';
+    if (!map.has(crew)) map.set(crew, { poles: new Set(), total: 0, items: 0, dates: new Set(), projects: new Set() });
+    const m = map.get(crew);
+    if (isPole(r[ROW.pole])) m.poles.add(r[ROW.proj] + '|' + r[ROW.pole]);
+    m.total += r[ROW.total] || 0;
+    m.items++;
+    const d = getDate(r);
+    if (d) m.dates.add(d);
+    if (r[ROW.proj]) m.projects.add(r[ROW.proj]);
+  }
+
+  const data = [...map.entries()].map(([crew, m]) => {
+    const days = m.dates.size;
+    const poles = m.poles.size;
+    return {
+      crew, days, poles, items: m.items, total: m.total,
+      polesPerDay: days > 0 ? poles / days : 0,
+      perPole: poles > 0 ? m.total / poles : 0,
+      projects: [...m.projects].sort().join(', ') || '—'
+    };
+  }).sort((a, b) => b.polesPerDay - a.polesPerDay); // mejor productividad primero
+
+  document.getElementById('crewCount').textContent = data.length;
+
+  const body = document.getElementById('crewPerfBody');
+  const foot = document.getElementById('crewPerfFoot');
+  if (!body) return;
+
+  if (data.length === 0) {
+    body.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: #5C6B62; font-family: 'JetBrains Mono', monospace;">Sin datos en el período seleccionado</td></tr>`;
+    foot.innerHTML = '';
+    return;
+  }
+
+  body.innerHTML = data.map((d, i) => `
+    <tr${i === 0 ? ' style="background:#EFF7EC;"' : ''}>
+      <td><strong>${i === 0 ? '🏆 ' : ''}${d.crew}</strong></td>
+      <td class="right">${d.days}</td>
+      <td class="right">${d.poles}</td>
+      <td class="right" style="color: var(--tysa-green); font-weight: 700;">${d.polesPerDay.toFixed(1)}</td>
+      <td class="right">${d.items}</td>
+      <td class="right"><strong>${fmtUSD(d.total)}</strong></td>
+      <td class="right">${d.poles > 0 ? fmtUSD(d.perPole) : '—'}</td>
+      <td style="font-size: 11px;">${d.projects}</td>
+    </tr>`).join('');
+
+  const totalDays = new Set(rows.map(r => getDate(r)).filter(Boolean)).size;
+  const totalPoles = data.reduce((s, d) => s + d.poles, 0);
+  const totalValue = data.reduce((s, d) => s + d.total, 0);
+  const totalItems = data.reduce((s, d) => s + d.items, 0);
+  foot.innerHTML = `<tr style="background:#EFF7EC;">
+    <td style="font-weight:700;">TOTAL · ${data.length} CUADRILLAS</td>
+    <td class="right" style="font-weight:700;">${totalDays}</td>
+    <td class="right" style="font-weight:700;">${totalPoles}</td>
+    <td class="right" style="font-weight:700;">${totalDays > 0 ? (totalPoles/totalDays).toFixed(1) : '0'}</td>
+    <td class="right" style="font-weight:700;">${totalItems}</td>
+    <td class="right" style="font-weight:700;">${fmtUSD(totalValue)}</td>
+    <td class="right" style="font-weight:700;">${totalPoles > 0 ? fmtUSD(totalValue/totalPoles) : '—'}</td>
+    <td></td>
+  </tr>`;
+}
+
+// =================== FILTER ===================
+function applyFilters() {
+  const f = state.filters;
+  state.filtered = state.rawRows.filter(r => {
+    const d = getDate(r);
+    if (!d && (f.from || f.to)) return false;
+    if (f.from && d < f.from) return false;
+    if (f.to && d > f.to) return false;
+    if (f.fc) {
+      const fc = r[ROW.fc];
+      if (f.fc === 'PEND' && fc !== '') return false;
+      if (f.fc === 'SI' && fc !== 'SI') return false;
+      if (f.fc === 'NO' && fc !== 'NO') return false;
+    }
+    if (f.job && r[ROW.job] !== f.job) return false;
+    if (f.cod && r[ROW.cod] !== f.cod) return false;
+    if (f.pole && r[ROW.pole] !== f.pole) return false;
+    if (f.proj && r[ROW.proj] !== f.proj) return false;
+    if (f.crew && r[ROW.crew] !== f.crew) return false;
+    return true;
+  });
+}
+
+// =================== AGGREGATIONS ===================
+function totalsByFc(rows) {
+  let si = 0, no = 0, pend = 0, siC = 0, noC = 0, pendC = 0;
+  for (const r of rows) {
+    const t = r[ROW.total];
+    const fc = r[ROW.fc];
+    if (fc === 'SI') { si += t; siC++; }
+    else if (fc === 'NO') { no += t; noC++; }
+    else { pend += t; pendC++; }
+  }
+  return { si, no, pend, siC, noC, pendC };
+}
+
+function topByCode(rows) {
+  const map = new Map();
+  for (const r of rows) {
+    const c = r[ROW.cod] || '—';
+    if (!map.has(c)) map.set(c, { cod: c, q: 0, total: 0, count: 0 });
+    const m = map.get(c);
+    m.q += r[ROW.q] || 0;
+    m.total += r[ROW.total] || 0;
+    m.count++;
+  }
+  return [...map.values()].sort((a,b) => b.total - a.total);
+}
+
+function topByJob(rows) {
+  const map = new Map();
+  for (const r of rows) {
+    const j = r[ROW.job] || '—';
+    if (!map.has(j)) map.set(j, { job: j, items: 0, poles: new Set(), total: 0 });
+    const m = map.get(j);
+    m.items++;
+    if (r[ROW.pole]) m.poles.add(r[ROW.pole]);
+    m.total += r[ROW.total] || 0;
+  }
+  return [...map.values()].map(j => ({...j, poles: j.poles.size})).sort((a,b) => b.total - a.total);
+}
+
+function topByPole(rows) {
+  const map = new Map();
+  for (const r of rows) {
+    const p = r[ROW.pole] || '—';
+    if (p === '—') continue;
+    // Excluir SITE SURVEY - no es un poste intervenido
+    if (/^site\s*survey$/i.test(p)) continue;
+    const k = p + '|' + (r[ROW.job] || '');
+    if (!map.has(k)) map.set(k, { pole: p, job: r[ROW.job] || '', items: 0, total: 0 });
+    const m = map.get(k);
+    m.items++;
+    m.total += r[ROW.total] || 0;
+  }
+  return [...map.values()].sort((a,b) => b.total - a.total);
+}
+
+function byPeriod(rows, group) {
+  const map = new Map();
+  for (const r of rows) {
+    const d = getDate(r);
+    if (!d) continue;
+    const k = periodKey(d, group);
+    if (!map.has(k)) map.set(k, { key: k, items: 0, jobs: new Set(), poles: new Set(), si: 0, noPend: 0, total: 0 });
+    const m = map.get(k);
+    m.items++;
+    m.jobs.add(r[ROW.job]);
+    // Postes intervenidos = poles únicos excluyendo SITE SURVEY
+    if (r[ROW.pole] && !/^site\s*survey$/i.test(r[ROW.pole])) {
+      m.poles.add(r[ROW.pole]);
+    }
+    m.total += r[ROW.total] || 0;
+    if (r[ROW.fc] === 'SI') m.si += r[ROW.total] || 0;
+    else m.noPend += r[ROW.total] || 0;
+  }
+  return [...map.values()].map(p => ({...p, jobs: p.jobs.size, polesIntervened: p.poles.size})).sort((a,b) => a.key.localeCompare(b.key));
+}
+
+// =================== RENDER ===================
+function renderKPIs() {
+  const rows = state.filtered;
+  const total = rows.reduce((s,r) => s + (r[ROW.total]||0), 0);
+  const totalQ = rows.reduce((s,r) => s + (r[ROW.q]||0), 0);
+  const dates = new Set(rows.map(r => getDate(r)).filter(Boolean));
+  const jobs = new Set(rows.map(r => r[ROW.job]).filter(Boolean));
+  const poles = new Set(rows.map(r => r[ROW.pole]).filter(Boolean));
+  // Postes intervenidos = poles únicos donde hubo trabajo real (excluyendo SITE SURVEY)
+  const polesIntervened = new Set(
+    rows
+      .filter(r => r[ROW.pole] && r[ROW.pole] !== 'SITE SURVEY' && !/^site\s*survey$/i.test(r[ROW.pole]))
+      .map(r => r[ROW.pole])
+  );
+  const codes = new Set(rows.map(r => r[ROW.cod]).filter(Boolean));
+  const t = totalsByFc(rows);
+
+  document.getElementById('kpiTotal').textContent = fmtUSD(total);
+  document.getElementById('kpiAvgDay').textContent = dates.size > 0 ? fmtUSD(total / dates.size) : '$0';
+  document.getElementById('kpiActiveDays').textContent = dates.size;
+  document.getElementById('kpiItems').textContent = fmtNum(rows.length);
+  document.getElementById('kpiQ').textContent = fmtNum(Math.round(totalQ));
+  document.getElementById('kpiAvgItem').textContent = rows.length > 0 ? fmtUSD(total / rows.length) : '$0';
+  document.getElementById('kpiJobs').textContent = jobs.size;
+  document.getElementById('kpiPolesIntervened').textContent = polesIntervened.size;
+  document.getElementById('kpiAvgPole').textContent = polesIntervened.size > 0 ? fmtUSD(total / polesIntervened.size) : '$0';
+
+  renderComparisons(rows);
+  renderCrewPerformance(rows);
+
+  const pct = (v) => total > 0 ? ((v/total)*100).toFixed(1) + '%' : '0%';
+  document.getElementById('statSiAmt').textContent = fmtUSD(t.si);
+  document.getElementById('statSiCount').textContent = `${t.siC} items`;
+  document.getElementById('statSiPct').textContent = pct(t.si);
+  document.getElementById('statNoAmt').textContent = fmtUSD(t.no);
+  document.getElementById('statNoCount').textContent = `${t.noC} items`;
+  document.getElementById('statNoPct').textContent = pct(t.no);
+  document.getElementById('statPendAmt').textContent = fmtUSD(t.pend);
+  document.getElementById('statPendCount').textContent = `${t.pendC} items`;
+  document.getElementById('statPendPct').textContent = pct(t.pend);
+
+  // Header meta
+  const allDates = [...dates].sort();
+  document.getElementById('hdrDateRange').textContent = allDates.length > 0
+    ? `${fmtDate(allDates[0])} – ${fmtDate(allDates[allDates.length-1])}`
+    : '—';
+  document.getElementById('hdrRecCount').textContent = fmtNum(rows.length);
+  
+  // Project Stats
+  renderProjectStats(rows, polesIntervened.size, dates);
+}
+
+function renderProjectStats(rows, polesIntervenedCount, datesSet) {
+  // El inventario ya NO se ingresa a mano: sale de la tabla maestra de asignaciones.
+  const on = PROJECTS.filter(p => state.visible[p] && state.projects[p]);
+  const asig = state.asignaciones || [];
+  // Se usan las MISMAS filas que el KPI de arriba (las filtradas), asi el
+  // desglose siempre cuadra con "Postes Intervenidos" pase el filtro que pase.
+  const ejecutados = postesEjecutados(rows);
+
+  const ejecutables   = asig.filter(a => a.ejecutable);
+  const noEjecutables = asig.filter(a => !a.ejecutable);
+  const yaEjecutados  = ejecutables.filter(a => estaEjecutado(a, ejecutados));
+  const pendientes    = ejecutables.filter(a => !estaEjecutado(a, ejecutados));
+  // Postes marcados N a los que la cuadrilla SI fue (quedo registro en produccion):
+  // se visitaron pero no se pudieron hacer (poda, acceso, no encontrado...).
+  const visitadosNoEjec = noEjecutables.filter(a => estaEjecutado(a, ejecutados));
+
+  const POSTES_ASIGNADOS   = asig.length;
+  const NO_EJECUTABLES     = noEjecutables.length;
+  const POSTES_POR_EJECUTAR = ejecutables.length;   // base para el avance
+  const has = POSTES_ASIGNADOS > 0;
+
+  // Subtitulo con los proyectos activos
+  const sub = document.getElementById('statsSubtitle');
+  if (sub) {
+    sub.textContent = on.length
+      ? on.join(' + ') + ' · Pole Transfer & Removal'
+      : 'Pole Transfer & Removal';
+  }
+  const fuente = document.getElementById('asigFuente');
+  if (fuente) fuente.textContent = has ? `(${POSTES_ASIGNADOS} filas en la tabla)` : '(sin tabla cargada)';
+
+  const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const n = (x) => x.toLocaleString('en-US');
+  setTxt('invAsignados',  has ? n(POSTES_ASIGNADOS) : '—');
+  setTxt('invNoEjec',     has ? n(NO_EJECUTABLES) : '—');
+  setTxt('polesNet',      has ? n(POSTES_POR_EJECUTAR) : '—');
+  setTxt('invEjecutados', has ? n(yaEjecutados.length) : '—');
+  setTxt('invPendientes', has ? n(pendientes.length) : '—');
+
+  setTxt('invVisitadosN', has ? n(visitadosNoEjec.length) : '—');
+  const filaVN = document.getElementById('rowVisitadosN');
+  if (filaVN) filaVN.style.display = (has && visitadosNoEjec.length) ? '' : 'none';
+
+  // Postes trabajados que no figuran en la tabla de asignaciones
+  const sinAsignar = has ? trabajadosSinAsignar(asig, rows) : [];
+  setTxt('invSinAsignar', has ? n(sinAsignar.length) : '—');
+  const filaSA = document.getElementById('rowSinAsignar');
+  if (filaSA) filaSA.style.display = (has && sinAsignar.length) ? '' : 'none';
+  // Aviso en el KPI de arriba, para no tener que buscarlo
+  const aviso = document.getElementById('kpiSinAsignarAviso');
+  if (aviso) {
+    aviso.style.display = (has && sinAsignar.length) ? '' : 'none';
+    const num = document.getElementById('kpiSinAsignarNum');
+    if (num) num.textContent = sinAsignar.length;
+  }
+  // Tabla de postes pendientes + cuadro de intervenidos sin asignar
+  renderPendientes(pendientes, noEjecutables, ejecutables.length, yaEjecutados.length);
+  renderSinAsignar(sinAsignar);
+
+  // "Postes Intervenidos" muestra EXACTAMENTE lo mismo que el KPI de arriba:
+  // postes unicos trabajados en la produccion. El desglose contra la tabla de
+  // asignaciones (Ya Ejecutados / Trabajados sin asignar) va en la tarjeta izquierda.
+  document.getElementById('polesIntervenedCount').textContent = polesIntervenedCount;
+  document.getElementById('polesNetDisplay').textContent = has ? POSTES_ASIGNADOS : '—';
+
+  // Avance = lo mismo que se muestra arriba, sobre el total asignado.
+  // Se usa el total (no solo los ejecutables) porque el numerador incluye
+  // visitas a postes marcados N y trabajo sin asignar; asi nunca pasa de 100%.
+  const baseAvance = has ? POSTES_ASIGNADOS : POSTES_POR_EJECUTAR;
+  const progressPct = baseAvance > 0 ? Math.min((polesIntervenedCount / baseAvance) * 100, 100) : 0;
+  document.getElementById('progressBarFill').style.width = `${Math.min(progressPct, 100)}%`;
+  document.getElementById('progressPct').textContent = `${progressPct.toFixed(1)}%`;
+  
+  // Calculate rate based on LAST 2 WEEKS only
+  const allDates = [...datesSet].sort();
+  if (allDates.length > 0) {
+    const mostRecentDate = new Date(allDates[allDates.length - 1]);
+    const twoWeeksAgo = new Date(mostRecentDate);
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    
+    // Filter rows from last 2 weeks
+    const recentRows = rows.filter(r => {
+      const rowDate = getDate(r);
+      if (!rowDate) return false;
+      const rd = new Date(rowDate);
+      return rd >= twoWeeksAgo && rd <= mostRecentDate;
+    });
+    
+    // Count unique poles and dates in last 2 weeks
+    const recentPoles = new Set(
+      recentRows
+        .filter(r => r[ROW.pole] && r[ROW.pole] !== 'SITE SURVEY' && !/^site\s*survey$/i.test(r[ROW.pole]))
+        .map(r => r[ROW.pole])
+    );
+    const recentDates = new Set(recentRows.map(r => getDate(r)).filter(Boolean));
+    
+    const recentPolesCount = recentPoles.size;
+    const recentActiveDays = recentDates.size;
+    
+    if (recentActiveDays > 0 && recentPolesCount > 0) {
+      const ratePerDay = recentPolesCount / recentActiveDays;
+      document.getElementById('ratePerDay').textContent = ratePerDay.toFixed(1);
+      
+      // Lo que falta son los pendientes reales de la tabla de asignaciones
+      const polesRemaining = has ? pendientes.length : (POSTES_POR_EJECUTAR - polesIntervenedCount);
+      if (polesRemaining > 0) {
+        const daysRemaining = Math.ceil(polesRemaining / ratePerDay);
+        document.getElementById('daysRemaining').textContent = daysRemaining;
+        
+        // Calculate projected end date (business days only - exclude weekends)
+        let projectedDate = new Date(mostRecentDate);
+        let businessDaysAdded = 0;
+        
+        while (businessDaysAdded < daysRemaining) {
+          projectedDate.setDate(projectedDate.getDate() + 1);
+          const dayOfWeek = projectedDate.getDay();
+          // Skip weekends (0 = Sunday, 6 = Saturday)
+          if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            businessDaysAdded++;
+          }
+        }
+        
+        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const projectedStr = `${projectedDate.getDate()} ${months[projectedDate.getMonth()]} ${projectedDate.getFullYear()}`;
+        document.getElementById('projectedEnd').textContent = projectedStr;
+      } else {
+        document.getElementById('daysRemaining').textContent = '0';
+        document.getElementById('projectedEnd').textContent = '✓ Completado';
+      }
+    } else {
+      // Not enough recent data
+      document.getElementById('ratePerDay').textContent = '—';
+      document.getElementById('daysRemaining').textContent = '—';
+      document.getElementById('projectedEnd').textContent = 'Sin datos recientes';
+    }
+  } else {
+    document.getElementById('ratePerDay').textContent = '—';
+    document.getElementById('daysRemaining').textContent = '—';
+    document.getElementById('projectedEnd').textContent = '—';
+  }
+}
+
+function renderCharts() {
+  // Trend chart - dual axis: bars (USD facturado) + line (postes intervenidos)
+  const periods = byPeriod(state.filtered, state.filters.group);
+  const labels = periods.map(p => periodLabel(p.key, state.filters.group));
+  const dataSi = periods.map(p => p.si);
+  const dataNoPend = periods.map(p => p.noPend);
+  const dataPoles = periods.map(p => p.polesIntervened);
+
+  if (state.charts.trend) state.charts.trend.destroy();
+  const ctx = document.getElementById('trendChart').getContext('2d');
+  state.charts.trend = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'bar',
+          label: 'Facturado (SI) USD',
+          data: dataSi,
+          backgroundColor: '#16A34A',
+          borderRadius: 0,
+          stack: 'a',
+          yAxisID: 'y'
+        },
+        {
+          type: 'bar',
+          label: 'NO / Pendiente USD',
+          data: dataNoPend,
+          backgroundColor: '#D97706',
+          borderRadius: 0,
+          stack: 'a',
+          yAxisID: 'y'
+        },
+        {
+          type: 'line',
+          label: 'Postes Intervenidos',
+          data: dataPoles,
+          borderColor: '#051A11',
+          backgroundColor: '#BEF264',
+          borderWidth: 2.5,
+          pointBackgroundColor: '#BEF264',
+          pointBorderColor: '#051A11',
+          pointBorderWidth: 2,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          tension: 0.3,
+          yAxisID: 'y1',
+          order: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'JetBrains Mono', size: 11 }, color: '#2D3A33', boxWidth: 12, boxHeight: 12, usePointStyle: false } },
+        tooltip: {
+          backgroundColor: '#051A11',
+          titleFont: { family: 'JetBrains Mono' },
+          bodyFont: { family: 'JetBrains Mono' },
+          callbacks: {
+            label: (c) => {
+              if (c.dataset.label === 'Postes Intervenidos') return `${c.dataset.label}: ${c.raw} postes`;
+              return `${c.dataset.label}: $${c.raw.toLocaleString('en-US')}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { stacked: true, ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#5C6B62', maxRotation: 60, minRotation: 0 }, grid: { display: false } },
+        y: {
+          stacked: true,
+          position: 'left',
+          title: { display: true, text: 'USD', font: { family: 'JetBrains Mono', size: 10 }, color: '#5C6B62' },
+          ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#5C6B62', callback: (v) => '$' + (v >= 1000 ? (v/1000).toFixed(0) + 'K' : v) },
+          grid: { color: '#E5DEC4' }
+        },
+        y1: {
+          position: 'right',
+          title: { display: true, text: 'Postes', font: { family: 'JetBrains Mono', size: 10 }, color: '#051A11' },
+          ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#051A11', precision: 0 },
+          grid: { display: false },
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  document.getElementById('trendTitle').textContent =
+    `Volumen por ${state.filters.group === 'week' ? 'semana' : state.filters.group === 'month' ? 'mes' : 'día'}`;
+  document.getElementById('trendSub').textContent = 'USD facturado (barras) + postes intervenidos (línea)';
+
+  // FC pie
+  const t = totalsByFc(state.filtered);
+  if (state.charts.fc) state.charts.fc.destroy();
+  const ctx2 = document.getElementById('fcChart').getContext('2d');
+  state.charts.fc = new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+      labels: ['Facturado', 'No facturado', 'Pendiente'],
+      datasets: [{
+        data: [t.si, t.no, t.pend],
+        backgroundColor: ['#16A34A', '#DC2626', '#D97706'],
+        borderColor: '#FFFDF5',
+        borderWidth: 3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'JetBrains Mono', size: 11 }, color: '#2D3A33', boxWidth: 12, boxHeight: 12 } },
+        tooltip: {
+          backgroundColor: '#051A11',
+          titleFont: { family: 'JetBrains Mono' },
+          bodyFont: { family: 'JetBrains Mono' },
+          callbacks: { label: (c) => `${c.label}: $${c.raw.toLocaleString('en-US')}` }
+        }
+      }
+    }
+  });
+}
+
+function renderBreakdowns() {
+  const rows = state.filtered;
+  const codes = topByCode(rows); // TODOS los códigos, sin límite
+  const codeMax = codes[0]?.total || 1;
+  document.getElementById('codesCount').textContent = `${codes.length} códigos`;
+  document.getElementById('codesBody').innerHTML = codes.map(c => `
+    <tr>
+      <td><strong>${c.cod}</strong></td>
+      <td style="font-size: 11px; color: var(--ink-soft);">${(state.codeDesc[c.cod] || '—').slice(0, 50)}${(state.codeDesc[c.cod]||'').length > 50 ? '…' : ''}</td>
+      <td class="right">${fmtNum(Math.round(c.q))}</td>
+      <td class="right">
+        ${fmtUSD(c.total)}
+        <span class="bar-cell"><span class="fill" style="width: ${(c.total/codeMax*100).toFixed(0)}%;"></span></span>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="4" style="text-align: center; padding: 30px; color: var(--ink-muted);">Sin datos</td></tr>';
+  const codeTotal = codes.reduce((s,c) => s + c.total, 0);
+  const codeTotalQ = codes.reduce((s,c) => s + c.q, 0);
+  document.getElementById('codesFoot').innerHTML = codes.length > 0
+    ? `<tr><td colspan="2">TOTAL ${codes.length} CÓDIGOS</td><td class="right">${fmtNum(Math.round(codeTotalQ))}</td><td class="right">${fmtUSD(codeTotal)}</td></tr>`
+    : '';
+
+  const jobs = topByJob(rows).slice(0, 15);
+  document.getElementById('jobsCount').textContent = `${topByJob(rows).length} jobs`;
+  document.getElementById('jobsBody').innerHTML = jobs.map(j => `
+    <tr>
+      <td><strong>${j.job}</strong></td>
+      <td class="right">${j.items}</td>
+      <td class="right">${j.poles}</td>
+      <td class="right">${fmtUSD(j.total)}</td>
+    </tr>`).join('') || '<tr><td colspan="4" style="text-align: center; padding: 30px; color: var(--ink-muted);">Sin datos</td></tr>';
+  const jobsTotal = jobs.reduce((s,j) => s + j.total, 0);
+  const jobsItems = jobs.reduce((s,j) => s + j.items, 0);
+  document.getElementById('jobsFoot').innerHTML = jobs.length > 0
+    ? `<tr><td>TOTAL TOP ${jobs.length}</td><td class="right">${jobsItems}</td><td class="right">—</td><td class="right">${fmtUSD(jobsTotal)}</td></tr>`
+    : '';
+
+  const periods = byPeriod(rows, state.filters.group);
+  document.getElementById('periodTitle').textContent = state.filters.group === 'week' ? 'SEMANA' : state.filters.group === 'month' ? 'MES' : 'DÍA';
+  document.getElementById('periodCount').textContent = `${periods.length} ${state.filters.group === 'week' ? 'semanas' : state.filters.group === 'month' ? 'meses' : 'días'}`;
+  document.getElementById('periodBody').innerHTML = periods.slice().reverse().slice(0, 30).map(p => `
+    <tr>
+      <td><strong>${periodLabel(p.key, state.filters.group)}</strong></td>
+      <td class="right">${p.items}</td>
+      <td class="right">${p.jobs}</td>
+      <td class="right" style="color: var(--success);">${fmtUSD(p.si)}</td>
+      <td class="right" style="color: var(--warn);">${fmtUSD(p.noPend)}</td>
+      <td class="right"><strong>${fmtUSD(p.total)}</strong></td>
+    </tr>`).join('') || '<tr><td colspan="6" style="text-align: center; padding: 30px; color: var(--ink-muted);">Sin datos</td></tr>';
+  const pTotal = periods.reduce((s,p) => s + p.total, 0);
+  const pSi = periods.reduce((s,p) => s + p.si, 0);
+  const pNoPend = periods.reduce((s,p) => s + p.noPend, 0);
+  const pItems = periods.reduce((s,p) => s + p.items, 0);
+  document.getElementById('periodFoot').innerHTML = periods.length > 0
+    ? `<tr><td>TOTAL ${periods.length}</td><td class="right">${pItems}</td><td class="right">—</td><td class="right">${fmtUSD(pSi)}</td><td class="right">${fmtUSD(pNoPend)}</td><td class="right">${fmtUSD(pTotal)}</td></tr>`
+    : '';
+
+  const polesArr = topByPole(rows); // TODOS los postes ejecutados, sin límite
+  document.getElementById('polesCount').textContent = `${polesArr.length} postes`;
+  document.getElementById('polesBody').innerHTML = polesArr.map(p => `
+    <tr>
+      <td><strong>${p.pole}</strong></td>
+      <td>${p.job}</td>
+      <td class="right">${p.items}</td>
+      <td class="right" style="color: var(--ink-muted);">${fmtUSD(p.total / p.items)}</td>
+      <td class="right"><strong>${fmtUSD(p.total)}</strong></td>
+    </tr>`).join('') || '<tr><td colspan="5" style="text-align: center; padding: 30px; color: var(--ink-muted);">Sin datos de poles</td></tr>';
+  const polesTotal = polesArr.reduce((s,p) => s + p.total, 0);
+  const polesItems = polesArr.reduce((s,p) => s + p.items, 0);
+  const polesAvg = polesArr.length > 0 ? polesTotal / polesArr.length : 0;
+  document.getElementById('polesFoot').innerHTML = polesArr.length > 0
+    ? `<tr><td colspan="2">TOTAL ${polesArr.length} POSTES · PROM ${fmtUSD(polesAvg)}/poste</td><td class="right">${polesItems}</td><td class="right">—</td><td class="right">${fmtUSD(polesTotal)}</td></tr>`
+    : '';
+}
+
+// =================== PRODUCCIÓN DIARIA (reemplaza alertas V185) ===================
+function renderDailyProduction() {
+  const rows = state.filtered;
+  const isPole = (p) => p && !/^site\s*survey$/i.test(p);
+
+  // Agrupar por fecha (respeta el modo de fecha activo: instalación o facturación)
+  const map = new Map();
+  for (const r of rows) {
+    const d = getDate(r);
+    if (!d) continue;
+    if (!map.has(d)) map.set(d, { poles: new Set(), total: 0, items: 0 });
+    const e = map.get(d);
+    if (isPole(r[ROW.pole])) e.poles.add(r[ROW.proj] + '|' + r[ROW.pole]);
+    e.total += r[ROW.total] || 0;
+    e.items++;
+  }
+
+  const days = [...map.entries()].sort((a, b) => a[0] < b[0] ? 1 : -1); // más reciente primero
+
+  document.getElementById('dailyDaysCount').textContent = days.length;
+  const totalPoles = days.reduce((s, [, e]) => s + e.poles.size, 0);
+  const totalValue = days.reduce((s, [, e]) => s + e.total, 0);
+  const totalItems = days.reduce((s, [, e]) => s + e.items, 0);
+  document.getElementById('dailyAvgPoles').textContent = days.length > 0 ? (totalPoles / days.length).toFixed(1) : '0';
+
+  if (days.length === 0) {
+    document.getElementById('dailyBody').innerHTML = `
+      <tr><td colspan="5" style="text-align: center; padding: 30px; color: #5C6B62; font-family: 'JetBrains Mono', monospace;">
+        Sin datos en el período seleccionado
+      </td></tr>`;
+    document.getElementById('dailyFoot').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('dailyBody').innerHTML = days.map(([d, e]) => {
+    const perPole = e.poles.size > 0 ? e.total / e.poles.size : 0;
+    return `<tr>
+      <td><strong>${fmtDate(d)}</strong></td>
+      <td class="right">${e.poles.size}</td>
+      <td class="right"><strong>${fmtUSD(e.total)}</strong></td>
+      <td class="right">${e.items}</td>
+      <td class="right" style="color: var(--tysa-green); font-weight: 700;">${e.poles.size > 0 ? fmtUSD(perPole) : '—'}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('dailyFoot').innerHTML =
+    `<tr style="background:#EFF7EC;"><td style="font-weight:700;">TOTAL · ${days.length} DÍAS</td><td class="right" style="font-weight:700;">${totalPoles}</td><td class="right" style="font-weight:700;">${fmtUSD(totalValue)}</td><td class="right" style="font-weight:700;">${totalItems}</td><td class="right" style="font-weight:700;">${totalPoles > 0 ? fmtUSD(totalValue/totalPoles) : '—'}</td></tr>`;
+}
+
+function renderDetail() {
+  const search = state.filters.search.toLowerCase();
+  let rows = state.filtered;
+  if (search) {
+    rows = rows.filter(r => {
+      const desc = state.codeDesc[r[ROW.cod]] || '';
+      return (r[ROW.job]||'').toLowerCase().includes(search)
+        || (r[ROW.pole]||'').toLowerCase().includes(search)
+        || (r[ROW.cod]||'').toLowerCase().includes(search)
+        || (r[ROW.proj]||'').toLowerCase().includes(search)
+        || (r[ROW.crew]||'').toLowerCase().includes(search)
+        || desc.toLowerCase().includes(search);
+    });
+  }
+  const max = 200;
+  const display = rows.slice(0, max);
+  document.getElementById('detailPager').textContent =
+    rows.length > max ? `Mostrando ${max} de ${fmtNum(rows.length)} filas` : `${fmtNum(rows.length)} filas`;
+
+  const fcCls = (fc) => fc === 'SI' ? 'si' : fc === 'NO' ? 'no' : 'pend';
+  const fcLab = (fc) => fc === 'SI' ? 'SI' : fc === 'NO' ? 'NO' : 'PEND';
+
+  document.getElementById('detailBody').innerHTML = display.map(r => `
+    <tr>
+      <td>${r[ROW.no]}</td>
+      <td>${fmtDate(r[ROW.d_ins])}</td>
+      <td>${fmtDate(r[ROW.d_fact])}</td>
+      <td style="font-size: 11px;">${r[ROW.proj] || '—'}</td>
+      <td style="font-size: 11px;">${r[ROW.crew] || '—'}</td>
+      <td><strong>${r[ROW.job]}</strong></td>
+      <td>${r[ROW.pole] || '—'}</td>
+      <td><strong>${r[ROW.cod]}</strong></td>
+      <td style="font-size: 11px; color: var(--ink-soft);">${(state.codeDesc[r[ROW.cod]] || '').slice(0, 60)}</td>
+      <td class="right">${fmtUSD2(r[ROW.pr])}</td>
+      <td class="right">${r[ROW.q].toFixed(2)}</td>
+      <td class="right"><strong>${fmtUSD2(r[ROW.total])}</strong></td>
+      <td><span class="fc-badge ${fcCls(r[ROW.fc])}">${fcLab(r[ROW.fc])}</span></td>
+    </tr>`).join('') || '<tr><td colspan="13" style="text-align: center; padding: 40px; color: var(--ink-muted);">Sin resultados</td></tr>';
+}
+
+// Pills clickeables de cuadrilla (en vez de un <select> escondido)
+function renderCrewPills(crews) {
+  const wrap = document.getElementById('filterCrewPills');
+  if (!wrap) return;
+  const current = state.filters.crew || '';
+  const pillStyle = (active) => `padding: 7px 14px; border-radius: 999px; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; cursor: pointer; border: 1px solid ${active ? 'var(--tysa-green)' : 'rgba(0,0,0,0.2)'}; background: ${active ? 'var(--tysa-green)' : 'white'}; color: ${active ? 'white' : 'var(--ink)'};`;
+  const all = `<button type="button" onclick="selectCrewPill('')" style="${pillStyle(current === '')}">TODAS</button>`;
+  const items = crews.map(c => `<button type="button" onclick="selectCrewPill('${c.replace(/'/g, "\\'")}')" style="${pillStyle(current === c)}">${c}</button>`).join('');
+  wrap.innerHTML = all + items;
+}
+
+function selectCrewPill(crew) {
+  state.filters.crew = crew;
+  const crews = [...new Set(state.rawRows.map(r => r[ROW.crew]).filter(Boolean))].sort();
+  renderCrewPills(crews);
+  refresh();
+}
+
+function populateFilterDropdowns() {
+  const jobs = [...new Set(state.rawRows.map(r => r[ROW.job]).filter(Boolean))].sort();
+  const codes = [...new Set(state.rawRows.map(r => r[ROW.cod]).filter(Boolean))].sort();
+  const poles = [...new Set(state.rawRows.map(r => r[ROW.pole]).filter(Boolean))].sort();
+  const projs = [...new Set(state.rawRows.map(r => r[ROW.proj]).filter(Boolean))].sort();
+  const crews = [...new Set(state.rawRows.map(r => r[ROW.crew]).filter(Boolean))].sort();
+
+  const projSel = document.getElementById('filterProj');
+  if (projSel) projSel.innerHTML = '<option value="">TODOS LOS PROYECTOS</option>' + projs.map(p => `<option value="${p}">${p}</option>`).join('');
+  renderCrewPills(crews);
+
+  const jobSel = document.getElementById('filterJob');
+  jobSel.innerHTML = '<option value="">TODOS LOS JOBS</option>' + jobs.map(j => `<option value="${j}">${j}</option>`).join('');
+  const codSel = document.getElementById('filterCod');
+  codSel.innerHTML = '<option value="">TODOS LOS CÓDIGOS</option>' + codes.map(c => `<option value="${c}">${c} · ${(state.codeDesc[c]||'').slice(0,40)}</option>`).join('');
+  const poleSel = document.getElementById('filterPole');
+  poleSel.innerHTML = '<option value="">TODOS LOS POLES</option>' + poles.map(p => `<option value="${p}">${p}</option>`).join('');
+}
+
+// =================== PRESETS ===================
+function applyPreset(preset) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  // iso() nunca debe tirar error, aunque le pasen una fecha inválida (datos con formato roto)
+  const iso = (d) => (d instanceof Date && !isNaN(d.getTime())) ? d.toISOString().slice(0,10) : iso(today);
+  let from = '', to = '';
+
+  // Use the data's most recent date as anchor for "today" if there's no data covering today.
+  // Se filtran también las fechas con formato de string inválido (no YYYY-MM-DD) para que
+  // un dato roto en cualquier proyecto (ej: fechas mal digitadas) no rompa el cálculo.
+  const isValidIsoDate = (s) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+    const d = new Date(s + 'T00:00:00');
+    return !isNaN(d.getTime());
+  };
+  const dates = state.rawRows
+    .map(r => r[state.filters.dateMode === 'd_fact' ? ROW.d_fact : ROW.d_ins])
+    .filter(Boolean)
+    .filter(isValidIsoDate)
+    .sort();
+  const dataMax = dates[dates.length - 1];
+  // El ancla es SIEMPRE el ultimo dia con datos, este en el pasado o en el futuro.
+  // Antes solo se movia si los datos eran futuros, asi que "Hoy"/"Ayer" salian
+  // vacios cuando el ultimo trabajo cargado era de hace unos dias.
+  let anchor = today;
+  if (dataMax) {
+    const candidate = new Date(dataMax + 'T00:00:00');
+    if (!isNaN(candidate.getTime())) anchor = candidate;
+  }
+  state._anchorFecha = dataMax || '';
+
+  const start = (offsetDays) => { const d = new Date(anchor); d.setDate(d.getDate() + offsetDays); return d; };
+
+  if (preset === 'today') { from = to = iso(anchor); }
+  else if (preset === 'yesterday') { from = to = iso(start(-1)); }
+  else if (preset === 'thisWeek') {
+    const day = anchor.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    const monday = start(diff);
+    from = iso(monday); to = iso(anchor);
+  }
+  else if (preset === 'lastWeek') {
+    const day = anchor.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    const monday = start(diff);
+    const lastMonday = new Date(monday); lastMonday.setDate(lastMonday.getDate() - 7);
+    const lastSunday = new Date(lastMonday); lastSunday.setDate(lastSunday.getDate() + 6);
+    from = iso(lastMonday); to = iso(lastSunday);
+  }
+  else if (preset === 'thisMonth') {
+    from = iso(new Date(anchor.getFullYear(), anchor.getMonth(), 1));
+    to = iso(anchor);
+  }
+  else if (preset === 'lastMonth') {
+    const firstThisMonth = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+    const lastMonthEnd = new Date(firstThisMonth); lastMonthEnd.setDate(lastMonthEnd.getDate() - 1);
+    const lastMonthStart = new Date(lastMonthEnd.getFullYear(), lastMonthEnd.getMonth(), 1);
+    from = iso(lastMonthStart); to = iso(lastMonthEnd);
+  }
+  else if (preset === 'last7') { from = iso(start(-6)); to = iso(anchor); }
+  else if (preset === 'last30') { from = iso(start(-29)); to = iso(anchor); }
+  else if (preset === 'last90') { from = iso(start(-89)); to = iso(anchor); }
+  else if (preset === 'all') { from = ''; to = ''; }
+
+  state.filters.from = from;
+  state.filters.to = to;
+  state.filters.preset = preset;
+  document.getElementById('dateFrom').value = from;
+  document.getElementById('dateTo').value = to;
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === preset));
+  refresh();
+}
+
+// =================== REFRESH ===================
+function refresh() {
+  const safe = (name, fn) => {
+    try { fn(); }
+    catch(e) {
+      console.error(`Error en ${name}:`, e);
+      showToast(`⚠ Error en ${name}: ${e.message}`);
+    }
+  };
+  safe('filtros', applyFilters);
+  safe('KPIs', renderKPIs);
+  // Estadísticas del proyecto: SIEMPRE se renderizan, aunque falle otra sección
+  safe('estadísticas', () => {
+    const rows = state.filtered;
+    const dates = new Set(rows.map(r => getDate(r)).filter(Boolean));
+    const poles = new Set(
+      rows.filter(r => r[ROW.pole] && !/^site\s*survey$/i.test(r[ROW.pole])).map(r => r[ROW.proj] + '|' + r[ROW.pole])
+    );
+    renderProjectStats(rows, poles.size, dates);
+  });
+  safe('gráficas', renderCharts);
+  safe('desgloses', renderBreakdowns);
+  safe('producción diaria', renderDailyProduction);
+  safe('detalle', renderDetail);
+  safe('resumen impresión', updatePrintSummary);
+}
+
+function updatePrintSummary() {
+  const f = state.filters;
+  const range = (f.from || f.to)
+    ? `${f.from ? fmtDateLong(f.from) : 'inicio'} → ${f.to ? fmtDateLong(f.to) : 'fin'}`
+    : 'TODO EL RANGO';
+  document.getElementById('prtRange').textContent = range;
+  const filt = [];
+  filt.push(`Modo: ${f.dateMode === 'd_fact' ? 'Día Facturación' : 'Día Instalación'}`);
+  if (f.fc) filt.push(`Estado FC: ${f.fc}`);
+  if (f.job) filt.push(`Job: ${f.job}`);
+  if (f.cod) filt.push(`Código: ${f.cod}`);
+  if (f.pole) filt.push(`Pole: ${f.pole}`);
+  filt.push(`Agrupado por ${f.group === 'week' ? 'semana' : f.group === 'month' ? 'mes' : 'día'}`);
+  document.getElementById('prtFilters').textContent = filt.join(' · ');
+  document.getElementById('prtGen').textContent = new Date().toLocaleString('es-CO');
+}
+
+// =================== EVENT WIRING ===================
+function wireEvents() {
+  document.querySelectorAll('.preset-btn').forEach(b => b.addEventListener('click', () => applyPreset(b.dataset.preset)));
+
+  ['dateFrom','dateTo','filterDateMode','filterFc','filterJob','filterCod','filterPole','filterProj','filterGroup'].forEach(id => {
+    document.getElementById(id).addEventListener('change', (e) => {
+      const map = { dateFrom:'from', dateTo:'to', filterDateMode:'dateMode', filterFc:'fc', filterJob:'job', filterCod:'cod', filterPole:'pole', filterProj:'proj', filterCrew:'crew', filterGroup:'group' };
+      state.filters[map[id]] = e.target.value;
+      if (id === 'dateFrom' || id === 'dateTo') {
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        state.filters.preset = 'custom';
+      }
+      refresh();
+    });
+  });
+
+  document.getElementById('detailSearch').addEventListener('input', (e) => {
+    state.filters.search = e.target.value;
+    renderDetail();
+  });
+
+  const pendS = document.getElementById('pendSearch');
+  if (pendS) pendS.addEventListener('input', () => renderPendientes());
+  const pendC = document.getElementById('pendVerNoEjec');
+  if (pendC) pendC.addEventListener('change', () => renderPendientes());
+
+  document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+}
+
+// =================== FILE UPLOAD ===================
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const name = file.name || 'archivo';
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  const mime = file.type || '';
+
+  showToast(`Procesando ${name}...`);
+
+  // Heuristic: detect Excel vs CSV/text by extension OR mime OR magic bytes
+  const isExcel = ext === 'xlsx' || ext === 'xls' || ext === 'xlsm' ||
+                  /spreadsheetml|ms-excel/i.test(mime);
+  const isText = ext === 'csv' || ext === 'tsv' || ext === 'txt' ||
+                 /^text\//i.test(mime);
+
+  // First try: read as ArrayBuffer (works for both Excel and text on iOS)
+  const reader = new FileReader();
+
+  reader.onerror = () => showToast(`Error leyendo archivo: ${reader.error?.message || 'desconocido'}`);
+
+  reader.onload = (ev) => {
+    try {
+      const buf = ev.target.result;
+      // Check first bytes - Excel files start with PK (zip) or D0CF (old xls)
+      const bytes = new Uint8Array(buf.slice(0, 4));
+      const isPK = bytes[0] === 0x50 && bytes[1] === 0x4B; // PK
+      const isOldXls = bytes[0] === 0xD0 && bytes[1] === 0xCF; // old xls
+
+      if (isPK || isOldXls || isExcel) {
+        // Excel route
+        if (typeof XLSX === 'undefined') {
+          showToast('Error: librería Excel no cargó. Revisá tu conexión.');
+          return;
+        }
+        const wb = XLSX.read(buf, { type: 'array' });
+        // Priorizar hoja que coincida con el proyecto seleccionado, luego pole/transfer, luego la primera
+        const projPat = pendingProject ? new RegExp(pendingProject.replace(' ', '\\s*'), 'i') : null;
+        let sheet = (projPat && wb.SheetNames.find(n => projPat.test(n)))
+          || wb.SheetNames.find(n => /pole|transfer/i.test(n))
+          || wb.SheetNames[0];
+        const json = XLSX.utils.sheet_to_json(wb.Sheets[sheet], { defval: '', raw: false });
+        if (json.length === 0) {
+          showToast(`Hoja "${sheet}" está vacía. Probá con otro archivo o usá "Pegar datos".`);
+          return;
+        }
+        ingestParsedRows(json, name, pendingProject);
+      } else {
+        // Text route — convert ArrayBuffer to string
+        const text = new TextDecoder('utf-8').decode(buf);
+        // Auto-detect delimiter: tab > semicolon > comma
+        const firstLine = text.split('\n')[0] || '';
+        const delim = firstLine.includes('\t') ? '\t' : firstLine.split(';').length > firstLine.split(',').length ? ';' : ',';
+        Papa.parse(text, {
+          header: true, skipEmptyLines: true, delimiter: delim,
+          complete: (res) => {
+            if (!res.data || res.data.length === 0) {
+              showToast(`Archivo vacío o sin encabezados. Probá "Pegar datos".`);
+              return;
+            }
+            ingestParsedRows(res.data, name, pendingProject);
+          },
+          error: (err) => showToast(`Error parseando: ${err.message}`)
+        });
+      }
+    } catch(err) {
+      console.error('File parse error:', err);
+      showToast(`Error: ${err.message}. Probá usar "Pegar datos" en su lugar.`);
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+
+  // Reset input so same file can be re-selected
+  e.target.value = '';
+}
+
+// =================== PASTE DATA (iOS-friendly fallback) ===================
+function openPasteModal() { openModal('pasteModal'); }
+
+function processPastedData() {
+  const text = document.getElementById('pasteArea').value.trim();
+  if (!text) { showToast('Pegá los datos primero'); return; }
+
+  // Auto-detect delimiter
+  const firstLine = text.split('\n')[0] || '';
+  const tabCount = (firstLine.match(/\t/g) || []).length;
+  const commaCount = (firstLine.match(/,/g) || []).length;
+  const semiCount = (firstLine.match(/;/g) || []).length;
+  let delim = '\t'; // Sheets/Excel paste defaults to tab
+  if (commaCount > tabCount && commaCount > semiCount) delim = ',';
+  else if (semiCount > tabCount && semiCount > commaCount) delim = ';';
+
+  Papa.parse(text, {
+    header: true, skipEmptyLines: true, delimiter: delim,
+    complete: (res) => {
+      if (!res.data || res.data.length === 0) {
+        showToast('No se detectaron filas. Verificá que copiaste con encabezados.');
+        return;
+      }
+      ingestParsedRows(res.data, `Pegado (${res.data.length} filas)`, (document.getElementById('pasteProject')||{}).value || 'WARREN');
+      closeModal('pasteModal');
+      document.getElementById('pasteArea').value = '';
+    },
+    error: (err) => showToast(`Error: ${err.message}`)
+  });
+}
+
+function ingestParsedRows(arr, srcName, project) {
+  project = project || pendingProject || 'WARREN';
+  if (!arr || arr.length === 0) { showToast('Archivo vacío'); return; }
+  // Try to detect column names flexibly (matches common variants)
+  const sample = arr[0];
+  const keys = Object.keys(sample);
+  const find = (...patterns) => {
+    for (const p of patterns) {
+      const k = keys.find(k => new RegExp(p, 'i').test(k.trim()));
+      if (k) return k;
+    }
+    return null;
+  };
+  const kNo = find('^no$', '^numero$', '^#$', '^entry$');
+  const kIns = find('dia.ins', 'd.ins', 'install', 'instalaci', 'fecha.ins');
+  const kFact = find('dia.fact', 'd.fact', 'fact', 'invoice');
+  const kJob = find('^job$', '^job', 'work order', 'trabajo');
+  const kPole = find('pol.no', 'pole', 'poste');
+  const kCod = find('^cod', 'codigo', 'code', 'unit');
+  const kPr = find('^pr$', 'price', 'precio', 'rate', 'tarifa', 'unit.*price');
+  const kQ = find('^q$', 'qty', 'cant', 'quantity', 'cantidad');
+  const kTot = find('total', 'amount', 'monto', 'valor');
+  const kDesc = find('descrip', 'desc');
+  const kFc = find('^fc$', 'facturado', 'invoiced', 'billed', 'estado');
+  const kCrew = find('cuadrilla', '^crew', 'squad', 'equipo');
+
+  const fixDate = (s) => {
+    if (!s) return '';
+    s = String(s).trim();
+    const isReal = (yy, mm, dd) => {
+      const d = new Date(Number(yy), Number(mm) - 1, Number(dd));
+      return d.getFullYear() === Number(yy) && (d.getMonth() + 1) === Number(mm) && d.getDate() === Number(dd);
+    };
+    // ISO already
+    let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return isReal(m[1], m[2], m[3]) ? s.slice(0,10) : '';
+    // MM/DD/YYYY o M/D/YYYY. Si el primer numero es > 12 pero el segundo no,
+    // viene en DD/MM (formato colombiano) y se intercambian: un mes nunca pasa de 12.
+    m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+    if (m) {
+      let [_, a, b, yy] = m;
+      if (yy.length === 2) yy = '20' + yy;
+      else if (yy.length === 3) yy = '20' + yy.slice(-2);
+      let mm = a, dd = b;
+      if (Number(a) > 12 && Number(b) <= 12) { mm = b; dd = a; }   // era DD/MM
+      if (!isReal(yy, mm, dd)) return '';
+      return `${yy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+    }
+    // Try Date parse
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+    return '';
+  };
+
+  const newDesc = { ...state.codeDesc };
+  const rows = [];
+  for (const r of arr) {
+    const cod = String(kCod ? r[kCod] || '' : '').trim().toUpperCase();
+    const desc = String(kDesc ? r[kDesc] || '' : '').trim();
+    if (cod && desc && !newDesc[cod]) newDesc[cod] = desc;
+    const fcRaw = String(kFc ? r[kFc] || '' : '').trim().toUpperCase();
+    const fc = fcRaw === 'SI' ? 'SI' : fcRaw === 'NO' ? 'NO' : '';
+    
+    // Parse numbers - handles European (150,00), American (150.00), and mixed formats (1.500,00)
+    const num = (v) => {
+      let s = String(v).trim().replace(/[$]/g, '');
+      
+      // Detect format by finding the last separator (decimal)
+      const lastComma = s.lastIndexOf(',');
+      const lastDot = s.lastIndexOf('.');
+      
+      if (lastComma > lastDot) {
+        // European/Colombian format: comma is decimal, dot is thousands
+        // Examples: "150,00", "1.500,00", "1500,5"
+        s = s.replace(/\./g, '').replace(',', '.');
+      } else if (lastDot > lastComma) {
+        // American format: dot is decimal, comma is thousands
+        // Examples: "150.00", "1,500.00"
+        s = s.replace(/,/g, '');
+      } else if (lastComma === -1 && lastDot === -1) {
+        // No separators - just a number
+        // Example: "150"
+        // do nothing
+      }
+      
+      const n = parseFloat(s);
+      return isNaN(n) ? 0 : n;
+    };
+    
+    // Extract PR and Q
+    const pr = num(kPr ? r[kPr] : 0);
+    const q = num(kQ ? r[kQ] : 0);
+    
+    // Try to get Total from column, but if it's a formula or 0, calculate from PR × Q
+    let total = num(kTot ? r[kTot] : 0);
+    if (total === 0 && pr > 0 && q > 0) {
+      total = pr * q;
+    }
+
+    const crew = String(kCrew ? r[kCrew] || '' : '').trim().toUpperCase() || 'SIN ASIGNAR';
+
+    rows.push([
+      String(kNo ? r[kNo] || '' : ''),
+      fixDate(kIns ? r[kIns] : ''),
+      fixDate(kFact ? r[kFact] : ''),
+      String(kJob ? r[kJob] || '' : '').trim(),
+      String(kPole ? r[kPole] || '' : '').trim(),
+      cod,
+      pr,
+      q,
+      total,
+      fc,
+      project,
+      crew
+    ]);
+  }
+  state.projects[project] = { rows, srcName };
+  // Alumbrar SOLO el proyecto recién cargado; los demás se apagan (se encienden con click)
+  for (const p of PROJECTS) state.visible[p] = (p === project);
+  state.codeDesc = newDesc;
+  state.source = 'upload';
+  rebuildCombined();
+  populateFilterDropdowns();
+  applyPreset('all');
+  showToast(`Cargadas ${rows.length} filas desde ${srcName}`);
+}
+
+// =================== WARREN LIVE SHEET (Direct Load) ===================
+async function loadWarrenSheet() {
+  // Warren PA Project - Main Data Sheet
+  const WARREN_SHEET_ID = '1de-ETTCpxA3G1g1lEP2_3CXCfIlCI0SHbqMXC7ewPFQ';
+  const gid = '617915464'; // Hoja: warren pole transfer
+  
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${WARREN_SHEET_ID}/gviz/tq?tqx=out:csv&gid=${gid}`;
+  showToast('🔄 Cargando Warren Live desde Google Sheets...');
+  
+  try {
+    const res = await fetch(csvUrl);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} - No se pudo acceder al Sheet`);
+    }
+    
+    const csv = await res.text();
+    
+    // Check if response is HTML (means sheet is not publicly accessible)
+    if (csv.trim().startsWith('<')) {
+      throw new Error('Sheet no público. Ve a Google Sheets → Compartir → "Anyone with the link" → Viewer');
+    }
+    
+    Papa.parse(csv, {
+      header: true,
+      skipEmptyLines: 'greedy', // Only skip completely empty lines, not lines with some empty fields
+      complete: (result) => {
+        console.log(`[DEBUG] Papa.parse recibió ${result.data.length} filas`);
+        if (result.data && result.data.length > 0) {
+          ingestParsedRows(result.data, 'Warren Live');
+          showToast(`✓ Warren Live cargado: ${result.data.length} registros`);
+        } else {
+          showToast('⚠ El Sheet está vacío o no tiene datos válidos');
+        }
+      },
+      error: (err) => {
+        showToast(`Error al parsear CSV: ${err.message}`);
+        console.error('Papa Parse error:', err);
+      }
+    });
+    
+  } catch (err) {
+    showToast(`❌ Error: ${err.message}`);
+    console.error('Warren Sheet load error:', err);
+    
+    // Provide helpful instructions
+    const helpMsg = document.createElement('div');
+    helpMsg.style.cssText = `
+      position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+      background: var(--tysa-darkest); color: var(--tysa-lime);
+      border: 2px solid var(--tysa-lime);
+      padding: 20px 30px; max-width: 600px; z-index: 1000;
+      font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; line-height: 1.6;
+    `;
+    helpMsg.innerHTML = `
+      <div style="font-weight: 700; font-size: 15px; margin-bottom: 10px; font-family: 'Anton', sans-serif; letter-spacing: 0.05em;">
+        CONFIGURACIÓN REQUERIDA
+      </div>
+      <div style="margin-bottom: 12px;">
+        Para cargar datos en vivo, el Google Sheet debe estar configurado como <strong>"Anyone with the link can view"</strong>:
+      </div>
+      <ol style="margin: 12px 0 12px 24px; color: rgba(255,255,255,0.9);">
+        <li>Abre el Google Sheet en tu navegador</li>
+        <li>Click en <strong>Compartir</strong> (botón verde arriba-derecha)</li>
+        <li>En "Acceso general" selecciona <strong>"Anyone with the link"</strong></li>
+        <li>Rol: <strong>Viewer</strong></li>
+        <li>Guarda los cambios</li>
+      </ol>
+      <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.2); font-size: 11px; color: rgba(255,255,255,0.7);">
+        Sheet ID: <code style="background: rgba(255,255,255,0.1); padding: 2px 6px; font-family: 'JetBrains Mono', monospace;">${WARREN_SHEET_ID}</code>
+      </div>
+      <button onclick="this.parentElement.remove()" style="
+        position: absolute; top: 10px; right: 10px;
+        background: transparent; border: 1px solid rgba(255,255,255,0.3);
+        color: white; padding: 4px 12px; cursor: pointer; font-size: 11px;
+      ">CERRAR</button>
+    `;
+    document.body.appendChild(helpMsg);
+    setTimeout(() => helpMsg.remove(), 12000);
+  }
+}
+
+// =================== GOOGLE SHEETS URL LOAD ===================
+async function loadFromUrl() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { showToast('Pega una URL de Google Sheets'); return; }
+  // Convert standard share URL to CSV export URL
+  const m = url.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (!m) { showToast('URL no válida — debe ser un Google Sheet'); return; }
+  const id = m[1];
+  const gidMatch = url.match(/[#&?]gid=(\d+)/);
+  const gid = gidMatch ? gidMatch[1] : '0';
+
+  // Try the gviz CSV endpoint (works for "anyone with link can view" sheets)
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${gid}`;
+  showToast('Cargando desde Google Sheets...');
+  try {
+    const res = await fetch(csvUrl);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const csv = await res.text();
+    if (csv.trim().startsWith('<')) throw new Error('La hoja no es pública. Comparte como "anyone with link can view" o publica como CSV.');
+    Papa.parse(csv, {
+      header: true, skipEmptyLines: true,
+      complete: (res) => ingestParsedRows(res.data, 'Google Sheets')
+    });
+  } catch (err) {
+    showToast(`Error: ${err.message}. Tip: Archivo > Compartir > "Anyone with link" o exporta CSV y súbelo.`);
+    console.error(err);
+  }
+}
+
+function loadDemoData() {
+  loadEmbedded();
+  state.visible['WARREN'] = true;
+  rebuildCombined();
+  populateFilterDropdowns();
+  applyPreset('all');
+  showToast('Datos Warren (embebidos) recargados');
+}
+
+// =================== POSTES INTERVENIDOS SIN ASIGNAR ===================
+let _saCache = [];
+
+function renderSinAsignar(lista) {
+  if (lista) _saCache = lista;
+  const filas = _saCache || [];
+  const body = document.getElementById('saBody');
+  const card = document.getElementById('cardSinAsignar');
+  if (!body) return;
+
+  document.getElementById('saCount').textContent = filas.length;
+  // El cuadro solo se muestra si hay algo que revisar
+  if (card) card.style.display = filas.length ? '' : 'none';
+  if (!filas.length) { body.innerHTML = ''; return; }
+
+  body.innerHTML = filas.map(a => {
+    const motivo = a.comentario || '';
+    const color = /otro EWO/i.test(motivo) ? '#B45309'
+                : /Sera el BGE/i.test(motivo) ? '#B91C1C'
+                : '#4B5563';
+    return `<tr>
+      <td><strong>${a.bge}</strong></td>
+      <td>${a.ewo || '—'}</td>
+      <td style="font-size:11px;">${a.proj || '—'}</td>
+      <td style="font-size:11px; white-space:nowrap;">${a.fecha || '—'}</td>
+      <td style="font-size:11px; color:${color}; font-weight:600;">${motivo}</td>
+    </tr>`;
+  }).join('');
+}
+
+function exportSinAsignar() {
+  const filas = _saCache || [];
+  if (!filas.length) { showToast('No hay postes intervenidos sin asignar'); return; }
+  const q = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+  const lines = [['BGE','EWO_usado','Proyecto','Fecha_trabajado','Posible_motivo'].join(',')];
+  for (const a of filas) {
+    lines.push([q(a.bge), q(a.ewo), q(a.proj), q(a.fecha), q(a.comentario)].join(','));
+  }
+  const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const el = document.createElement('a');
+  el.href = url;
+  el.download = `postes_sin_asignar_${new Date().toISOString().slice(0,10)}.csv`;
+  el.click();
+  URL.revokeObjectURL(url);
+  showToast(`Descargados ${filas.length} postes sin asignar`);
+}
+
+// =================== EXPORTAR POSTES PENDIENTES ===================
+function exportPendientes() {
+  const filas = (_pendCache.visibles || []);
+  if (!filas.length) { showToast('No hay postes pendientes para descargar'); return; }
+
+  const q = (v) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+  const headers = ['LOC','BGE','VZ','EWO','Direccion','Fecha_Asignacion','Estado','Ejecutable','Comentarios'];
+  const lines = [headers.join(',')];
+  for (const a of filas) {
+    lines.push([
+      q(a.loc), q(a.bge), q(a.vz), q(a.ewo), q(a.direccion), q(a.fecha),
+      q(a.sinAsignar ? 'TRABAJADO SIN ASIGNAR' : (a.ejecutable ? 'PENDIENTE' : 'NO EJECUTABLE')),
+      q(a.ejecRaw), q(a.comentario)
+    ].join(','));
+  }
+  // El BOM hace que Excel abra bien las tildes (Direccion, comentarios en español)
+  const csv = '\uFEFF' + lines.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `postes_pendientes_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`Descargados ${filas.length} postes pendientes`);
+}
+
+// =================== EXPORT CSV ===================
+function exportCsv() {
+  const rows = state.filtered;
+  const headers = ['NO','DIA_INS','DIA_FACT','Job','Pole','Cod','Descripcion','PR','Q','Total','FC'];
+  const lines = [headers.join(',')];
+  for (const r of rows) {
+    const desc = (state.codeDesc[r[ROW.cod]] || '').replace(/"/g,'""');
+    lines.push([
+      r[ROW.no],
+      r[ROW.d_ins],
+      r[ROW.d_fact],
+      `"${r[ROW.job]}"`,
+      `"${r[ROW.pole]}"`,
+      r[ROW.cod],
+      `"${desc}"`,
+      r[ROW.pr],
+      r[ROW.q],
+      r[ROW.total],
+      r[ROW.fc] || 'PEND'
+    ].join(','));
+  }
+  const csv = lines.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `tysa_warren_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`Exportadas ${rows.length} filas a CSV`);
+}
+
+// =================== EXPORT STANDALONE HTML (verdadero "link compartible") ===================
+async function exportStandaloneHtml() {
+  showToast('Generando archivo HTML compartible...');
+  try {
+    // Clone the current document
+    const html = document.documentElement.outerHTML;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    // Replace embedded data with current state (preserves any uploaded data)
+    const dataEl = doc.getElementById('embeddedData');
+    if (dataEl) {
+      dataEl.textContent = JSON.stringify({
+        rows: state.rawRows,
+        codeDesc: state.codeDesc
+      });
+    }
+
+    // Inject standalone flag and snapshot meta
+    const flagScript = doc.createElement('script');
+    const dateRange = (() => {
+      const dates = state.filtered.map(r => getDate(r)).filter(Boolean).sort();
+      return dates.length > 0 ? `${dates[0]} → ${dates[dates.length-1]}` : 'completo';
+    })();
+    flagScript.textContent = `
+window.__TYSA_STANDALONE__ = true;
+window.__TYSA_SNAPSHOT__ = ${JSON.stringify({
+      filters: state.filters,
+      sourceLabel: document.getElementById('dataSourceLabel').textContent,
+      generatedAt: new Date().toISOString(),
+      dateRange: dateRange
+    })};`;
+    dataEl.parentNode.insertBefore(flagScript, dataEl);
+
+    // Build final HTML
+    const final = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
+
+    // Trigger download
+    const blob = new Blob([final], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().slice(0,10);
+    const periodTag = state.filters.preset === 'all' ? 'completo' : state.filters.preset;
+    a.href = url;
+    a.download = `TYSA-Warren-Reporte-${dateStr}-${periodTag}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('✓ Archivo descargado · súbelo a Drive para obtener un link');
+  } catch(err) {
+    showToast('Error: ' + err.message);
+    console.error(err);
+  }
+}
+
+function openShareHelp() { openModal('helpShareModal'); }
+
+// =================== UI HELPERS ===================
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('active'); });
+});
+
+// =================== STANDALONE SNAPSHOT MODE ===================
+function applyStandaloneMode() {
+  const snap = window.__TYSA_SNAPSHOT__;
+  // Hide data input controls (file upload, URL paste, demo button)
+  const dataBar = document.querySelector('.data-bar');
+  if (dataBar) dataBar.style.display = 'none';
+
+  // Add a "Snapshot" indicator banner above the filters
+  const banner = document.createElement('div');
+  banner.style.cssText = `
+    background: var(--tysa-darkest);
+    color: var(--tysa-lime);
+    padding: 12px 22px;
+    border-bottom: 2px solid var(--tysa-lime);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  `;
+  const generated = snap?.generatedAt ? new Date(snap.generatedAt).toLocaleString('es-CO') : '—';
+  banner.innerHTML = `
+    <span style="background: var(--tysa-lime); color: var(--tysa-darkest); padding: 4px 10px; font-weight: 700; letter-spacing: 0.2em;">📸 SNAPSHOT</span>
+    <span>Reporte estático generado el <strong>${generated}</strong></span>
+    <span style="color: rgba(255,255,255,0.4);">·</span>
+    <span>Origen: ${snap?.sourceLabel || '—'}</span>
+    <span style="margin-left: auto; color: rgba(255,255,255,0.6);">Los filtros pueden ajustarse pero los datos están congelados</span>
+  `;
+  document.querySelector('header.brand').after(banner);
+
+  // Apply snapshot filters to the UI
+  if (snap?.filters) {
+    Object.assign(state.filters, snap.filters);
+    document.getElementById('filterDateMode').value = state.filters.dateMode || 'd_ins';
+    document.getElementById('dateFrom').value = state.filters.from || '';
+    document.getElementById('dateTo').value = state.filters.to || '';
+    document.getElementById('filterFc').value = state.filters.fc || '';
+    document.getElementById('filterGroup').value = state.filters.group || 'day';
+  }
+
+  // Update source label (still useful even though hidden, for share again)
+  if (snap?.sourceLabel) {
+    document.getElementById('dataSourceLabel').textContent = snap.sourceLabel;
+  }
+}
+
+// =================== INIT ===================
+window.addEventListener('error', (e) => {
+  try { showToast('⚠ ERROR: ' + (e.message || 'desconocido')); } catch(_) {}
+});
+
+function init() {
+  loadAppsScriptUrl();
+  rebuildCombined();  // arranca vacío — cargá cada proyecto con su botón "📂"
+  populateFilterDropdowns();
+  wireEvents();
+
+  // Auto-carga silenciosa: solo dispara si ya hay una URL de Apps Script guardada
+  // (si no está configurada, no hace nada — no molesta al que sube Excel a mano)
+  if (!window.__TYSA_STANDALONE__ && state.appsScriptUrl) {
+    setTimeout(() => { loadAllCloud(true); }, 300);
+  }
+
+  if (window.__TYSA_STANDALONE__) {
+    applyStandaloneMode();
+    // Apply the snapshot's filters to UI selectors after dropdowns are populated
+    document.getElementById('filterJob').value = state.filters.job || '';
+    document.getElementById('filterCod').value = state.filters.cod || '';
+    document.getElementById('filterPole').value = state.filters.pole || '';
+    const pSel = document.getElementById('filterProj'); if (pSel) pSel.value = state.filters.proj || '';
+    renderCrewPills([...new Set(state.rawRows.map(r => r[ROW.crew]).filter(Boolean))].sort());
+    // Set preset button state
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === state.filters.preset));
+    refresh();
+  } else {
+    applyPreset('all');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
